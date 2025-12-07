@@ -14,6 +14,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 // Dependency Injection
 builder.Services.AddScoped<UserRepository>();
 builder.Services.AddScoped<TripRepository>();
+builder.Services.AddScoped<TripImageRepository>();
 builder.Services.AddScoped<PasswordService>();
 
 var app = builder.Build();

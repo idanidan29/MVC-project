@@ -1,9 +1,9 @@
 {
   "ExpandedNodes": [
     "",
-    "\\Views",
-    "\\Views\\User"
+    "\\Controllers",
+    "\\Views"
   ],
-  "SelectedNode": "\\Views\\User\\Register.cshtml",
+  "SelectedNode": "\\MVC-project.sln",
   "PreviewInSolutionExplorer": false
 }

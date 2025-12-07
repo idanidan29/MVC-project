@@ -11,6 +11,7 @@ namespace MVC_project.Data
 
         public DbSet<User> Users { get; set; }
         public DbSet<Trip> Trips { get; set; }
+        public DbSet<TripImage> TripImages { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -28,6 +29,20 @@ namespace MVC_project.Data
 
             modelBuilder.Entity<Trip>()
                 .HasKey(t => t.TripID);
+
+            // Configure TripImage entity
+            modelBuilder.Entity<TripImage>()
+                .ToTable("TripImages", "dbo");
+
+            modelBuilder.Entity<TripImage>()
+                .HasKey(ti => ti.ImageID);
+
+            // Configure relationship: Trip -> TripImages (One-to-Many)
+            modelBuilder.Entity<TripImage>()
+                .HasOne(ti => ti.Trip)
+                .WithMany()
+                .HasForeignKey(ti => ti.TripID)
+                .OnDelete(DeleteBehavior.Cascade);
 
             base.OnModelCreating(modelBuilder);
         }
