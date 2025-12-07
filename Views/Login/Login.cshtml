@@ -4,30 +4,372 @@
     ViewData["Title"] = "Login";
 }
 
-<div class="container d-flex align-items-center justify-content-center min-vh-100" style="background: linear-gradient(135deg, #f8fafc 0%, #e0e7ff 100%);">
-    <div class="card shadow-lg rounded-4 p-4 border-0" style="max-width: 400px; width: 100%;">
+<style>
+    /* Animated Background */
+    .login-bg {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(-45deg, #6366f1, #3730a3, #a78bfa, #6366f1);
+        background-size: 400% 400%;
+        animation: gradient 15s ease infinite;
+        z-index: -1;
+    }
+
+    @@keyframes gradient {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+    }
+
+    /* Floating particles background effect */
+    .particle {
+        position: fixed;
+        pointer-events: none;
+        opacity: 0.5;
+        animation: float 20s infinite linear;
+        z-index: -1;
+    }
+
+    @@keyframes float {
+        0% {
+            transform: translate(0, 0) rotate(0deg);
+            opacity: 0;
+        }
+        10% {
+            opacity: 0.5;
+        }
+        90% {
+            opacity: 0.5;
+        }
+        100% {
+            transform: translate(100px, -100vh) rotate(360deg);
+            opacity: 0;
+        }
+    }
+
+    /* Login container with backdrop blur effect */
+    .login-container {
+        position: relative;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 1rem;
+        overflow: hidden;
+    }
+
+    /* Enhanced card styling */
+    .login-card {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        border-radius: 2rem;
+        padding: 2.5rem;
+        max-width: 420px;
+        width: 100%;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        box-shadow: 0 20px 70px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.5);
+        animation: slideInUp 0.8s ease-out;
+        position: relative;
+        overflow: hidden;
+    }
+
+    /* Glowing border effect */
+    .login-card::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -50%;
+        width: 200%;
+        height: 200%;
+        background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+        animation: shine 3s infinite;
+        pointer-events: none;
+    }
+
+    @@keyframes shine {
+        0% { transform: translate(-100%, -100%) rotate(0deg); }
+        100% { transform: translate(100%, 100%) rotate(0deg); }
+    }
+
+    @@keyframes slideInUp {
+        from {
+            opacity: 0;
+            transform: translateY(50px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* Icon animation */
+    .login-icon {
+        font-size: 3rem;
+        color: white;
+        width: 5rem;
+        height: 5rem;
+        border-radius: 1rem;
+        background: linear-gradient(135deg, #6366f1, #3730a3);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 1rem;
+        animation: iconBounce 2s ease-in-out infinite;
+        box-shadow: 0 10px 40px rgba(99, 102, 241, 0.4);
+        position: relative;
+        z-index: 1;
+    }
+
+    @@keyframes iconBounce {
+        0%, 100% {
+            transform: translateY(0);
+        }
+        50% {
+            transform: translateY(-15px);
+        }
+    }
+
+    /* Title animation */
+    .login-title {
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: #3730a3;
+        margin-bottom: 0.5rem;
+        animation: fadeInDown 0.8s ease-out 0.2s both;
+        position: relative;
+        z-index: 1;
+    }
+
+    @@keyframes fadeInDown {
+        from {
+            opacity: 0;
+            transform: translateY(-20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* Subtitle animation */
+    .login-subtitle {
+        color: #64748b;
+        margin-bottom: 0;
+        animation: fadeInDown 0.8s ease-out 0.4s both;
+        position: relative;
+        z-index: 1;
+    }
+
+    /* Form inputs with enhanced styling */
+    .login-form {
+        position: relative;
+        z-index: 1;
+    }
+
+    .form-group-login {
+        position: relative;
+        margin-bottom: 1.5rem;
+        animation: fadeInLeft 0.8s ease-out both;
+    }
+
+    .form-group-login:nth-child(1) { animation-delay: 0.5s; }
+    .form-group-login:nth-child(2) { animation-delay: 0.6s; }
+
+    @@keyframes fadeInLeft {
+        from {
+            opacity: 0;
+            transform: translateX(-30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+
+    .login-form label {
+        font-weight: 600;
+        color: #3730a3;
+        margin-bottom: 0.5rem;
+        display: block;
+        transition: color 0.3s;
+    }
+
+    .login-form .form-control {
+        height: 3rem;
+        border-radius: 0.875rem;
+        border: 2px solid #e2e8f0;
+        padding: 0.75rem 1rem;
+        font-size: 1rem;
+        background: #f8fafc;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        z-index: 1;
+    }
+
+    .login-form .form-control:focus {
+        border-color: #6366f1;
+        background: white;
+        box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.15), inset 0 0 0 1px rgba(99, 102, 241, 0.1);
+        transform: translateY(-2px);
+        outline: none;
+    }
+
+    .login-form .form-control:hover:not(:focus) {
+        border-color: #a78bfa;
+        background: white;
+        transform: translateY(-1px);
+    }
+
+    /* Submit button with advanced styling */
+    .btn-login {
+        width: 100%;
+        height: 3.25rem;
+        background: linear-gradient(135deg, #6366f1, #3730a3);
+        border: none;
+        border-radius: 1rem;
+        color: white;
+        font-weight: 700;
+        font-size: 1.125rem;
+        cursor: pointer;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 0 10px 30px rgba(99, 102, 241, 0.3);
+        margin-top: 1rem;
+        animation: fadeInRight 0.8s ease-out 0.7s both;
+        position: relative;
+        overflow: hidden;
+        z-index: 1;
+    }
+
+    .btn-login::before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 0;
+        height: 0;
+        background: rgba(255, 255, 255, 0.3);
+        border-radius: 50%;
+        transform: translate(-50%, -50%);
+        transition: width 0.6s, height 0.6s;
+        z-index: -1;
+    }
+
+    .btn-login:hover::before {
+        width: 300px;
+        height: 300px;
+    }
+
+    .btn-login:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 20px 50px rgba(99, 102, 241, 0.5);
+    }
+
+    .btn-login:active {
+        transform: translateY(-2px);
+    }
+
+    @@keyframes fadeInRight {
+        from {
+            opacity: 0;
+            transform: translateX(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+
+    /* Register link */
+    .login-register-link {
+        text-align: center;
+        margin-top: 1.5rem;
+        animation: fadeInUp 0.8s ease-out 0.8s both;
+        position: relative;
+        z-index: 1;
+    }
+
+    .login-register-link a {
+        color: #6366f1;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        position: relative;
+    }
+
+    .login-register-link a::after {
+        content: '';
+        position: absolute;
+        bottom: -3px;
+        left: 0;
+        width: 0;
+        height: 2px;
+        background: linear-gradient(90deg, #6366f1, #3730a3);
+        transition: width 0.3s ease;
+    }
+
+    .login-register-link a:hover::after {
+        width: 100%;
+    }
+
+    .login-register-link a:hover {
+        color: #3730a3;
+        transform: translateY(-2px);
+    }
+
+    @@keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* Validation error animation */
+    .text-danger {
+        animation: shake 0.5s ease-in-out;
+        font-weight: 500;
+        margin-top: 0.5rem;
+    }
+
+    @@keyframes shake {
+        0%, 100% { transform: translateX(0); }
+        25% { transform: translateX(-5px); }
+        75% { transform: translateX(5px); }
+    }
+</style>
+
+<div class="login-bg"></div>
+
+<div class="login-container">
+    <div class="login-card">
         <div class="text-center mb-4">
-            <span class="d-inline-block mb-2" style="font-size: 2.5rem; color: #6366f1;">
-                <i class="bi bi-person-circle"></i>
+            <span class="login-icon">
+                <i class="bi bi-person-plus"></i>
             </span>
-            <h2 class="fw-bold" style="font-family: 'Segoe UI', sans-serif; color: #3730a3;">@ViewData["Title"]</h2>
-            <p class="text-muted mb-0" style="font-size: 1rem;">Welcome back! Please login to your account.</p>
+            <h2 class="login-title">@ViewData["Title"]</h2>
+            <p class="login-subtitle">Welcome back! Please login to your account.</p>
         </div>
-        <form asp-action="Login" method="post">
-            <div class="mb-3">
-                <label asp-for="Email" class="form-label fw-semibold" style="color: #3730a3;">Email</label>
-                <input asp-for="Email" class="form-control form-control-lg" placeholder="Enter your email" />
+        <form asp-action="Login" method="post" class="login-form">
+            <div class="form-group-login">
+                <label asp-for="Email" class="form-label">Email</label>
+                <input asp-for="Email" class="form-control" placeholder="Enter your email" />
                 <span asp-validation-for="Email" class="text-danger"></span>
             </div>
-            <div class="mb-3">
-                <label asp-for="Password" class="form-label fw-semibold" style="color: #3730a3;">Password</label>
-                <input asp-for="Password" type="password" class="form-control form-control-lg" placeholder="Enter password" />
+            <div class="form-group-login">
+                <label asp-for="Password" class="form-label">Password</label>
+                <input asp-for="Password" type="password" class="form-control" placeholder="Enter password" />
                 <span asp-validation-for="Password" class="text-danger"></span>
             </div>
-            <button type="submit" class="btn btn-primary w-100 py-2 fw-bold rounded-pill" style="background: linear-gradient(90deg, #6366f1 0%, #3730a3 100%); border: none;">Login</button>
+            <button type="submit" class="btn-login">Login</button>
         </form>
-        <div class="mt-3 text-center">
-            <a href="/User/Register" class="text-decoration-none" style="color: #6366f1;">Don't have an account? Register</a>
+        <div class="login-register-link">
+            <a href="/User/Register">Don't have an account? Register</a>
         </div>
     </div>
 </div>
