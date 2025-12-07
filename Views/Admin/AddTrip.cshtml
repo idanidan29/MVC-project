@@ -1,0 +1,468 @@
+@model MVC_project.ViewModels.AddTripViewModel
+
+@{
+    ViewData["Title"] = "Add New Trip";
+}
+
+<style>
+    /* Animated Background */
+    .addtrip-bg {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(-45deg, #6366f1, #3730a3, #a78bfa, #6366f1);
+        background-size: 400% 400%;
+        animation: gradient 15s ease infinite;
+        z-index: -1;
+    }
+
+    @@keyframes gradient {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+    }
+
+    /* Floating particles background effect */
+    .particle {
+        position: fixed;
+        pointer-events: none;
+        opacity: 0.5;
+        animation: float 20s infinite linear;
+        z-index: -1;
+    }
+
+    @@keyframes float {
+        0% {
+            transform: translate(0, 0) rotate(0deg);
+            opacity: 0;
+        }
+        10% {
+            opacity: 0.5;
+        }
+        90% {
+            opacity: 0.5;
+        }
+        100% {
+            transform: translate(100px, -100vh) rotate(360deg);
+            opacity: 0;
+        }
+    }
+
+    /* Form container */
+    .addtrip-container {
+        position: relative;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem 1rem;
+        overflow-y: auto;
+    }
+
+    /* Enhanced card styling */
+    .addtrip-card {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        border-radius: 2rem;
+        padding: 2.5rem;
+        max-width: 700px;
+        width: 100%;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        box-shadow: 0 20px 70px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.5);
+        animation: slideInUp 0.8s ease-out;
+        position: relative;
+        overflow: hidden;
+        margin: 2rem auto;
+    }
+
+    /* Glowing border effect */
+    .addtrip-card::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -50%;
+        width: 200%;
+        height: 200%;
+        background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+        animation: shine 3s infinite;
+        pointer-events: none;
+    }
+
+    @@keyframes shine {
+        0% { transform: translate(-100%, -100%) rotate(0deg); }
+        100% { transform: translate(100%, 100%) rotate(0deg); }
+    }
+
+    @@keyframes slideInUp {
+        from {
+            opacity: 0;
+            transform: translateY(50px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* Typography */
+    .form-title {
+        color: #1e293b;
+        font-size: 2.5rem;
+        font-weight: 700;
+        text-align: center;
+        margin-bottom: 0.5rem;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .form-subtitle {
+        color: #64748b;
+        text-align: center;
+        margin-bottom: 2rem;
+        font-size: 1rem;
+    }
+
+    /* Form styling */
+    .form-group {
+        margin-bottom: 1.5rem;
+        position: relative;
+    }
+
+    .form-label {
+        color: #334155;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        display: block;
+        font-size: 0.95rem;
+    }
+
+    .form-label i {
+        margin-right: 0.5rem;
+        color: #6366f1;
+    }
+
+    .form-control, .form-select {
+        width: 100%;
+        padding: 0.85rem 1rem;
+        border: 2px solid #e2e8f0;
+        border-radius: 0.75rem;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+        background: white;
+    }
+
+    .form-control:focus, .form-select:focus {
+        outline: none;
+        border-color: #6366f1;
+        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+    }
+
+    textarea.form-control {
+        resize: vertical;
+        min-height: 120px;
+    }
+
+    /* Two column layout for dates and numbers */
+    .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+    }
+
+    @@media (max-width: 576px) {
+        .form-row {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    /* Button styling */
+    .btn-submit {
+        background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+        color: white;
+        border: none;
+        padding: 1rem 2rem;
+        border-radius: 1rem;
+        font-size: 1.1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+        width: 100%;
+        margin-top: 1rem;
+    }
+
+    .btn-submit:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(99, 102, 241, 0.6);
+        background: linear-gradient(135deg, #4f46e5 0%, #4338ca 100%);
+    }
+
+    .btn-back {
+        background: linear-gradient(135deg, #64748b 0%, #475569 100%);
+        color: white;
+        border: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 0.75rem;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(100, 116, 139, 0.4);
+        width: 100%;
+        margin-top: 0.5rem;
+        text-decoration: none;
+        display: inline-block;
+        text-align: center;
+    }
+
+    .btn-back:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(100, 116, 139, 0.6);
+        background: linear-gradient(135deg, #475569 0%, #334155 100%);
+        color: white;
+    }
+
+    /* Validation error styling */
+    .text-danger {
+        color: #dc2626;
+        font-size: 0.875rem;
+        margin-top: 0.25rem;
+        display: block;
+    }
+
+    .input-validation-error {
+        border-color: #dc2626 !important;
+    }
+
+    .validation-summary-errors {
+        background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+        border: 1px solid #fca5a5;
+        border-radius: 1rem;
+        padding: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .validation-summary-errors ul {
+        margin: 0;
+        padding-left: 1.5rem;
+    }
+
+    .validation-summary-errors li {
+        color: #991b1b;
+        font-weight: 500;
+    }
+
+    /* File upload styling */
+    .file-upload-wrapper {
+        position: relative;
+    }
+
+    .file-upload-label {
+        display: block;
+        padding: 0.85rem 1rem;
+        border: 2px dashed #cbd5e1;
+        border-radius: 0.75rem;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        background: #f8fafc;
+    }
+
+    .file-upload-label:hover {
+        border-color: #6366f1;
+        background: #f1f5f9;
+    }
+
+    .file-upload-label i {
+        font-size: 2rem;
+        color: #6366f1;
+        display: block;
+        margin-bottom: 0.5rem;
+    }
+
+    input[type="file"] {
+        display: none;
+    }
+</style>
+
+<!-- Animated Background -->
+<div class="addtrip-bg"></div>
+
+<!-- Floating particles -->
+<script>
+    for (let i = 0; i < 15; i++) {
+        let particle = document.createElement('div');
+        particle.className = 'particle';
+        particle.style.width = Math.random() * 5 + 2 + 'px';
+        particle.style.height = particle.style.width;
+        particle.style.left = Math.random() * 100 + '%';
+        particle.style.background = 'white';
+        particle.style.borderRadius = '50%';
+        particle.style.animationDelay = Math.random() * 20 + 's';
+        particle.style.animationDuration = Math.random() * 10 + 15 + 's';
+        document.body.appendChild(particle);
+    }
+</script>
+
+<div class="addtrip-container">
+    <div class="addtrip-card">
+        <h1 class="form-title">
+            <i class="bi bi-airplane"></i> Add New Trip
+        </h1>
+        <p class="form-subtitle">Create an exciting new travel package</p>
+
+        @if (!ViewData.ModelState.IsValid)
+        {
+            <div asp-validation-summary="All" class="validation-summary-errors"></div>
+        }
+
+        <form asp-action="AddTrip" asp-controller="Admin" method="post" enctype="multipart/form-data">
+            <!-- Destination & Country -->
+            <div class="form-row">
+                <div class="form-group">
+                    <label asp-for="Destination" class="form-label">
+                        <i class="bi bi-geo-alt"></i> Destination
+                    </label>
+                    <input asp-for="Destination" class="form-control" placeholder="e.g., Paris, Tokyo, New York" />
+                    <span asp-validation-for="Destination" class="text-danger"></span>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="Country" class="form-label">
+                        <i class="bi bi-flag"></i> Country
+                    </label>
+                    <input asp-for="Country" class="form-control" placeholder="e.g., France, Japan, USA" />
+                    <span asp-validation-for="Country" class="text-danger"></span>
+                </div>
+            </div>
+
+            <!-- Travel Dates -->
+            <div class="form-row">
+                <div class="form-group">
+                    <label asp-for="StartDate" class="form-label">
+                        <i class="bi bi-calendar-check"></i> Start Date
+                    </label>
+                    <input asp-for="StartDate" type="date" class="form-control" />
+                    <span asp-validation-for="StartDate" class="text-danger"></span>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="EndDate" class="form-label">
+                        <i class="bi bi-calendar-x"></i> End Date
+                    </label>
+                    <input asp-for="EndDate" type="date" class="form-control" />
+                    <span asp-validation-for="EndDate" class="text-danger"></span>
+                </div>
+            </div>
+
+            <!-- Price & Rooms -->
+            <div class="form-row">
+                <div class="form-group">
+                    <label asp-for="Price" class="form-label">
+                        <i class="bi bi-currency-dollar"></i> Price
+                    </label>
+                    <input asp-for="Price" type="number" step="0.01" class="form-control" placeholder="0.00" />
+                    <span asp-validation-for="Price" class="text-danger"></span>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="AvailableRooms" class="form-label">
+                        <i class="bi bi-door-open"></i> Available Rooms
+                    </label>
+                    <input asp-for="AvailableRooms" type="number" class="form-control" placeholder="0" />
+                    <span asp-validation-for="AvailableRooms" class="text-danger"></span>
+                </div>
+            </div>
+
+            <!-- Discount Price & End Date (Optional) -->
+            <div class="form-row">
+                <div class="form-group">
+                    <label asp-for="DiscountPrice" class="form-label">
+                        <i class="bi bi-tag"></i> Discount Price (Optional)
+                    </label>
+                    <input asp-for="DiscountPrice" type="number" step="0.01" class="form-control" placeholder="0.00" />
+                    <span asp-validation-for="DiscountPrice" class="text-danger"></span>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="DiscountEndDate" class="form-label">
+                        <i class="bi bi-calendar-event"></i> Discount End Date
+                    </label>
+                    <input asp-for="DiscountEndDate" type="date" class="form-control" />
+                    <span asp-validation-for="DiscountEndDate" class="text-danger"></span>
+                </div>
+            </div>
+
+            <!-- Package Type & Age Limit -->
+            <div class="form-row">
+                <div class="form-group">
+                    <label asp-for="PackageType" class="form-label">
+                        <i class="bi bi-box"></i> Package Type
+                    </label>
+                    <select asp-for="PackageType" class="form-select">
+                        <option value="">-- Select Package Type --</option>
+                        <option value="Family">Family</option>
+                        <option value="Honeymoon">Honeymoon</option>
+                        <option value="Adventure">Adventure</option>
+                        <option value="Cruise">Cruise</option>
+                        <option value="Luxury">Luxury</option>
+                        <option value="Budget">Budget</option>
+                        <option value="Group">Group</option>
+                        <option value="Solo">Solo</option>
+                    </select>
+                    <span asp-validation-for="PackageType" class="text-danger"></span>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="AgeLimit" class="form-label">
+                        <i class="bi bi-person-badge"></i> Age Limit (Optional)
+                    </label>
+                    <input asp-for="AgeLimit" type="number" class="form-control" placeholder="e.g., 18" />
+                    <span asp-validation-for="AgeLimit" class="text-danger"></span>
+                </div>
+            </div>
+
+            <!-- Description -->
+            <div class="form-group">
+                <label asp-for="Description" class="form-label">
+                    <i class="bi bi-card-text"></i> Description
+                </label>
+                <textarea asp-for="Description" class="form-control" rows="5" 
+                          placeholder="Describe the trip package, highlights, activities, accommodations, etc."></textarea>
+                <span asp-validation-for="Description" class="text-danger"></span>
+            </div>
+
+            <!-- Images Upload -->
+            <div class="form-group">
+                <label class="form-label">
+                    <i class="bi bi-image"></i> Trip Images (Optional)
+                </label>
+                <div class="file-upload-wrapper">
+                    <label for="imageUpload" class="file-upload-label">
+                        <i class="bi bi-cloud-upload"></i>
+                        <span>Click to upload images</span>
+                        <small style="display: block; color: #64748b; margin-top: 0.5rem;">
+                            Select multiple images for this trip
+                        </small>
+                    </label>
+                    <input id="imageUpload" asp-for="Images" type="file" multiple accept="image/*" />
+                </div>
+            </div>
+
+            <!-- Submit Button -->
+            <button type="submit" class="btn-submit">
+                <i class="bi bi-check-circle"></i> Create Trip Package
+            </button>
+
+            <!-- Back to Dashboard -->
+            <a href="@Url.Action("Dashboard", "Admin")" class="btn-back">
+                <i class="bi bi-arrow-left"></i> Back to Dashboard
+            </a>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

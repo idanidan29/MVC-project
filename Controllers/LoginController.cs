@@ -38,6 +38,12 @@ namespace MVC_project.Controllers
                 return View(model);
             }
 
+            // Redirect based on user role
+            if (user.admin)
+            {
+                return RedirectToAction("Dashboard", "Admin");
+            }
+
             // כאן אפשר לשים Session/Cookie ל־Login
             return RedirectToAction("Success", "User");
         }

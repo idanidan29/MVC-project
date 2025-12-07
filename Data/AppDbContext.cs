@@ -10,6 +10,7 @@ namespace MVC_project.Data
         }
 
         public DbSet<User> Users { get; set; }
+        public DbSet<Trip> Trips { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -20,6 +21,13 @@ namespace MVC_project.Data
             // Set 'email' as the primary key of the User entity
             modelBuilder.Entity<User>()
                 .HasKey(u => u.email);
+
+            // Configure Trip entity
+            modelBuilder.Entity<Trip>()
+                .ToTable("Trips", "dbo");
+
+            modelBuilder.Entity<Trip>()
+                .HasKey(t => t.TripID);
 
             base.OnModelCreating(modelBuilder);
         }

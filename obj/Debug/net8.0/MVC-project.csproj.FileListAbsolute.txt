@@ -421,3 +421,5 @@ C:\Users\29ida\OneDrive\Documents\GitHub\MVC-project\obj\Debug\net8.0\MVC-projec
 C:\Users\29ida\OneDrive\Documents\GitHub\MVC-project\obj\Debug\net8.0\ref\MVC-project.dll
 C:\Users\29ida\OneDrive\Documents\GitHub\MVC-project\bin\Debug\net8.0\package-lock.json
 C:\Users\29ida\OneDrive\Documents\GitHub\MVC-project\bin\Debug\net8.0\package.json
+C:\Users\zecha\Documents\GitHub\MVC-project\bin\Debug\net8.0\package-lock.json
+C:\Users\zecha\Documents\GitHub\MVC-project\bin\Debug\net8.0\package.json
