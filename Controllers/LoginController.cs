@@ -5,8 +5,7 @@ using MVC_project.ViewModels;
 
 namespace MVC_project.Controllers
 {
-    [Route("Login")] // כל הנתיבים ב־Controller הזה מתחילים ב-/Login
-    public class LoginController : Controller
+    [Route("Login")]     public class LoginController : Controller
     {
         private readonly UserRepository _repo;
         private readonly PasswordService _passwordService;
@@ -21,7 +20,7 @@ namespace MVC_project.Controllers
         [HttpGet("")]
         public IActionResult Login()
         {
-            return View(); // MVC יחפש Views/Login/Login.cshtml
+            return View(); 
         }
 
         // POST /Login
@@ -44,8 +43,7 @@ namespace MVC_project.Controllers
                 return RedirectToAction("Dashboard", "Admin");
             }
 
-            // כאן אפשר לשים Session/Cookie ל־Login
-            return RedirectToAction("Success", "User");
+            return RedirectToAction("Index", "Dashboard");
         }
     }
 }

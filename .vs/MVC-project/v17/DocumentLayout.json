@@ -7,16 +7,16 @@
       "RelativeMoniker": "D:0:0:{452F67CE-40C4-4C66-8B40-8AFADA014B24}|MVC-project.csproj|solutionrelative:appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{452F67CE-40C4-4C66-8B40-8AFADA014B24}|MVC-project.csproj|c:\\users\\zecha\\documents\\github\\mvc-project\\appsettings.development.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
-      "RelativeMoniker": "D:0:0:{452F67CE-40C4-4C66-8B40-8AFADA014B24}|MVC-project.csproj|solutionrelative:appsettings.development.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
+      "AbsoluteMoniker": "D:0:0:{452F67CE-40C4-4C66-8B40-8AFADA014B24}|MVC-project.csproj|c:\\users\\zecha\\documents\\github\\mvc-project\\package.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
+      "RelativeMoniker": "D:0:0:{452F67CE-40C4-4C66-8B40-8AFADA014B24}|MVC-project.csproj|solutionrelative:package.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{452F67CE-40C4-4C66-8B40-8AFADA014B24}|MVC-project.csproj|c:\\users\\zecha\\documents\\github\\mvc-project\\package-lock.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
       "RelativeMoniker": "D:0:0:{452F67CE-40C4-4C66-8B40-8AFADA014B24}|MVC-project.csproj|solutionrelative:package-lock.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{452F67CE-40C4-4C66-8B40-8AFADA014B24}|MVC-project.csproj|c:\\users\\zecha\\documents\\github\\mvc-project\\package.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
-      "RelativeMoniker": "D:0:0:{452F67CE-40C4-4C66-8B40-8AFADA014B24}|MVC-project.csproj|solutionrelative:package.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
+      "AbsoluteMoniker": "D:0:0:{452F67CE-40C4-4C66-8B40-8AFADA014B24}|MVC-project.csproj|c:\\users\\zecha\\documents\\github\\mvc-project\\appsettings.development.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
+      "RelativeMoniker": "D:0:0:{452F67CE-40C4-4C66-8B40-8AFADA014B24}|MVC-project.csproj|solutionrelative:appsettings.development.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{452F67CE-40C4-4C66-8B40-8AFADA014B24}|MVC-project.csproj|c:\\users\\zecha\\documents\\github\\mvc-project\\controllers\\admincontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
@@ -80,14 +80,14 @@
               "RelativeDocumentMoniker": "appsettings.json",
               "ToolTip": "C:\\Users\\zecha\\Documents\\GitHub\\MVC-project\\appsettings.json",
               "RelativeToolTip": "appsettings.json",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAEAAAABAAAAAAAAAA==",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAwAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
               "WhenOpened": "2025-12-07T14:20:11.245Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 3,
+              "DocumentIndex": 1,
               "Title": "package.json",
               "DocumentMoniker": "C:\\Users\\zecha\\Documents\\GitHub\\MVC-project\\package.json",
               "RelativeDocumentMoniker": "package.json",
@@ -95,8 +95,7 @@
               "RelativeToolTip": "package.json",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
-              "WhenOpened": "2025-12-07T14:19:56.493Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-12-07T14:19:56.493Z"
             },
             {
               "$type": "Document",
@@ -108,12 +107,11 @@
               "RelativeToolTip": "package-lock.json",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
-              "WhenOpened": "2025-12-07T14:19:51.79Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-12-07T14:19:51.79Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 1,
+              "DocumentIndex": 3,
               "Title": "appsettings.Development.json",
               "DocumentMoniker": "C:\\Users\\zecha\\Documents\\GitHub\\MVC-project\\appsettings.Development.json",
               "RelativeDocumentMoniker": "appsettings.Development.json",
@@ -121,8 +119,7 @@
               "RelativeToolTip": "appsettings.Development.json",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAMAAAAEAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
-              "WhenOpened": "2025-12-07T14:19:47.584Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-12-07T14:19:47.584Z"
             },
             {
               "$type": "Document",
@@ -134,8 +131,7 @@
               "RelativeToolTip": "Controllers\\AdminController.cs",
               "ViewState": "AgIAADgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-12-07T13:57:33.568Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-12-07T13:57:33.568Z"
             },
             {
               "$type": "Document",
