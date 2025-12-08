@@ -8,8 +8,68 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/MVC_project.styles.css" asp-append-version="true" />
+    <style>
+        /* Logged-in navbar styling matching site theme */
+        .app-navbar {
+            background: linear-gradient(90deg, rgba(99,102,241,0.12), rgba(55,48,163,0.06));
+            backdrop-filter: blur(6px);
+            border-bottom: 1px solid rgba(226,232,240,0.12);
+            padding: 0.4rem 1rem;
+            position: sticky;
+            top: 0;
+            z-index: 1030;
+        }
+        .app-navbar .navbar-brand { color: white; font-weight:700; }
+        .app-navbar .navbar-logo {
+            width:44px; height:44px; display:inline-flex; align-items:center; justify-content:center; border-radius:10px;
+            background: linear-gradient(135deg,var(--primary),var(--primary-dark)); color:white; box-shadow: var(--shadow-button);
+            margin-right:0.5rem; font-size:1.25rem;
+        }
+        .app-navbar .nav-link { color: white; transition: all .18s ease; font-weight:600; }
+        .app-navbar .nav-link:hover { transform: translateY(-3px); color: #e0e7ff; }
+        .app-navbar .btn-ghost { background: transparent; border: 1px solid rgba(255,255,255,0.2); color: white; }
+        .app-navbar .user-badge { padding: .35rem .6rem; border-radius: .7rem; color: white; }
+        .app-navbar .support-link { color: white; }
+        @@media (max-width: 767px) { .app-navbar .nav { display:none; } }
+    </style>
 </head>
 <body>
+    <!-- Navbar: show only for authenticated users -->
+    @if (User?.Identity?.IsAuthenticated ?? false)
+    {
+        <nav class="app-navbar">
+        <div class="container-fluid d-flex align-items-center justify-content-between">
+            <div class="d-flex align-items-center">
+                <a class="navbar-brand d-flex align-items-center text-decoration-none" asp-controller="Dashboard" asp-action="Index">
+                    <span class="navbar-logo"><i class="bi bi-geo-alt-fill"></i></span>
+                    <span>TravelMate</span>
+                </a>
+                <ul class="nav ms-3">
+                    <li class="nav-item"><a class="nav-link" asp-controller="Dashboard" asp-action="Index">Trips</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/Dashboard?search=">Search</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/User/Bookings">My Bookings</a></li>
+                </ul>
+            </div>
+            <div class="d-flex align-items-center">
+                <a class="me-3 text-decoration-none nav-link support-link" href="/Help">Support</a>
+                <div class="dropdown">
+                    <a class="btn user-badge d-flex align-items-center" href="#" role="button" id="userMenu" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="bi bi-person-circle me-2" style="font-size:1.25rem;color:white;"></i>
+                        <span class="d-none d-md-inline">Welcome, @(User?.Identity?.Name?.Split('@')[0] ?? "Friend")!</span>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userMenu">
+                        <li><a class="dropdown-item" asp-controller="User" asp-action="Register">Profile</a></li>
+                        <li><a class="dropdown-item" href="/User/Bookings">My Bookings</a></li>
+                        <li><a class="dropdown-item" href="/User/Dashboard">Dashboard</a></li>
+                        <li><hr class="dropdown-divider" /></li>
+                        <li><a class="dropdown-item" href="/Login/Logout">Logout</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        </nav>
+    }
+
     <div class="container">
         <main role="main" class="pb-3">
             @RenderBody()
