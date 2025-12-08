@@ -61,5 +61,13 @@ namespace MVC_project.Controllers
 
             return RedirectToAction("Index", "Dashboard");
         }
+
+        // GET /Login/Logout
+        [HttpGet("Logout")]
+        public async Task<IActionResult> Logout()
+        {
+            await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+            return RedirectToAction("Login", "Login");
+        }
     }
 }

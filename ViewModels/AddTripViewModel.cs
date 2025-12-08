@@ -24,11 +24,11 @@ namespace MVC_project.ViewModels
         public DateTime EndDate { get; set; }
 
         [Required(ErrorMessage = "Price is required")]
-        [Range(0.01, 999999.99, ErrorMessage = "Price must be between 0.01 and 999,999.99")]
+        [Range(0, 999999.99, ErrorMessage = "Price must be a non-negative value up to 999,999.99")]
         [DataType(DataType.Currency)]
         public decimal Price { get; set; }
 
-        [Range(0.01, 999999.99, ErrorMessage = "Discount price must be between 0.01 and 999,999.99")]
+        [Range(0, 999999.99, ErrorMessage = "Discount price must be a non-negative value up to 999,999.99")]
         [DataType(DataType.Currency)]
         [Display(Name = "Discount Price (Optional)")]
         public decimal? DiscountPrice { get; set; }

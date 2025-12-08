@@ -259,11 +259,13 @@
     }
 
     .file-upload-label {
-        display: block;
-        padding: 0.85rem 1rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.75rem;
+        padding: 0.75rem 1rem;
         border: 2px dashed #cbd5e1;
         border-radius: 0.75rem;
-        text-align: center;
         cursor: pointer;
         transition: all 0.3s ease;
         background: #f8fafc;
@@ -284,6 +286,92 @@
     input[type="file"] {
         display: none;
     }
+
+    /* Upload success/status UI */
+    /* Use CSS Grid so the check icon remains fixed while message/thumbs grow */
+    .upload-status {
+        position: relative;
+        display: grid;
+        grid-template-columns: 36px 1fr auto auto;
+        gap: 0.6rem;
+        align-items: center;
+        width: 100%;
+        margin-top: 0.75rem;
+        background: rgba(16,185,129,0.06);
+        color: #065f46;
+        padding: 0.5rem 0.6rem;
+        border-radius: 0.6rem;
+        font-size: 0.95rem;
+        box-shadow: 0 6px 18px rgba(16,185,129,0.04);
+        opacity: 0;
+        transform: translateY(6px);
+        transition: all 0.28s cubic-bezier(.2,.9,.3,1);
+    }
+    .upload-status.show {
+        transform: translateY(0);
+        opacity: 1;
+    }
+    .upload-status .check {
+        background: #10b981;
+        color: white;
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.95rem;
+        flex: 0 0 auto;
+    }
+    .file-upload-label.success {
+        border-color: #10b981;
+        box-shadow: 0 10px 30px rgba(16,185,129,0.12);
+    }
+    .upload-status .upload-msg { grid-column: 2 / 3; min-width: 0; overflow: hidden; }
+    .upload-status .thumbs {
+        grid-column: 3 / 4;
+        display: flex;
+        gap: 0.4rem;
+        align-items: center;
+        flex-wrap: wrap;
+        max-width: 320px;
+        overflow: hidden;
+    }
+    .upload-status .thumbs img {
+        width: 40px;
+        height: 40px;
+        object-fit: cover;
+        border-radius: 6px;
+        border: 1px solid rgba(0,0,0,0.06);
+        box-shadow: 0 6px 18px rgba(16,185,129,0.06);
+    }
+    .upload-status .clear-upload {
+        grid-column: 4 / 5;
+        opacity: 0.9;
+        display: none;
+        background: transparent;
+        border: none;
+        padding: 0.2rem 0.4rem;
+    }
+    .upload-status.show .clear-upload { display: inline-flex; align-items:center; }
+    .file-upload-label .label-main { font-weight:600; }
+    .file-upload-label .file-count { color: #64748b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 160px; display: inline-block; }
+    .file-upload-label.success .file-count { color: #065f46; font-weight:600; }
+
+    /* Responsive: stack status below the label on small screens */
+    @@media (max-width: 576px) {
+        .file-upload-label { flex-direction: column; align-items: flex-start; }
+        .file-upload-label .file-count { max-width: 100%; }
+        .upload-status { display: flex; flex-direction: column; gap: 0.5rem; }
+        .upload-status .thumbs img { width: 34px; height: 34px; }
+        .upload-status .thumbs { max-width: 100%; }
+        .upload-status .clear-upload { margin-left: 0; }
+    }
+
+    /* Ensure upload message doesn't push the check icon when filenames are long */
+    .upload-status .upload-msg { overflow: hidden; }
+    .upload-title { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+    .upload-sub { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #065f46; opacity: 0.9; }
 </style>
 
 <!-- Animated Background -->
@@ -362,7 +450,7 @@
                     <label asp-for="Price" class="form-label">
                         <i class="bi bi-currency-dollar"></i> Price
                     </label>
-                    <input asp-for="Price" type="number" step="0.01" class="form-control" placeholder="0.00" />
+                    <input asp-for="Price" type="number" step="0.01" min="0" class="form-control" placeholder="0.00" />
                     <span asp-validation-for="Price" class="text-danger"></span>
                 </div>
 
@@ -370,7 +458,7 @@
                     <label asp-for="AvailableRooms" class="form-label">
                         <i class="bi bi-door-open"></i> Available Rooms
                     </label>
-                    <input asp-for="AvailableRooms" type="number" class="form-control" placeholder="0" />
+                    <input asp-for="AvailableRooms" type="number" min="0" class="form-control" placeholder="0" />
                     <span asp-validation-for="AvailableRooms" class="text-danger"></span>
                 </div>
             </div>
@@ -381,7 +469,7 @@
                     <label asp-for="DiscountPrice" class="form-label">
                         <i class="bi bi-tag"></i> Discount Price (Optional)
                     </label>
-                    <input asp-for="DiscountPrice" type="number" step="0.01" class="form-control" placeholder="0.00" />
+                    <input asp-for="DiscountPrice" type="number" step="0.01" min="0" class="form-control" placeholder="0.00" />
                     <span asp-validation-for="DiscountPrice" class="text-danger"></span>
                 </div>
 
@@ -418,7 +506,7 @@
                     <label asp-for="AgeLimit" class="form-label">
                         <i class="bi bi-person-badge"></i> Age Limit (Optional)
                     </label>
-                    <input asp-for="AgeLimit" type="number" class="form-control" placeholder="e.g., 18" />
+                    <input asp-for="AgeLimit" type="number" min="0" class="form-control" placeholder="e.g., 18" />
                     <span asp-validation-for="AgeLimit" class="text-danger"></span>
                 </div>
             </div>
@@ -441,12 +529,23 @@
                 <div class="file-upload-wrapper">
                     <label for="imageUpload" class="file-upload-label">
                         <i class="bi bi-cloud-upload"></i>
-                        <span>Click to upload images</span>
-                        <small style="display: block; color: #64748b; margin-top: 0.5rem;">
-                            Select multiple images for this trip
-                        </small>
+                        <div>
+                            <span class="label-main">Click to upload images</span>
+                            <span class="file-count d-block small text-muted">No files</span>
+                        </div>
                     </label>
                     <input id="imageUpload" asp-for="Images" type="file" multiple accept="image/*" />
+                    <div id="uploadStatus" class="upload-status" aria-live="polite">
+                        <span class="check"><i class="bi bi-check-lg"></i></span>
+                        <div class="upload-msg">
+                            <strong class="upload-title">No files</strong>
+                            <div class="small text-muted upload-sub">Select images to upload</div>
+                        </div>
+                        <div class="thumbs" aria-hidden="true"></div>
+                        <button type="button" class="btn btn-sm btn-link text-muted clear-upload" title="Clear selection" aria-label="Clear selected files">
+                            <i class="bi bi-x-lg"></i>
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -466,3 +565,83 @@
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
 }
+<script>
+    (function(){
+        const input = document.getElementById('imageUpload');
+        const status = document.getElementById('uploadStatus');
+        const label = document.querySelector('.file-upload-label');
+        const thumbs = status ? status.querySelector('.thumbs') : null;
+        const uploadTitle = status ? status.querySelector('.upload-title') : null;
+        const uploadSub = status ? status.querySelector('.upload-sub') : null;
+        const clearBtn = status ? status.querySelector('.clear-upload') : null;
+        const fileCountSpan = label ? label.querySelector('.file-count') : null;
+
+        if (!input || !status || !label) return;
+
+        function resetState() {
+            input.value = '';
+            if (thumbs) thumbs.innerHTML = '';
+            if (uploadTitle) uploadTitle.textContent = 'No files';
+            if (uploadSub) uploadSub.textContent = 'Select images to upload';
+            if (fileCountSpan) fileCountSpan.textContent = 'No files';
+            status.classList.remove('show');
+            label.classList.remove('success');
+        }
+
+        function renderThumbnails(files) {
+            if (!thumbs) return;
+            thumbs.innerHTML = '';
+            const maxThumbs = 6;
+            files.slice(0, maxThumbs).forEach(file => {
+                if (!file.type.startsWith('image/')) return;
+                const img = document.createElement('img');
+                img.alt = file.name;
+                thumbs.appendChild(img);
+                const reader = new FileReader();
+                reader.onload = function(ev) { img.src = ev.target.result; };
+                reader.readAsDataURL(file);
+            });
+            if (files.length > maxThumbs) {
+                const more = document.createElement('div');
+                more.textContent = `+${files.length - maxThumbs}`;
+                more.style.fontSize = '0.85rem';
+                more.style.color = '#065f46';
+                thumbs.appendChild(more);
+            }
+        }
+
+        function showStatus(files) {
+            const count = files.length;
+            const names = files.map(f => f.name);
+            const preview = names.slice(0,3).join(', ') + (names.length > 3 ? '...' : '');
+
+            if (uploadTitle) uploadTitle.textContent = count > 0 ? `${count} file${count>1?'s':''} selected` : 'No files';
+            if (uploadSub) uploadSub.textContent = count > 0 ? preview : 'Select images to upload';
+            if (fileCountSpan) fileCountSpan.textContent = count > 0 ? `${count} file${count>1?'s':''}` : 'No files';
+
+            if (count > 0) {
+                label.classList.add('success');
+                renderThumbnails(files);
+                status.classList.add('show');
+            } else {
+                resetState();
+            }
+        }
+
+        input.addEventListener('change', function(e){
+            const files = Array.from(input.files || []);
+            showStatus(files);
+        });
+
+        if (clearBtn) {
+            clearBtn.addEventListener('click', function(){
+                resetState();
+            });
+        }
+
+        // keyboard accessibility: clear on Escape when status visible
+        document.addEventListener('keydown', function(e){
+            if (e.key === 'Escape' && status.classList.contains('show')) resetState();
+        });
+    })();
+</script>
