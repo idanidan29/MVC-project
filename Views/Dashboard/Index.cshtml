@@ -90,6 +90,30 @@
         }
     }
 
+    /* Search button */
+    .search-button {
+        display: inline-block;
+        margin-top: 1.5rem;
+    }
+
+    .btn-search {
+        background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+        color: white;
+        padding: 0.75rem 1.5rem;
+        border-radius: 0.75rem;
+        text-decoration: none;
+        font-weight: 600;
+        box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+        transition: all 0.2s ease;
+        display: inline-block;
+    }
+
+    .btn-search:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(99, 102, 241, 0.6);
+        color: white;
+    }
+
     /* Grid layout for trip cards */
     .trips-grid {
         display: grid;
@@ -333,6 +357,11 @@
             <i class="bi bi-airplane"></i> Explore Our Trips
         </h1>
         <p class="page-subtitle">Discover your next adventure from our curated collection</p>
+        <div class="search-button">
+            <a href="@Url.Action("Search", "Dashboard")" class="btn-search">
+                <i class="bi bi-search"></i> Search & Filter Trips
+            </a>
+        </div>
     </div>
 
     @if (Model == null || !Model.Any())
@@ -421,3 +450,125 @@
         </div>
     }
 </div>
+
+<script>
+    (function() {
+        const destinationFilter = document.getElementById('destinationFilter');
+        const countryFilter = document.getElementById('countryFilter');
+        const categoryFilter = document.getElementById('categoryFilter');
+        const minPrice = document.getElementById('minPrice');
+        const maxPrice = document.getElementById('maxPrice');
+        const travelDateFilter = document.getElementById('travelDateFilter');
+        const discountOnly = document.getElementById('discountOnly');
+        const sortBy = document.getElementById('sortBy');
+        const applyBtn = document.getElementById('applyFilters');
+        const resetBtn = document.getElementById('resetFilters');
+        const tripCount = document.getElementById('tripCount');
+        const tripsGrid = document.getElementById('tripsGrid');
+        const tripCards = Array.from(document.querySelectorAll('.trip-card'));
+
+        if (!applyBtn || !tripsGrid) return;
+
+        function applyFiltersAndSort() {
+            let filtered = tripCards;
+
+            // Destination filter
+            if (destinationFilter.value) {
+                filtered = filtered.filter(card => 
+                    card.dataset.destination.includes(destinationFilter.value.toLowerCase())
+                );
+            }
+
+            // Country filter
+            if (countryFilter.value) {
+                filtered = filtered.filter(card => 
+                    card.dataset.country.includes(countryFilter.value.toLowerCase())
+                );
+            }
+
+            // Category filter
+            if (categoryFilter.value) {
+                filtered = filtered.filter(card => 
+                    card.dataset.category === categoryFilter.value
+                );
+            }
+
+            // Price range filter
+            const min = minPrice.value ? parseFloat(minPrice.value) : 0;
+            const max = maxPrice.value ? parseFloat(maxPrice.value) : Infinity;
+            filtered = filtered.filter(card => {
+                const price = parseFloat(card.dataset.price);
+                return price >= min && price <= max;
+            });
+
+            // Travel date filter
+            if (travelDateFilter.value) {
+                const filterDate = new Date(travelDateFilter.value);
+                filtered = filtered.filter(card => {
+                    const startDate = new Date(card.dataset.startDate);
+                    return startDate >= filterDate;
+                });
+            }
+
+            // Discount only filter
+            if (discountOnly.checked) {
+                filtered = filtered.filter(card => card.dataset.isDiscount === 'true');
+            }
+
+            // Sort
+            const sortValue = sortBy.value;
+            if (sortValue === 'price-asc') {
+                filtered.sort((a, b) => parseFloat(a.dataset.price) - parseFloat(b.dataset.price));
+            } else if (sortValue === 'price-desc') {
+                filtered.sort((a, b) => parseFloat(b.dataset.price) - parseFloat(a.dataset.price));
+            } else if (sortValue === 'date') {
+                filtered.sort((a, b) => new Date(a.dataset.startDate) - new Date(b.dataset.startDate));
+            } else if (sortValue === 'popular') {
+                // Most popular: shuffle for now (in a real app, this would come from a popularity metric)
+                filtered.sort(() => Math.random() - 0.5);
+            }
+
+            // Update grid
+            tripsGrid.innerHTML = '';
+            filtered.forEach(card => {
+                tripsGrid.appendChild(card.cloneNode(true));
+            });
+
+            // Update count
+            tripCount.textContent = filtered.length;
+
+            // Show empty message if no results
+            if (filtered.length === 0) {
+                tripsGrid.innerHTML = `
+                    <div style="grid-column: 1 / -1; text-align: center; padding: 3rem;">
+                        <p style="color: #64748b; font-size: 1.1rem;">No trips match your filters. Try adjusting your criteria.</p>
+                    </div>
+                `;
+            }
+        }
+
+        function resetAllFilters() {
+            destinationFilter.value = '';
+            countryFilter.value = '';
+            categoryFilter.value = '';
+            minPrice.value = '';
+            maxPrice.value = '';
+            travelDateFilter.value = '';
+            discountOnly.checked = false;
+            sortBy.value = '';
+            applyFiltersAndSort();
+        }
+
+        applyBtn.addEventListener('click', applyFiltersAndSort);
+        resetBtn.addEventListener('click', resetAllFilters);
+
+        // Optional: Apply filters on Enter key in text inputs
+        [destinationFilter, countryFilter, minPrice, maxPrice].forEach(input => {
+            input.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') applyFiltersAndSort();
+            });
+        });
+    })();
+</script>
+
+```

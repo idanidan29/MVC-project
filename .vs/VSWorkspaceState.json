@@ -2,8 +2,9 @@
   "ExpandedNodes": [
     "",
     "\\Controllers",
-    "\\Views"
+    "\\Views",
+    "\\Views\\Shared"
   ],
-  "SelectedNode": "\\appsettings.Development.json",
+  "SelectedNode": "\\Views\\Shared\\_Layout.cshtml",
   "PreviewInSolutionExplorer": false
 }
