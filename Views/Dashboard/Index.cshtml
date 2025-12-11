@@ -362,6 +362,9 @@
                 <i class="bi bi-search"></i> Search & Filter Trips
             </a>
         </div>
+        <div class="trip-count" style="margin-top:1rem; color: rgba(255,255,255,0.95); font-weight:600;">
+            Showing <strong id="tripCount">@Model.Count()</strong> trips
+        </div>
     </div>
 
     @if (Model == null || !Model.Any())
@@ -379,7 +382,13 @@
         <div class="trips-grid">
             @foreach (var trip in Model)
             {
-                <div class="trip-card">
+                 <div class="trip-card"
+                     data-destination="@trip.Destination.ToLower()"
+                     data-country="@trip.Country.ToLower()"
+                     data-category="@trip.PackageType"
+                     data-price="@(trip.DiscountPrice.HasValue && trip.DiscountPrice < trip.Price ? trip.DiscountPrice.Value : trip.Price)"
+                     data-start-date="@trip.StartDate.ToString("yyyy-MM-dd")"
+                     data-is-discount="@(trip.DiscountPrice.HasValue && trip.DiscountPrice < trip.Price ? "true" : "false")">
                     <!-- Package Type Badge -->
                     <div class="package-badge">
                         <i class="bi bi-star-fill"></i> @trip.PackageType

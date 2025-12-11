@@ -578,14 +578,14 @@
                 </div>
             </div>
 
-            <form id="filterForm" method="get" action="">
+            <form id="filterForm" method="get" action="@Url.Action("Search", "Filter")">
                 <div class="filter-grid">
                     <!-- Destination Filter -->
                     <div class="filter-group">
                         <label class="filter-label">
                             <i class="bi bi-geo-alt"></i> Destination
                         </label>
-                        <input type="text" id="destinationFilter" class="filter-input" placeholder="e.g., Paris, Tokyo...">
+                        <input type="text" id="destination" name="destination" class="filter-input" placeholder="e.g., Paris, Tokyo..." value="@Context.Request.Query["destination"]">
                     </div>
 
                     <!-- Country Filter -->
@@ -593,7 +593,7 @@
                         <label class="filter-label">
                             <i class="bi bi-flag"></i> Country
                         </label>
-                        <input type="text" id="countryFilter" class="filter-input" placeholder="e.g., France, Japan...">
+                        <input type="text" id="country" name="country" class="filter-input" placeholder="e.g., France, Japan..." value="@Context.Request.Query["country"]">
                     </div>
 
                     <!-- Category Filter -->
@@ -601,16 +601,16 @@
                         <label class="filter-label">
                             <i class="bi bi-box"></i> Category
                         </label>
-                        <select id="categoryFilter" class="filter-select">
+                        <select id="category" name="category" class="filter-select">
                             <option value="">All Categories</option>
-                            <option value="Family">Family</option>
-                            <option value="Honeymoon">Honeymoon</option>
-                            <option value="Adventure">Adventure</option>
-                            <option value="Cruise">Cruise</option>
-                            <option value="Luxury">Luxury</option>
-                            <option value="Budget">Budget</option>
-                            <option value="Group">Group</option>
-                            <option value="Solo">Solo</option>
+                            <option value="Family" selected="@(Context.Request.Query["category"] == "Family")">Family</option>
+                            <option value="Honeymoon" selected="@(Context.Request.Query["category"] == "Honeymoon")">Honeymoon</option>
+                            <option value="Adventure" selected="@(Context.Request.Query["category"] == "Adventure")">Adventure</option>
+                            <option value="Cruise" selected="@(Context.Request.Query["category"] == "Cruise")">Cruise</option>
+                            <option value="Luxury" selected="@(Context.Request.Query["category"] == "Luxury")">Luxury</option>
+                            <option value="Budget" selected="@(Context.Request.Query["category"] == "Budget")">Budget</option>
+                            <option value="Group" selected="@(Context.Request.Query["category"] == "Group")">Group</option>
+                            <option value="Solo" selected="@(Context.Request.Query["category"] == "Solo")">Solo</option>
                         </select>
                     </div>
 
@@ -620,8 +620,8 @@
                             <i class="bi bi-currency-dollar"></i> Price Range
                         </label>
                         <div style="display: flex; gap: 0.5rem; min-width: 0;">
-                            <input type="number" id="minPrice" class="filter-input" placeholder="Min" min="0" style="flex: 1; min-width: 0;">
-                            <input type="number" id="maxPrice" class="filter-input" placeholder="Max" min="0" style="flex: 1; min-width: 0;">
+                            <input type="number" id="minPrice" name="minPrice" class="filter-input" placeholder="Min" min="0" style="flex: 1; min-width: 0;" value="@Context.Request.Query["minPrice"]">
+                            <input type="number" id="maxPrice" name="maxPrice" class="filter-input" placeholder="Max" min="0" style="flex: 1; min-width: 0;" value="@Context.Request.Query["maxPrice"]">
                         </div>
                     </div>
 
@@ -630,7 +630,7 @@
                         <label class="filter-label">
                             <i class="bi bi-calendar"></i> Travel Date
                         </label>
-                        <input type="date" id="travelDateFilter" class="filter-input">
+                        <input type="date" id="travelDate" name="travelDate" class="filter-input" value="@Context.Request.Query["travelDate"]">
                     </div>
 
                     <!-- On Sale Filter -->
@@ -639,7 +639,7 @@
                             <i class="bi bi-tag"></i> Special Offers
                         </label>
                         <div class="discount-checkbox">
-                            <input type="checkbox" id="discountOnly">
+                            <input type="checkbox" id="discountOnly" name="discountOnly" value="true" checked="@(Context.Request.Query["discountOnly"] == "true")">
                             <label for="discountOnly">Show discounted only</label>
                         </div>
                     </div>
@@ -651,17 +651,16 @@
                         <label class="sort-label">
                             <i class="bi bi-arrow-down-up"></i> Sort By
                         </label>
-                        <select id="sortBy" class="filter-select">
-                            <option value="">Default</option>
-                            <option value="price-asc">Price: Low to High</option>
-                            <option value="price-desc">Price: High to Low</option>
-                            <option value="date">Travel Date</option>
-                            <option value="popular">Most Popular</option>
+                        <select id="sortBy" name="sortBy" class="filter-select">
+                            <option value="" selected="@(Context.Request.Query["sortBy"] == "")">Default</option>
+                            <option value="price-asc" selected="@(Context.Request.Query["sortBy"] == "price-asc")">Price: Low to High</option>
+                            <option value="price-desc" selected="@(Context.Request.Query["sortBy"] == "price-desc")">Price: High to Low</option>
+                            <option value="date" selected="@(Context.Request.Query["sortBy"] == "date")">Travel Date</option>
                         </select>
                     </div>
 
                     <div class="filter-buttons">
-                        <button type="button" class="btn-filter btn-apply" id="applyFilters">
+                        <button type="submit" class="btn-filter btn-apply" id="applyFilters">
                             <i class="bi bi-check-circle"></i> Apply Filters
                         </button>
                         <button type="button" class="btn-filter btn-reset" id="resetFilters">
@@ -755,155 +754,22 @@
 </div>
 
 <script>
-    // Filter and Sort Logic
     const filterForm = document.getElementById('filterForm');
-    const destinationFilter = document.getElementById('destinationFilter');
-    const countryFilter = document.getElementById('countryFilter');
-    const categoryFilter = document.getElementById('categoryFilter');
-    const minPrice = document.getElementById('minPrice');
-    const maxPrice = document.getElementById('maxPrice');
-    const travelDateFilter = document.getElementById('travelDateFilter');
-    const discountOnly = document.getElementById('discountOnly');
-    const sortBy = document.getElementById('sortBy');
-    const applyFilters = document.getElementById('applyFilters');
-    const resetFilters = document.getElementById('resetFilters');
-    const tripsGrid = document.getElementById('tripsGrid');
-    const tripCount = document.getElementById('tripCount');
-
-    // Build a stable data model from the initial DOM cards so filtering/sorting is reliable
-    const originalData = Array.from(tripsGrid.querySelectorAll('.trip-card')).map(card => ({
-        html: card.outerHTML,
-        destination: (card.dataset.destination || '').toLowerCase(),
-        country: (card.dataset.country || '').toLowerCase(),
-        category: card.dataset.category || '',
-        price: parseFloat(card.dataset.price || '0') || 0,
-        startDate: card.dataset.startDate || '',
-        isDiscount: (card.dataset.isDiscount || 'false') === 'true'
-    }));
-
-    // Apply filters
-    function applyFilter() {
-        const destination = destinationFilter.value.toLowerCase();
-        const country = countryFilter.value.toLowerCase();
-        const category = categoryFilter.value;
-        const min = minPrice.value ? parseFloat(minPrice.value) : 0;
-        const max = maxPrice.value ? parseFloat(maxPrice.value) : Infinity;
-        const travelDate = travelDateFilter.value;
-        const onlyDiscount = discountOnly.checked;
-        const sort = sortBy.value;
-
-        // Start from the original data model
-        let items = originalData.slice();
-
-        // Filter data
-        items = items.filter(item => {
-            const matchDest = !destination || item.destination.includes(destination);
-            const matchCountry = !country || item.country.includes(country);
-            const matchCategory = !category || item.category === category;
-            const matchPrice = item.price >= min && item.price <= max;
-            const matchDate = !travelDate || item.startDate >= travelDate;
-            const matchDiscount = !onlyDiscount || item.isDiscount;
-            return matchDest && matchCountry && matchCategory && matchPrice && matchDate && matchDiscount;
-        });
-
-        // Sort data
-        if (sort === 'price-asc') {
-            items.sort((a, b) => a.price - b.price);
-        } else if (sort === 'price-desc') {
-            items.sort((a, b) => b.price - a.price);
-        } else if (sort === 'date') {
-            items.sort((a, b) => new Date(a.startDate) - new Date(b.startDate));
-        }
-
-        // Render results
-        tripsGrid.innerHTML = items.map(i => i.html).join('');
-
-        // Update count
-        tripCount.textContent = items.length;
-
-        // Show empty state if no results
-        if (cards.length === 0) {
-            const emptyState = document.createElement('div');
-            emptyState.className = 'empty-state';
-            emptyState.innerHTML = `
-                <i class="bi bi-search"></i>
-                <h2>No Trips Found</h2>
-                <p>Try adjusting your filters to find more options</p>
-            `;
-            tripsGrid.appendChild(emptyState);
-        }
-    }
-
-    // Update category dropdown options based on other filters (exclude category itself)
-    function updateCategoryOptions() {
-        const destination = destinationFilter.value.toLowerCase();
-        const country = countryFilter.value.toLowerCase();
-        const min = minPrice.value ? parseFloat(minPrice.value) : 0;
-        const max = maxPrice.value ? parseFloat(maxPrice.value) : Infinity;
-        const travelDate = travelDateFilter.value;
-        const onlyDiscount = discountOnly.checked;
-
-        // Find categories available when applying all filters except the category filter
-        const available = originalData.filter(item => {
-            const matchDest = !destination || item.destination.includes(destination);
-            const matchCountry = !country || item.country.includes(country);
-            const matchPrice = item.price >= min && item.price <= max;
-            const matchDate = !travelDate || item.startDate >= travelDate;
-            const matchDiscount = !onlyDiscount || item.isDiscount;
-            return matchDest && matchCountry && matchPrice && matchDate && matchDiscount;
-        }).map(i => i.category).filter(Boolean);
-
-        const unique = Array.from(new Set(available));
-
-        // Rebuild category select while preserving selection if still available
-        const prev = categoryFilter.value;
-        categoryFilter.innerHTML = '<option value="">All Categories</option>' +
-            unique.map(c => `<option value="${c}">${c}</option>`).join('');
-
-        if (prev && unique.includes(prev)) {
-            categoryFilter.value = prev;
-        } else {
-            categoryFilter.value = '';
-        }
-    }
+    const resetFiltersBtn = document.getElementById('resetFilters');
 
     // Reset filters
-    function resetFilter() {
-        destinationFilter.value = '';
-        countryFilter.value = '';
-        categoryFilter.value = '';
-        minPrice.value = '';
-        maxPrice.value = '';
-        travelDateFilter.value = '';
-        discountOnly.checked = false;
-        sortBy.value = '';
+    resetFiltersBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        // Clear all form inputs
+        filterForm.reset();
+        // Redirect to filter page with no parameters to show all trips
+        window.location.href = '@Url.Action("Search", "Filter")';
+    });
 
-        // Restore original full list of cards from data model
-        tripsGrid.innerHTML = originalData.map(i => i.html).join('');
-        tripCount.textContent = originalData.length;
-    }
-
-    // Event listeners
-    applyFilters.addEventListener('click', applyFilter);
-    resetFilters.addEventListener('click', resetFilter);
-
-    // Real-time filtering on input
-    // For inputs that affect which categories are available, update category options first
-    destinationFilter.addEventListener('input', () => { updateCategoryOptions(); applyFilter(); });
-    countryFilter.addEventListener('input', () => { updateCategoryOptions(); applyFilter(); });
-    minPrice.addEventListener('input', () => { updateCategoryOptions(); applyFilter(); });
-    maxPrice.addEventListener('input', () => { updateCategoryOptions(); applyFilter(); });
-    travelDateFilter.addEventListener('change', () => { updateCategoryOptions(); applyFilter(); });
-    discountOnly.addEventListener('change', () => { updateCategoryOptions(); applyFilter(); });
-
-    // When category itself changes, just apply filter (options already reflect other filters)
-    categoryFilter.addEventListener('change', applyFilter);
-    minPrice.addEventListener('input', applyFilter);
-    maxPrice.addEventListener('input', applyFilter);
-    travelDateFilter.addEventListener('change', applyFilter);
-    discountOnly.addEventListener('change', applyFilter);
-    sortBy.addEventListener('change', applyFilter);
-
-    // Initialize category options on load
-    updateCategoryOptions();
+    // Optional: Auto-submit on filter change for better UX (uncomment if you prefer instant filtering)
+    // const filterInputs = filterForm.querySelectorAll('input[type="text"], input[type="number"], input[type="date"], select, input[type="checkbox"]');
+    // filterInputs.forEach(input => {
+    //     input.addEventListener('change', () => filterForm.submit());
+    // });
 </script>
+
