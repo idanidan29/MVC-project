@@ -2,6 +2,7 @@ using MVC_project.Data;
 using MVC_project.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Http.Features;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -15,6 +16,19 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         options.LoginPath = "/Login";
         options.Cookie.Name = "MvcProjectAuth";
     });
+
+// Increase multipart/form-data upload limit to support large image uploads
+builder.Services.Configure<FormOptions>(o =>
+{
+    // 100 MB total multipart body limit
+    o.MultipartBodyLengthLimit = 100 * 1024 * 1024;
+});
+
+// If hosting with Kestrel directly, also raise the max request body size
+builder.WebHost.ConfigureKestrel(options =>
+{
+    options.Limits.MaxRequestBodySize = 100 * 1024 * 1024; // 100 MB
+});
 
 // Database
 builder.Services.AddDbContext<AppDbContext>(options =>

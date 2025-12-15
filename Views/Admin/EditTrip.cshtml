@@ -1,0 +1,630 @@
+@model MVC_project.ViewModels.AddTripViewModel
+
+@{
+    ViewData["Title"] = "Edit Trip";
+    var tripId = ViewBag.TripId;
+    var existingImages = ViewBag.ExistingImages as List<MVC_project.Models.TripImage> ?? new List<MVC_project.Models.TripImage>();
+}
+
+<style>
+    /* Animated Background */
+    .addtrip-bg {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(-45deg, #f59e0b, #d97706, #fb923c, #f59e0b);
+        background-size: 400% 400%;
+        animation: gradient 15s ease infinite;
+        z-index: -1;
+    }
+
+    @@keyframes gradient {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+    }
+
+    /* Floating particles background effect */
+    .particle {
+        position: fixed;
+        pointer-events: none;
+        opacity: 0.5;
+        animation: float 20s infinite linear;
+        z-index: -1;
+    }
+
+    @@keyframes float {
+        0% {
+            transform: translate(0, 0) rotate(0deg);
+            opacity: 0;
+        }
+        10% {
+            opacity: 0.5;
+        }
+        90% {
+            opacity: 0.5;
+        }
+        100% {
+            transform: translate(100px, -100vh) rotate(360deg);
+            opacity: 0;
+        }
+    }
+
+    /* Form container */
+    .addtrip-container {
+        position: relative;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem 1rem;
+        overflow-y: auto;
+    }
+
+    /* Enhanced card styling */
+    .addtrip-card {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        border-radius: 2rem;
+        padding: 2.5rem;
+        max-width: 700px;
+        width: 100%;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        box-shadow: 0 20px 70px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.5);
+        animation: slideInUp 0.8s ease-out;
+        position: relative;
+        overflow: hidden;
+        margin: 2rem auto;
+    }
+
+    /* Glowing border effect */
+    .addtrip-card::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -50%;
+        width: 200%;
+        height: 200%;
+        background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+        animation: shine 3s infinite;
+        pointer-events: none;
+    }
+
+    @@keyframes shine {
+        0% { transform: translate(-100%, -100%) rotate(0deg); }
+        100% { transform: translate(100%, 100%) rotate(0deg); }
+    }
+
+    @@keyframes slideInUp {
+        from {
+            opacity: 0;
+            transform: translateY(50px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* Typography */
+    .form-title {
+        color: #1e293b;
+        font-size: 2.5rem;
+        font-weight: 700;
+        text-align: center;
+        margin-bottom: 0.5rem;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .form-subtitle {
+        color: #64748b;
+        text-align: center;
+        margin-bottom: 2rem;
+        font-size: 1rem;
+    }
+
+    /* Form styling */
+    .form-group {
+        margin-bottom: 1.5rem;
+        position: relative;
+    }
+
+    .form-label {
+        color: #334155;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        display: block;
+        font-size: 0.95rem;
+    }
+
+    .form-label i {
+        margin-right: 0.5rem;
+        color: #f59e0b;
+    }
+
+    .form-control, .form-select {
+        width: 100%;
+        padding: 0.85rem 1rem;
+        border: 2px solid #e2e8f0;
+        border-radius: 0.75rem;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+        background: white;
+    }
+
+    .form-control:focus, .form-select:focus {
+        outline: none;
+        border-color: #f59e0b;
+        box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1);
+    }
+
+    textarea.form-control {
+        resize: vertical;
+        min-height: 120px;
+    }
+
+    /* Two column layout for dates and numbers */
+    .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+    }
+
+    @@media (max-width: 576px) {
+        .form-row {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    /* Button styling */
+    .btn-submit {
+        background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        color: white;
+        border: none;
+        padding: 1rem 2rem;
+        border-radius: 1rem;
+        font-size: 1.1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(245, 158, 11, 0.4);
+        width: 100%;
+        margin-top: 1rem;
+    }
+
+    .btn-submit:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(245, 158, 11, 0.6);
+        background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
+    }
+
+    .btn-back {
+        background: linear-gradient(135deg, #64748b 0%, #475569 100%);
+        color: white;
+        border: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 0.75rem;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(100, 116, 139, 0.4);
+        width: 100%;
+        margin-top: 0.5rem;
+        text-decoration: none;
+        display: inline-block;
+        text-align: center;
+    }
+
+    .btn-back:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(100, 116, 139, 0.6);
+        background: linear-gradient(135deg, #475569 0%, #334155 100%);
+        color: white;
+    }
+
+    /* Validation error styling */
+    .text-danger {
+        color: #dc2626;
+        font-size: 0.875rem;
+        margin-top: 0.25rem;
+        display: block;
+    }
+
+    .input-validation-error {
+        border-color: #dc2626 !important;
+    }
+
+    .validation-summary-errors {
+        background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+        border: 1px solid #fca5a5;
+        border-radius: 1rem;
+        padding: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .validation-summary-errors ul {
+        margin: 0;
+        padding-left: 1.5rem;
+    }
+
+    .validation-summary-errors li {
+        color: #991b1b;
+        font-weight: 500;
+    }
+
+    /* File upload styling */
+    .file-upload-wrapper {
+        position: relative;
+    }
+
+    .file-upload-label {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.75rem;
+        padding: 0.75rem 1rem;
+        border: 2px dashed #cbd5e1;
+        border-radius: 0.75rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        background: #f8fafc;
+    }
+
+    .file-upload-label:hover {
+        border-color: #f59e0b;
+        background: #f1f5f9;
+    }
+
+    .file-upload-label i {
+        font-size: 2rem;
+        color: #f59e0b;
+        display: block;
+        margin-bottom: 0.5rem;
+    }
+
+    input[type="file"] {
+        display: none;
+    }
+
+    /* Existing images display */
+    .existing-images {
+        margin-bottom: 1.5rem;
+    }
+
+    .existing-images-title {
+        color: #334155;
+        font-weight: 600;
+        margin-bottom: 0.75rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .existing-images-title i {
+        color: #f59e0b;
+    }
+
+    .images-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+        gap: 1rem;
+    }
+
+    .image-item {
+        position: relative;
+        border-radius: 0.75rem;
+        overflow: hidden;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        transition: transform 0.3s ease;
+    }
+
+    .image-item:hover {
+        transform: scale(1.05);
+    }
+
+    .image-item img {
+        width: 100%;
+        height: 120px;
+        object-fit: cover;
+        display: block;
+    }
+
+    .delete-image-btn {
+        position: absolute;
+        top: 0.25rem;
+        right: 0.25rem;
+        background: rgba(239, 68, 68, 0.95);
+        color: white;
+        border: none;
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        font-size: 0.9rem;
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    }
+
+    .delete-image-btn:hover {
+        background: rgba(220, 38, 38, 1);
+        transform: scale(1.1);
+    }
+</style>
+
+<!-- Animated Background -->
+<div class="addtrip-bg"></div>
+
+<!-- Floating particles -->
+<script>
+    for (let i = 0; i < 15; i++) {
+        let particle = document.createElement('div');
+        particle.className = 'particle';
+        particle.style.width = Math.random() * 5 + 2 + 'px';
+        particle.style.height = particle.style.width;
+        particle.style.left = Math.random() * 100 + '%';
+        particle.style.background = 'white';
+        particle.style.borderRadius = '50%';
+        particle.style.animationDelay = Math.random() * 20 + 's';
+        particle.style.animationDuration = Math.random() * 10 + 15 + 's';
+        document.body.appendChild(particle);
+    }
+</script>
+
+<div class="addtrip-container">
+    <div class="addtrip-card">
+        <h1 class="form-title">
+            <i class="bi bi-pencil-square"></i> Edit Trip
+        </h1>
+        <p class="form-subtitle">Update travel package details</p>
+
+        @if (!ViewData.ModelState.IsValid)
+        {
+            <div asp-validation-summary="All" class="validation-summary-errors"></div>
+        }
+
+        <!-- Display existing images -->
+        @if (existingImages.Any())
+        {
+            <div class="existing-images">
+                <div class="existing-images-title">
+                    <i class="bi bi-images"></i>
+                    <span>Current Images (@existingImages.Count)</span>
+                </div>
+                <div class="images-grid" id="imagesGrid">
+                    @foreach (var image in existingImages)
+                    {
+                        <div class="image-item" data-image-id="@image.ImageID">
+                            <img src="@Url.Action("GetImageById", "Dashboard", new { imageId = image.ImageID })" 
+                                 alt="Trip image" />
+                            <button type="button" class="delete-image-btn" 
+                                    onclick="deleteImage(@image.ImageID)"
+                                    title="Delete image">
+                                <i class="bi bi-x"></i>
+                            </button>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+
+        <form asp-action="EditTrip" asp-controller="Admin" asp-route-id="@tripId" method="post" enctype="multipart/form-data">
+            <!-- Destination & Country -->
+            <div class="form-row">
+                <div class="form-group">
+                    <label asp-for="Destination" class="form-label">
+                        <i class="bi bi-geo-alt"></i> Destination
+                    </label>
+                    <input asp-for="Destination" class="form-control" placeholder="e.g., Paris, Tokyo, New York" />
+                    <span asp-validation-for="Destination" class="text-danger"></span>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="Country" class="form-label">
+                        <i class="bi bi-flag"></i> Country
+                    </label>
+                    <input asp-for="Country" class="form-control" placeholder="e.g., France, Japan, USA" />
+                    <span asp-validation-for="Country" class="text-danger"></span>
+                </div>
+            </div>
+
+            <!-- Travel Dates -->
+            <div class="form-row">
+                <div class="form-group">
+                    <label asp-for="StartDate" class="form-label">
+                        <i class="bi bi-calendar-check"></i> Start Date
+                    </label>
+                    <input asp-for="StartDate" type="date" class="form-control" />
+                    <span asp-validation-for="StartDate" class="text-danger"></span>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="EndDate" class="form-label">
+                        <i class="bi bi-calendar-x"></i> End Date
+                    </label>
+                    <input asp-for="EndDate" type="date" class="form-control" />
+                    <span asp-validation-for="EndDate" class="text-danger"></span>
+                </div>
+            </div>
+
+            <!-- Price & Rooms -->
+            <div class="form-row">
+                <div class="form-group">
+                    <label asp-for="Price" class="form-label">
+                        <i class="bi bi-currency-dollar"></i> Price
+                    </label>
+                    <input asp-for="Price" type="number" step="0.01" min="0" class="form-control" placeholder="0.00" />
+                    <span asp-validation-for="Price" class="text-danger"></span>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="AvailableRooms" class="form-label">
+                        <i class="bi bi-door-open"></i> Available Rooms
+                    </label>
+                    <input asp-for="AvailableRooms" type="number" min="0" class="form-control" placeholder="0" />
+                    <span asp-validation-for="AvailableRooms" class="text-danger"></span>
+                </div>
+            </div>
+
+            <!-- Discount Price & End Date (Optional) -->
+            <div class="form-row">
+                <div class="form-group">
+                    <label asp-for="DiscountPrice" class="form-label">
+                        <i class="bi bi-tag"></i> Discount Price (Optional)
+                    </label>
+                    <input asp-for="DiscountPrice" type="number" step="0.01" min="0" class="form-control" placeholder="0.00" />
+                    <span asp-validation-for="DiscountPrice" class="text-danger"></span>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="DiscountEndDate" class="form-label">
+                        <i class="bi bi-calendar-event"></i> Discount End Date
+                    </label>
+                    <input asp-for="DiscountEndDate" type="date" class="form-control" />
+                    <span asp-validation-for="DiscountEndDate" class="text-danger"></span>
+                </div>
+            </div>
+
+            <!-- Package Type & Age Limit -->
+            <div class="form-row">
+                <div class="form-group">
+                    <label asp-for="PackageType" class="form-label">
+                        <i class="bi bi-box"></i> Package Type
+                    </label>
+                    <select asp-for="PackageType" class="form-select">
+                        <option value="">-- Select Package Type --</option>
+                        <option value="Family">Family</option>
+                        <option value="Honeymoon">Honeymoon</option>
+                        <option value="Adventure">Adventure</option>
+                        <option value="Cruise">Cruise</option>
+                        <option value="Luxury">Luxury</option>
+                        <option value="Budget">Budget</option>
+                        <option value="Group">Group</option>
+                        <option value="Solo">Solo</option>
+                    </select>
+                    <span asp-validation-for="PackageType" class="text-danger"></span>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="AgeLimit" class="form-label">
+                        <i class="bi bi-person-badge"></i> Age Limit (Optional)
+                    </label>
+                    <input asp-for="AgeLimit" type="number" min="0" class="form-control" placeholder="e.g., 18" />
+                    <span asp-validation-for="AgeLimit" class="text-danger"></span>
+                </div>
+            </div>
+
+            <!-- Description -->
+            <div class="form-group">
+                <label asp-for="Description" class="form-label">
+                    <i class="bi bi-card-text"></i> Description
+                </label>
+                <textarea asp-for="Description" class="form-control" rows="5" 
+                          placeholder="Describe the trip package, highlights, activities, accommodations, etc."></textarea>
+                <span asp-validation-for="Description" class="text-danger"></span>
+            </div>
+
+            <!-- Add New Images Upload -->
+            <div class="form-group">
+                <label class="form-label">
+                    <i class="bi bi-image"></i> Add New Images (Optional)
+                </label>
+                <div class="file-upload-wrapper">
+                    <label for="imageUpload" class="file-upload-label">
+                        <i class="bi bi-cloud-upload"></i>
+                        <div>
+                            <span class="label-main">Click to upload new images</span>
+                            <span class="file-count d-block small text-muted">No new files selected</span>
+                        </div>
+                    </label>
+                    <input id="imageUpload" asp-for="Images" type="file" multiple accept="image/*" />
+                </div>
+            </div>
+
+            <!-- Submit Button -->
+            <button type="submit" class="btn-submit">
+                <i class="bi bi-check-circle"></i> Update Trip
+            </button>
+
+            <!-- Back to Dashboard -->
+            <a href="@Url.Action("Index", "Dashboard")" class="btn-back">
+                <i class="bi bi-arrow-left"></i> Back to Trips
+            </a>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}
+
+<script>
+    // File input label update
+    (function(){
+        const input = document.getElementById('imageUpload');
+        const fileCountSpan = document.querySelector('.file-count');
+        
+        if (input && fileCountSpan) {
+            input.addEventListener('change', function(){
+                const count = input.files.length;
+                fileCountSpan.textContent = count > 0 ? `${count} new file${count > 1 ? 's' : ''} selected` : 'No new files selected';
+            });
+        }
+    })();
+
+    // Delete image function
+    function deleteImage(imageId) {
+        if (!confirm('Are you sure you want to delete this image?')) {
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('imageId', imageId);
+
+        fetch('/Admin/DeleteImage', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const imageItem = document.querySelector(`.image-item[data-image-id="${imageId}"]`);
+                if (imageItem) {
+                    imageItem.style.animation = 'fadeOut 0.3s ease';
+                    setTimeout(() => imageItem.remove(), 300);
+                }
+                
+                // Update count
+                const grid = document.getElementById('imagesGrid');
+                const remaining = grid ? grid.querySelectorAll('.image-item').length - 1 : 0;
+                if (remaining === 0) {
+                    document.querySelector('.existing-images')?.remove();
+                } else {
+                    const title = document.querySelector('.existing-images-title span');
+                    if (title) title.textContent = `Current Images (${remaining})`;
+                }
+            } else {
+                alert('Failed to delete image: ' + (data.message || 'Unknown error'));
+            }
+        })
+        .catch(error => {
+            console.error('Delete error:', error);
+            alert('Error deleting image');
+        });
+    }
+
+    // Animation for fade out
+    const style = document.createElement('style');
+    style.textContent = `
+        @@keyframes fadeOut {
+            from { opacity: 1; transform: scale(1); }
+            to { opacity: 0; transform: scale(0.9); }
+        }
+    `;
+    document.head.appendChild(style);
+</script>
