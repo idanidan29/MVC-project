@@ -223,6 +223,28 @@
         transform: translateY(-1px);
     }
 
+    /* Input group with icon styling */
+    .input-group-custom {
+        position: relative;
+        display: flex;
+        align-items: center;
+    }
+
+    .password-toggle-icon {
+        position: absolute;
+        right: 1rem;
+        color: #64748b;
+        font-size: 1.1rem;
+        cursor: pointer;
+        z-index: 2;
+        transition: color 0.3s ease;
+        user-select: none;
+    }
+
+    .password-toggle-icon:hover {
+        color: #6366f1;
+    }
+
     /* Submit button with advanced styling */
     .btn-login {
         width: 100%;
@@ -363,7 +385,11 @@
             </div>
             <div class="form-group-login">
                 <label asp-for="Password" class="form-label">Password</label>
-                <input asp-for="Password" type="password" class="form-control" placeholder="Enter password" />
+                <div class="input-group-custom">
+                    <input asp-for="Password" type="password" class="form-control" id="passwordInput"
+                           placeholder="Enter password" style="padding-right: 2.5rem;" />
+                    <i class="fa-solid fa-eye password-toggle-icon" id="togglePassword"></i>
+                </div>
                 <span asp-validation-for="Password" class="text-danger"></span>
             </div>
             <button type="submit" class="btn-login">Login</button>
