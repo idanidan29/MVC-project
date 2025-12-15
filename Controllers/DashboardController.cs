@@ -26,18 +26,23 @@ namespace MVC_project.Controllers
             var trips = _tripRepo.GetActiveTrips();
 
             // Map to view models with image check
-            var tripViewModels = trips.Select(trip => new TripDashboardViewModel
-            {
-                TripID = trip.TripID,
-                Destination = trip.Destination,
-                Country = trip.Country,
-                StartDate = trip.StartDate,
-                EndDate = trip.EndDate,
-                Price = trip.Price,
-                DiscountPrice = trip.DiscountPrice,
-                PackageType = trip.PackageType,
-                Description = trip.Description,
-                HasImage = _imageRepo.GetByTripId(trip.TripID).Any()
+            var tripViewModels = trips.Select(trip => {
+                var images = _imageRepo.GetByTripId(trip.TripID);
+                return new TripDashboardViewModel
+                {
+                    TripID = trip.TripID,
+                    Destination = trip.Destination,
+                    Country = trip.Country,
+                    StartDate = trip.StartDate,
+                    EndDate = trip.EndDate,
+                    Price = trip.Price,
+                    DiscountPrice = trip.DiscountPrice,
+                    PackageType = trip.PackageType,
+                    Description = trip.Description,
+                    HasImage = images.Any(),
+                    ImageCount = images.Count(),
+                    AvailableRooms = trip.AvailableRooms
+                };
             }).ToList();
 
             return View(tripViewModels);
@@ -58,6 +63,36 @@ namespace MVC_project.Controllers
         {
             // Get first image for the trip
             var image = _imageRepo.GetByTripId(tripId).FirstOrDefault();
+            
+            if (image == null)
+                return NotFound();
+
+            return File(image.ImageData, image.ContentType ?? "image/jpeg");
+        }
+
+        // GET: /Dashboard/GetAllImages?tripId=1
+        [HttpGet("GetAllImages")]
+        public IActionResult GetAllImages(int tripId)
+        {
+            var images = _imageRepo.GetByTripId(tripId);
+            
+            if (!images.Any())
+                return Ok(new { images = new List<object>() });
+
+            var imageList = images.Select(img => new
+            {
+                imageId = img.ImageID,
+                imageUrl = Url.Action("GetImageById", "Dashboard", new { imageId = img.ImageID })
+            }).ToList();
+
+            return Ok(new { images = imageList });
+        }
+
+        // GET: /Dashboard/GetImageById?imageId=1
+        [HttpGet("GetImageById")]
+        public IActionResult GetImageById(int imageId)
+        {
+            var image = _imageRepo.GetById(imageId);
             
             if (image == null)
                 return NotFound();

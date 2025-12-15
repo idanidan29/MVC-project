@@ -300,6 +300,445 @@
         z-index: 1;
     }
 
+    /* Expand button */
+    .expand-btn {
+        position: absolute;
+        bottom: 1rem;
+        right: 1rem;
+        background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+        color: white;
+        border: none;
+        padding: 0.5rem 1rem;
+        border-radius: 0.75rem;
+        font-size: 0.9rem;
+        font-weight: 600;
+        cursor: pointer;
+        box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        z-index: 2;
+    }
+
+    .expand-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(99, 102, 241, 0.6);
+    }
+
+    /* Trip Modal Overlay */
+    .trip-modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: radial-gradient(circle at center, rgba(99, 102, 241, 0.15), rgba(0, 0, 0, 0.95));
+        backdrop-filter: blur(10px);
+        z-index: 9998;
+        overflow-y: auto;
+    }
+
+    .trip-modal.active {
+        display: block;
+        animation: modalBackdropFadeIn 0.4s ease;
+    }
+
+    .modal-content {
+        max-width: 1200px;
+        margin: 2rem auto;
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(248, 250, 252, 0.98) 100%);
+        border-radius: 2rem;
+        padding: 2.5rem;
+        position: relative;
+        box-shadow: 0 40px 100px rgba(99, 102, 241, 0.3), 
+                    0 20px 60px rgba(0, 0, 0, 0.4),
+                    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+        border: 1px solid rgba(255, 255, 255, 0.5);
+        transform-origin: center;
+    }
+
+    .modal-content.expand-animation {
+        animation: expandFromCard 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .modal-content::before {
+        content: '';
+        position: absolute;
+        top: -2px;
+        left: -2px;
+        right: -2px;
+        bottom: -2px;
+        background: linear-gradient(45deg, #6366f1, #a78bfa, #6366f1);
+        border-radius: 2rem;
+        z-index: -1;
+        opacity: 0.3;
+        filter: blur(20px);
+    }
+
+    .modal-close {
+        position: absolute;
+        top: 1.5rem;
+        right: 1.5rem;
+        background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        color: white;
+        border: none;
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        font-size: 1.5rem;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s ease;
+        z-index: 10;
+        box-shadow: 0 8px 20px rgba(239, 68, 68, 0.4);
+    }
+
+    .modal-close:hover {
+        transform: rotate(90deg) scale(1.15);
+        box-shadow: 0 12px 30px rgba(239, 68, 68, 0.6);
+        background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+    }
+
+    .modal-close:active {
+        transform: rotate(90deg) scale(1.05);
+    }
+
+    /* Photo Carousel */
+    .photo-carousel {
+        position: relative;
+        width: 100%;
+        margin-bottom: 2rem;
+    }
+
+    .carousel-main {
+        position: relative;
+        width: 100%;
+        height: 500px;
+        background: linear-gradient(135deg, #ede9fe 0%, #ddd6fe 50%, #e0f2fe 100%);
+        border-radius: 1.5rem;
+        overflow: hidden;
+        margin-bottom: 1.5rem;
+        box-shadow: inset 0 2px 20px rgba(99, 102, 241, 0.1),
+                    0 10px 40px rgba(0, 0, 0, 0.1);
+        border: 2px solid rgba(255, 255, 255, 0.5);
+    }
+
+    .carousel-image {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        display: none;
+    }
+
+    .carousel-image.active {
+        display: block;
+        animation: fadeIn 0.3s ease;
+    }
+
+    .carousel-arrow {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(248, 250, 252, 0.95));
+        color: #6366f1;
+        border: 2px solid rgba(99, 102, 241, 0.2);
+        width: 56px;
+        height: 56px;
+        border-radius: 50%;
+        font-size: 1.6rem;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s ease;
+        z-index: 5;
+        box-shadow: 0 8px 25px rgba(99, 102, 241, 0.3),
+                    0 4px 10px rgba(0, 0, 0, 0.2);
+        backdrop-filter: blur(10px);
+    }
+
+    .carousel-arrow:hover {
+        background: linear-gradient(135deg, #6366f1, #7c3aed);
+        color: white;
+        border-color: transparent;
+        transform: translateY(-50%) scale(1.15);
+        box-shadow: 0 12px 35px rgba(99, 102, 241, 0.5),
+                    0 6px 15px rgba(0, 0, 0, 0.3);
+    }
+
+    .carousel-arrow:active {
+        transform: translateY(-50%) scale(1.05);
+    }
+
+    .carousel-arrow.prev {
+        left: 1rem;
+    }
+
+    .carousel-arrow.next {
+        right: 1rem;
+    }
+
+    .carousel-counter {
+        position: absolute;
+        bottom: 1rem;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(0, 0, 0, 0.7);
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 2rem;
+        font-size: 0.9rem;
+        font-weight: 600;
+    }
+
+    /* Thumbnail Strip */
+    .carousel-thumbnails {
+        display: flex;
+        gap: 0.75rem;
+        overflow-x: auto;
+        padding: 0.5rem;
+        background: rgba(248, 250, 252, 0.8);
+        border-radius: 0.75rem;
+        scrollbar-width: thin;
+        scrollbar-color: #cbd5e1 #f1f5f9;
+    }
+
+    .carousel-thumbnails::-webkit-scrollbar {
+        height: 6px;
+    }
+
+    .carousel-thumbnails::-webkit-scrollbar-track {
+        background: #f1f5f9;
+        border-radius: 3px;
+    }
+
+    .carousel-thumbnails::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 3px;
+    }
+
+    .thumbnail {
+        min-width: 100px;
+        width: 100px;
+        height: 80px;
+        object-fit: cover;
+        border-radius: 0.5rem;
+        cursor: pointer;
+        border: 3px solid transparent;
+        transition: all 0.3s ease;
+        opacity: 0.6;
+    }
+
+    .thumbnail:hover {
+        opacity: 1;
+        transform: scale(1.05);
+    }
+
+    .thumbnail.active {
+        border-color: #6366f1;
+        opacity: 1;
+        box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+    }
+
+    .carousel-loading,
+    .carousel-empty {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #64748b;
+        font-size: 1.2rem;
+    }
+
+    /* Modal trip details */
+    .modal-trip-header {
+        margin-bottom: 2rem;
+        padding-bottom: 1.5rem;
+        border-bottom: 3px solid transparent;
+        background: linear-gradient(white, white) padding-box,
+                    linear-gradient(90deg, #6366f1, #a78bfa, #6366f1) border-box;
+        border-image: linear-gradient(90deg, #6366f1, #a78bfa, #6366f1) 1;
+    }
+
+    .modal-trip-title {
+        color: #1e293b;
+        font-size: 2.5rem;
+        font-weight: 800;
+        margin-bottom: 0.75rem;
+        background: linear-gradient(135deg, #1e293b 0%, #475569 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .modal-trip-location {
+        color: #6366f1;
+        font-size: 1.3rem;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin-bottom: 1rem;
+    }
+
+    .modal-trip-location i {
+        font-size: 1.5rem;
+        animation: pulse 2s ease-in-out infinite;
+    }
+
+    @@keyframes pulse {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.1); }
+    }
+
+    .modal-trip-description {
+        color: #475569;
+        font-size: 1rem;
+        line-height: 1.8;
+        margin-bottom: 1rem;
+    }
+
+    /* Additional trip details */
+    .additional-details {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .detail-item {
+        background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+        padding: 1rem;
+        border-radius: 0.75rem;
+        border: 1px solid #e2e8f0;
+    }
+
+    .detail-item strong {
+        color: #6366f1;
+        display: block;
+        margin-bottom: 0.5rem;
+        font-size: 0.9rem;
+    }
+
+    .detail-item span {
+        color: #1e293b;
+        font-size: 1rem;
+        font-weight: 600;
+    }
+
+    /* Action buttons */
+    .trip-actions {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+
+    .btn-action {
+        flex: 1;
+        min-width: 150px;
+        padding: 0.75rem 1.5rem;
+        border: none;
+        border-radius: 0.75rem;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+    }
+
+    .btn-add-cart {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        color: white;
+        box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+    }
+
+    .btn-add-cart:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(16, 185, 129, 0.6);
+    }
+
+    .btn-book-now {
+        background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        color: white;
+        box-shadow: 0 4px 15px rgba(245, 158, 11, 0.4);
+    }
+
+    .btn-book-now:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(245, 158, 11, 0.6);
+    }
+
+    @@keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+
+    @@keyframes modalBackdropFadeIn {
+        from {
+            opacity: 0;
+            backdrop-filter: blur(0px);
+        }
+        to {
+            opacity: 1;
+            backdrop-filter: blur(10px);
+        }
+    }
+
+    @@keyframes expandFromCard {
+        from {
+            opacity: 0;
+            transform: translate(var(--start-x), var(--start-y)) scale(0.3);
+            border-radius: 1.5rem;
+        }
+        to {
+            opacity: 1;
+            transform: translate(0, 0) scale(1);
+            border-radius: 2rem;
+        }
+    }
+
+    @@keyframes slideInUp {
+        from {
+            opacity: 0;
+            transform: translateY(50px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @@media (max-width: 768px) {
+        .modal-content {
+            margin: 1rem;
+            padding: 1.5rem;
+        }
+
+        .carousel-main {
+            height: 300px;
+        }
+
+        .carousel-arrow {
+            width: 40px;
+            height: 40px;
+            font-size: 1.2rem;
+        }
+
+        .thumbnail {
+            min-width: 80px;
+            width: 80px;
+            height: 60px;
+        }
+    }
+
     /* Empty state */
     .empty-state {
         text-align: center;
@@ -454,6 +893,23 @@
                             }
                         </div>
                     </div>
+
+                    <!-- Expand Button -->
+                    <button class="expand-btn" data-trip-id="@trip.TripID" 
+                            data-destination="@trip.Destination"
+                            data-country="@trip.Country"
+                            data-description="@trip.Description"
+                            data-start-date='@trip.StartDate.ToString("MMM dd, yyyy")'
+                            data-end-date='@trip.EndDate.ToString("MMM dd, yyyy")'
+                            data-duration="@((trip.EndDate - trip.StartDate).Days)"
+                            data-rooms="@trip.AvailableRooms"
+                            data-package="@trip.PackageType"
+                            data-price='@(trip.DiscountPrice.HasValue && trip.DiscountPrice < trip.Price ? trip.DiscountPrice.Value.ToString("N2") : trip.Price.ToString("N2"))'
+                            data-image-count="@trip.ImageCount"
+                            onclick="openTripModal(this, @trip.TripID)">
+                        <span>View Details</span>
+                        <i class="bi bi-eye"></i>
+                    </button>
                 </div>
             }
         </div>
@@ -578,6 +1034,336 @@
             });
         });
     })();
+
+    // Trip Modal functionality
+    let tripModal = null;
+    let currentImages = [];
+    let currentImageIndex = 0;
+
+    function openTripModal(button, tripId) {
+        const data = button.dataset;
+        
+        if (!tripModal) {
+            createModal();
+        }
+        
+        // Get card position for animation
+        const card = button.closest('.trip-card');
+        const cardRect = card.getBoundingClientRect();
+        const modalContent = tripModal.querySelector('.modal-content');
+        
+        // Calculate position offset from center
+        const centerX = window.innerWidth / 2;
+        const centerY = window.innerHeight / 2;
+        const cardCenterX = cardRect.left + cardRect.width / 2;
+        const cardCenterY = cardRect.top + cardRect.height / 2;
+        
+        const offsetX = cardCenterX - centerX;
+        const offsetY = cardCenterY - centerY;
+        
+        // Set CSS custom properties for animation
+        modalContent.style.setProperty('--start-x', `${offsetX}px`);
+        modalContent.style.setProperty('--start-y', `${offsetY}px`);
+        
+        // Populate modal with trip data
+        document.getElementById('modal-title').textContent = data.destination;
+        document.getElementById('modal-location').innerHTML = `<i class="bi bi-geo-alt-fill"></i> ${data.country}`;
+        document.getElementById('modal-description').textContent = data.description;
+        document.getElementById('modal-dates').textContent = `${data.startDate} - ${data.endDate}`;
+        document.getElementById('modal-duration').textContent = `${data.duration} days`;
+        document.getElementById('modal-rooms').textContent = `${data.rooms} rooms`;
+        document.getElementById('modal-package').textContent = data.package;
+        document.getElementById('modal-price').textContent = `$${data.price}`;
+        
+        // Store trip ID for actions
+        tripModal.dataset.tripId = tripId;
+        tripModal.dataset.destination = data.destination;
+        
+        // Load images
+        loadCarouselImages(tripId);
+        
+        // Show modal with animation
+        tripModal.classList.add('active');
+        modalContent.classList.add('expand-animation');
+        document.body.style.overflow = 'hidden';
+        
+        // Remove animation class after it completes
+        setTimeout(() => {
+            modalContent.classList.remove('expand-animation');
+        }, 500);
+    }
+
+    function createModal() {
+        tripModal = document.createElement('div');
+        tripModal.className = 'trip-modal';
+        tripModal.innerHTML = `
+            <div class="modal-content">
+                <button class="modal-close" onclick="closeTripModal()">
+                    <i class="bi bi-x"></i>
+                </button>
+                
+                <div class="modal-trip-header">
+                    <h2 class="modal-trip-title" id="modal-title"></h2>
+                    <div class="modal-trip-location" id="modal-location"></div>
+                    <p class="modal-trip-description" id="modal-description"></p>
+                </div>
+                
+                <div class="photo-carousel">
+                    <div class="carousel-main">
+                        <div class="carousel-loading">Loading photos...</div>
+                        <button class="carousel-arrow prev" onclick="prevImage()" style="display:none;">
+                            <i class="bi bi-chevron-left"></i>
+                        </button>
+                        <button class="carousel-arrow next" onclick="nextImage()" style="display:none;">
+                            <i class="bi bi-chevron-right"></i>
+                        </button>
+                        <div class="carousel-counter" style="display:none;"></div>
+                    </div>
+                    <div class="carousel-thumbnails"></div>
+                </div>
+                
+                <div class="additional-details">
+                    <div class="detail-item">
+                        <strong><i class="bi bi-calendar-event"></i> Travel Dates</strong>
+                        <span id="modal-dates"></span>
+                    </div>
+                    <div class="detail-item">
+                        <strong><i class="bi bi-clock-history"></i> Duration</strong>
+                        <span id="modal-duration"></span>
+                    </div>
+                    <div class="detail-item">
+                        <strong><i class="bi bi-door-open"></i> Available Rooms</strong>
+                        <span id="modal-rooms"></span>
+                    </div>
+                    <div class="detail-item">
+                        <strong><i class="bi bi-tag"></i> Package Type</strong>
+                        <span id="modal-package"></span>
+                    </div>
+                    <div class="detail-item">
+                        <strong><i class="bi bi-currency-dollar"></i> Price</strong>
+                        <span id="modal-price"></span>
+                    </div>
+                </div>
+                
+                <div class="trip-actions">
+                    <button class="btn-action btn-add-cart" onclick="addToCartFromModal()">
+                        <i class="bi bi-cart-plus"></i>
+                        Add to Cart
+                    </button>
+                    <button class="btn-action btn-book-now" onclick="bookNowFromModal()">
+                        <i class="bi bi-lightning-charge"></i>
+                        Book Now
+                    </button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(tripModal);
+        
+        // Close on background click
+        tripModal.addEventListener('click', (e) => {
+            if (e.target === tripModal) closeTripModal();
+        });
+    }
+
+    function closeTripModal() {
+        if (tripModal) {
+            tripModal.classList.remove('active');
+            document.body.style.overflow = '';
+            currentImages = [];
+            currentImageIndex = 0;
+        }
+    }
+
+    async function loadCarouselImages(tripId) {
+        const carouselMain = tripModal.querySelector('.carousel-main');
+        const thumbnailsContainer = tripModal.querySelector('.carousel-thumbnails');
+        const prevBtn = tripModal.querySelector('.carousel-arrow.prev');
+        const nextBtn = tripModal.querySelector('.carousel-arrow.next');
+        const counter = tripModal.querySelector('.carousel-counter');
+        
+        try {
+            const response = await fetch(`/Dashboard/GetAllImages?tripId=${tripId}`);
+            const data = await response.json();
+            
+            if (data.images && data.images.length > 0) {
+                currentImages = data.images;
+                currentImageIndex = 0;
+                
+                // Clear loading message
+                carouselMain.innerHTML = '';
+                
+                // Create main images
+                data.images.forEach((img, index) => {
+                    const imgElement = document.createElement('img');
+                    imgElement.src = img.imageUrl;
+                    imgElement.alt = `Trip photo ${index + 1}`;
+                    imgElement.className = 'carousel-image' + (index === 0 ? ' active' : '');
+                    carouselMain.appendChild(imgElement);
+                });
+                
+                // Create thumbnails
+                thumbnailsContainer.innerHTML = '';
+                data.images.forEach((img, index) => {
+                    const thumb = document.createElement('img');
+                    thumb.src = img.imageUrl;
+                    thumb.alt = `Thumbnail ${index + 1}`;
+                    thumb.className = 'thumbnail' + (index === 0 ? ' active' : '');
+                    thumb.onclick = () => showImage(index);
+                    thumbnailsContainer.appendChild(thumb);
+                });
+                
+                // Show controls if more than one image
+                if (data.images.length > 1) {
+                    prevBtn.style.display = 'flex';
+                    nextBtn.style.display = 'flex';
+                    counter.style.display = 'block';
+                    updateCounter();
+                }
+                
+                // Add arrow controls to carousel main
+                carouselMain.appendChild(prevBtn);
+                carouselMain.appendChild(nextBtn);
+                carouselMain.appendChild(counter);
+            } else {
+                carouselMain.innerHTML = '<div class="carousel-empty">No photos available</div>';
+            }
+        } catch (error) {
+            console.error('Error loading images:', error);
+            carouselMain.innerHTML = '<div class="carousel-empty">Failed to load photos</div>';
+        }
+    }
+
+    function showImage(index) {
+        const images = tripModal.querySelectorAll('.carousel-image');
+        const thumbnails = tripModal.querySelectorAll('.thumbnail');
+        
+        images.forEach(img => img.classList.remove('active'));
+        thumbnails.forEach(thumb => thumb.classList.remove('active'));
+        
+        images[index].classList.add('active');
+        thumbnails[index].classList.add('active');
+        
+        currentImageIndex = index;
+        updateCounter();
+        
+        // Scroll thumbnail into view
+        thumbnails[index].scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+    }
+
+    function prevImage() {
+        const newIndex = currentImageIndex === 0 ? currentImages.length - 1 : currentImageIndex - 1;
+        showImage(newIndex);
+    }
+
+    function nextImage() {
+        const newIndex = currentImageIndex === currentImages.length - 1 ? 0 : currentImageIndex + 1;
+        showImage(newIndex);
+    }
+
+    function updateCounter() {
+        const counter = tripModal.querySelector('.carousel-counter');
+        if (counter && currentImages.length > 0) {
+            counter.textContent = `${currentImageIndex + 1} / ${currentImages.length}`;
+        }
+    }
+
+    // Keyboard navigation
+    document.addEventListener('keydown', (e) => {
+        if (!tripModal || !tripModal.classList.contains('active')) return;
+        
+        if (e.key === 'Escape') {
+            closeTripModal();
+        } else if (e.key === 'ArrowLeft') {
+            prevImage();
+        } else if (e.key === 'ArrowRight') {
+            nextImage();
+        }
+    });
+
+    function addToCartFromModal() {
+        const tripId = parseInt(tripModal.dataset.tripId);
+        const destination = tripModal.dataset.destination;
+        addToCart(tripId, destination);
+    }
+
+    function bookNowFromModal() {
+        const tripId = parseInt(tripModal.dataset.tripId);
+        bookNow(tripId);
+    }
+
+    // Shopping cart functionality
+    let cart = JSON.parse(localStorage.getItem('tripCart')) || [];
+
+    function addToCart(tripId, destination) {
+        const existingItem = cart.find(item => item.tripId === tripId);
+        
+        if (existingItem) {
+            alert(`${destination} is already in your cart!`);
+        } else {
+            cart.push({ tripId, destination, addedAt: new Date().toISOString() });
+            localStorage.setItem('tripCart', JSON.stringify(cart));
+            
+            // Show success message
+            showNotification(`✓ ${destination} added to cart!`, 'success');
+        }
+    }
+
+    function bookNow(tripId) {
+        // Redirect to booking page (you can create this later)
+        alert(`Booking trip ${tripId}. This will redirect to the booking page.`);
+        // window.location.href = `/Booking/Book?tripId=${tripId}`;
+    }
+
+    function showNotification(message, type = 'info') {
+        const notification = document.createElement('div');
+        notification.style.cssText = `
+            position: fixed;
+            top: 2rem;
+            right: 2rem;
+            background: ${type === 'success' ? 'linear-gradient(135deg, #10b981, #059669)' : 'linear-gradient(135deg, #6366f1, #4f46e5)'};
+            color: white;
+            padding: 1rem 1.5rem;
+            border-radius: 0.75rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            z-index: 10000;
+            animation: slideInRight 0.3s ease;
+            font-weight: 600;
+        `;
+        notification.textContent = message;
+        document.body.appendChild(notification);
+        
+        setTimeout(() => {
+            notification.style.animation = 'slideOutRight 0.3s ease';
+            setTimeout(() => notification.remove(), 300);
+        }, 3000);
+    }
+
+    // Add animation keyframes
+    // Add animation keyframes
+    const style = document.createElement('style');
+    style.textContent = `
+        @@keyframes slideInRight {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        @@keyframes slideOutRight {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+        }
+    `;
+    document.head.appendChild(style);
 </script>
 
 ```

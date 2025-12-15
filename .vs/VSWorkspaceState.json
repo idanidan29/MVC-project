@@ -3,8 +3,10 @@
     "",
     "\\Controllers",
     "\\Views",
-    "\\Views\\Shared"
+    "\\Views\\Shared",
+    "\\wwwroot",
+    "\\wwwroot\\css"
   ],
-  "SelectedNode": "\\MVC-project.sln",
+  "SelectedNode": "\\wwwroot\\css\\site.css",
   "PreviewInSolutionExplorer": false
 }

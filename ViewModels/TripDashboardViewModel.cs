@@ -12,5 +12,7 @@ namespace MVC_project.ViewModels
         public string PackageType { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
         public bool HasImage { get; set; }
+        public int ImageCount { get; set; }
+        public int AvailableRooms { get; set; }
     }
 }

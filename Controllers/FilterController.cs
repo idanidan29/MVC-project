@@ -101,18 +101,23 @@ namespace MVC_project.Controllers
                 trips = ApplySorting(trips, sortBy);
 
                 // Map to view models with image check
-                var tripViewModels = trips.Select(trip => new TripDashboardViewModel
-                {
-                    TripID = trip.TripID,
-                    Destination = trip.Destination,
-                    Country = trip.Country,
-                    StartDate = trip.StartDate,
-                    EndDate = trip.EndDate,
-                    Price = trip.Price,
-                    DiscountPrice = trip.DiscountPrice,
-                    PackageType = trip.PackageType,
-                    Description = trip.Description,
-                    HasImage = _imageRepo.GetByTripId(trip.TripID).Any()
+                var tripViewModels = trips.Select(trip => {
+                    var images = _imageRepo.GetByTripId(trip.TripID);
+                    return new TripDashboardViewModel
+                    {
+                        TripID = trip.TripID,
+                        Destination = trip.Destination,
+                        Country = trip.Country,
+                        StartDate = trip.StartDate,
+                        EndDate = trip.EndDate,
+                        Price = trip.Price,
+                        DiscountPrice = trip.DiscountPrice,
+                        PackageType = trip.PackageType,
+                        Description = trip.Description,
+                        HasImage = images.Any(),
+                        ImageCount = images.Count(),
+                        AvailableRooms = trip.AvailableRooms
+                    };
                 }).ToList();
 
                 return View("~/Views/Dashboard/Search.cshtml", tripViewModels);
