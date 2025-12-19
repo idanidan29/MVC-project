@@ -12,6 +12,7 @@ namespace MVC_project.Data
         public DbSet<User> Users { get; set; }
         public DbSet<Trip> Trips { get; set; }
         public DbSet<TripImage> TripImages { get; set; }
+        public DbSet<UserTrip> UserTrips { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -42,6 +43,32 @@ namespace MVC_project.Data
                 .HasOne(ti => ti.Trip)
                 .WithMany()
                 .HasForeignKey(ti => ti.TripID)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Configure UserTrip entity
+            modelBuilder.Entity<UserTrip>()
+                .ToTable("UserTrips", "dbo");
+
+            modelBuilder.Entity<UserTrip>()
+                .HasKey(ut => ut.UserTripID);
+
+            // Unique constraint on user_email and TripID
+            modelBuilder.Entity<UserTrip>()
+                .HasIndex(ut => new { ut.UserEmail, ut.TripID })
+                .IsUnique()
+                .HasDatabaseName("UQ_UserTrips_User_Trip");
+
+            // Configure relationships
+            modelBuilder.Entity<UserTrip>()
+                .HasOne(ut => ut.User)
+                .WithMany()
+                .HasForeignKey(ut => ut.UserEmail)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<UserTrip>()
+                .HasOne(ut => ut.Trip)
+                .WithMany()
+                .HasForeignKey(ut => ut.TripID)
                 .OnDelete(DeleteBehavior.Cascade);
 
             base.OnModelCreating(modelBuilder);

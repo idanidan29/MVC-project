@@ -1368,19 +1368,26 @@
     }
 
     // Shopping cart functionality
-    let cart = JSON.parse(localStorage.getItem('tripCart')) || [];
+    async function addToCart(tripId, destination) {
+        try {
+            const response = await fetch('/User/AddToCart', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ tripId: tripId })
+            });
 
-    function addToCart(tripId, destination) {
-        const existingItem = cart.find(item => item.tripId === tripId);
-        
-        if (existingItem) {
-            alert(`${destination} is already in your cart!`);
-        } else {
-            cart.push({ tripId, destination, addedAt: new Date().toISOString() });
-            localStorage.setItem('tripCart', JSON.stringify(cart));
+            const data = await response.json();
             
-            // Show success message
-            showNotification(`✓ ${destination} added to cart!`, 'success');
+            if (data.success) {
+                showNotification(data.message, 'success');
+            } else {
+                showNotification(data.message, 'error');
+            }
+        } catch (error) {
+            console.error('Error adding to cart:', error);
+            showNotification('Failed to add trip to cart. Please try again.', 'error');
         }
     }
 

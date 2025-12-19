@@ -3,6 +3,14 @@
   "WorkspaceRootPath": "C:\\Users\\zecha\\Documents\\GitHub\\MVC-project\\",
   "Documents": [
     {
+      "AbsoluteMoniker": "D:0:0:{452F67CE-40C4-4C66-8B40-8AFADA014B24}|MVC-project.csproj|c:\\users\\zecha\\documents\\github\\mvc-project\\controllers\\usercontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{452F67CE-40C4-4C66-8B40-8AFADA014B24}|MVC-project.csproj|solutionrelative:controllers\\usercontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{452F67CE-40C4-4C66-8B40-8AFADA014B24}|MVC-project.csproj|c:\\users\\zecha\\documents\\github\\mvc-project\\controllers\\dashboardcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{452F67CE-40C4-4C66-8B40-8AFADA014B24}|MVC-project.csproj|solutionrelative:controllers\\dashboardcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
       "AbsoluteMoniker": "D:0:0:{452F67CE-40C4-4C66-8B40-8AFADA014B24}|MVC-project.csproj|c:\\users\\zecha\\documents\\github\\mvc-project\\wwwroot\\css\\site.css||{A5401142-F49D-43DB-90B1-F57BA349E55C}",
       "RelativeMoniker": "D:0:0:{452F67CE-40C4-4C66-8B40-8AFADA014B24}|MVC-project.csproj|solutionrelative:wwwroot\\css\\site.css||{A5401142-F49D-43DB-90B1-F57BA349E55C}"
     },
@@ -11,52 +19,48 @@
       "RelativeMoniker": "D:0:0:{452F67CE-40C4-4C66-8B40-8AFADA014B24}|MVC-project.csproj|solutionrelative:wwwroot\\js\\site.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{452F67CE-40C4-4C66-8B40-8AFADA014B24}|MVC-project.csproj|c:\\users\\zecha\\documents\\github\\mvc-project\\views\\user\\register.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
-      "RelativeMoniker": "D:0:0:{452F67CE-40C4-4C66-8B40-8AFADA014B24}|MVC-project.csproj|solutionrelative:views\\user\\register.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{452F67CE-40C4-4C66-8B40-8AFADA014B24}|MVC-project.csproj|c:\\users\\zecha\\documents\\github\\mvc-project\\views\\login\\login.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
-      "RelativeMoniker": "D:0:0:{452F67CE-40C4-4C66-8B40-8AFADA014B24}|MVC-project.csproj|solutionrelative:views\\login\\login.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{452F67CE-40C4-4C66-8B40-8AFADA014B24}|MVC-project.csproj|c:\\users\\zecha\\documents\\github\\mvc-project\\controllers\\usercontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{452F67CE-40C4-4C66-8B40-8AFADA014B24}|MVC-project.csproj|solutionrelative:controllers\\usercontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{452F67CE-40C4-4C66-8B40-8AFADA014B24}|MVC-project.csproj|c:\\users\\zecha\\documents\\github\\mvc-project\\viewmodels\\registerviewmodel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{452F67CE-40C4-4C66-8B40-8AFADA014B24}|MVC-project.csproj|solutionrelative:viewmodels\\registerviewmodel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
       "AbsoluteMoniker": "D:0:0:{452F67CE-40C4-4C66-8B40-8AFADA014B24}|MVC-project.csproj|c:\\users\\zecha\\documents\\github\\mvc-project\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
       "RelativeMoniker": "D:0:0:{452F67CE-40C4-4C66-8B40-8AFADA014B24}|MVC-project.csproj|solutionrelative:appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{452F67CE-40C4-4C66-8B40-8AFADA014B24}|MVC-project.csproj|c:\\users\\zecha\\documents\\github\\mvc-project\\package.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
-      "RelativeMoniker": "D:0:0:{452F67CE-40C4-4C66-8B40-8AFADA014B24}|MVC-project.csproj|solutionrelative:package.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{452F67CE-40C4-4C66-8B40-8AFADA014B24}|MVC-project.csproj|c:\\users\\zecha\\documents\\github\\mvc-project\\package-lock.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
-      "RelativeMoniker": "D:0:0:{452F67CE-40C4-4C66-8B40-8AFADA014B24}|MVC-project.csproj|solutionrelative:package-lock.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{452F67CE-40C4-4C66-8B40-8AFADA014B24}|MVC-project.csproj|c:\\users\\zecha\\documents\\github\\mvc-project\\appsettings.development.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
-      "RelativeMoniker": "D:0:0:{452F67CE-40C4-4C66-8B40-8AFADA014B24}|MVC-project.csproj|solutionrelative:appsettings.development.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{452F67CE-40C4-4C66-8B40-8AFADA014B24}|MVC-project.csproj|c:\\users\\zecha\\documents\\github\\mvc-project\\controllers\\admincontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{452F67CE-40C4-4C66-8B40-8AFADA014B24}|MVC-project.csproj|solutionrelative:controllers\\admincontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{452F67CE-40C4-4C66-8B40-8AFADA014B24}|MVC-project.csproj|c:\\users\\zecha\\documents\\github\\mvc-project\\views\\user\\register.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{452F67CE-40C4-4C66-8B40-8AFADA014B24}|MVC-project.csproj|solutionrelative:views\\user\\register.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{452F67CE-40C4-4C66-8B40-8AFADA014B24}|MVC-project.csproj|c:\\users\\zecha\\documents\\github\\mvc-project\\views\\admin\\dashboard.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
       "RelativeMoniker": "D:0:0:{452F67CE-40C4-4C66-8B40-8AFADA014B24}|MVC-project.csproj|solutionrelative:views\\admin\\dashboard.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
     },
     {
+      "AbsoluteMoniker": "D:0:0:{452F67CE-40C4-4C66-8B40-8AFADA014B24}|MVC-project.csproj|c:\\users\\zecha\\documents\\github\\mvc-project\\controllers\\logincontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{452F67CE-40C4-4C66-8B40-8AFADA014B24}|MVC-project.csproj|solutionrelative:controllers\\logincontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{452F67CE-40C4-4C66-8B40-8AFADA014B24}|MVC-project.csproj|c:\\users\\zecha\\documents\\github\\mvc-project\\viewmodels\\registerviewmodel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{452F67CE-40C4-4C66-8B40-8AFADA014B24}|MVC-project.csproj|solutionrelative:viewmodels\\registerviewmodel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{452F67CE-40C4-4C66-8B40-8AFADA014B24}|MVC-project.csproj|c:\\users\\zecha\\documents\\github\\mvc-project\\views\\login\\login.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{452F67CE-40C4-4C66-8B40-8AFADA014B24}|MVC-project.csproj|solutionrelative:views\\login\\login.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
       "AbsoluteMoniker": "D:0:0:{452F67CE-40C4-4C66-8B40-8AFADA014B24}|MVC-project.csproj|c:\\users\\zecha\\documents\\github\\mvc-project\\views\\admin\\addtrip.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
       "RelativeMoniker": "D:0:0:{452F67CE-40C4-4C66-8B40-8AFADA014B24}|MVC-project.csproj|solutionrelative:views\\admin\\addtrip.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{452F67CE-40C4-4C66-8B40-8AFADA014B24}|MVC-project.csproj|c:\\users\\zecha\\documents\\github\\mvc-project\\controllers\\logincontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{452F67CE-40C4-4C66-8B40-8AFADA014B24}|MVC-project.csproj|solutionrelative:controllers\\logincontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{452F67CE-40C4-4C66-8B40-8AFADA014B24}|MVC-project.csproj|c:\\users\\zecha\\documents\\github\\mvc-project\\controllers\\admincontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{452F67CE-40C4-4C66-8B40-8AFADA014B24}|MVC-project.csproj|solutionrelative:controllers\\admincontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{452F67CE-40C4-4C66-8B40-8AFADA014B24}|MVC-project.csproj|c:\\users\\zecha\\documents\\github\\mvc-project\\appsettings.development.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
+      "RelativeMoniker": "D:0:0:{452F67CE-40C4-4C66-8B40-8AFADA014B24}|MVC-project.csproj|solutionrelative:appsettings.development.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{452F67CE-40C4-4C66-8B40-8AFADA014B24}|MVC-project.csproj|c:\\users\\zecha\\documents\\github\\mvc-project\\package-lock.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
+      "RelativeMoniker": "D:0:0:{452F67CE-40C4-4C66-8B40-8AFADA014B24}|MVC-project.csproj|solutionrelative:package-lock.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{452F67CE-40C4-4C66-8B40-8AFADA014B24}|MVC-project.csproj|c:\\users\\zecha\\documents\\github\\mvc-project\\package.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
+      "RelativeMoniker": "D:0:0:{452F67CE-40C4-4C66-8B40-8AFADA014B24}|MVC-project.csproj|solutionrelative:package.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{452F67CE-40C4-4C66-8B40-8AFADA014B24}|MVC-project.csproj|c:\\users\\zecha\\documents\\github\\mvc-project\\models\\user.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
@@ -70,7 +74,7 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 9,
+          "SelectedChildIndex": 6,
           "Children": [
             {
               "$type": "Bookmark",
@@ -79,32 +83,19 @@
             {
               "$type": "Document",
               "DocumentIndex": 1,
-              "Title": "site.js",
-              "DocumentMoniker": "C:\\Users\\zecha\\Documents\\GitHub\\MVC-project\\wwwroot\\js\\site.js",
-              "RelativeDocumentMoniker": "wwwroot\\js\\site.js",
-              "ToolTip": "C:\\Users\\zecha\\Documents\\GitHub\\MVC-project\\wwwroot\\js\\site.js",
-              "RelativeToolTip": "wwwroot\\js\\site.js",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAACEAAAADAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001646|",
-              "WhenOpened": "2025-12-15T08:24:59.851Z",
+              "Title": "DashboardController.cs",
+              "DocumentMoniker": "C:\\Users\\zecha\\Documents\\GitHub\\MVC-project\\Controllers\\DashboardController.cs",
+              "RelativeDocumentMoniker": "Controllers\\DashboardController.cs",
+              "ToolTip": "C:\\Users\\zecha\\Documents\\GitHub\\MVC-project\\Controllers\\DashboardController.cs",
+              "RelativeToolTip": "Controllers\\DashboardController.cs",
+              "ViewState": "AgIAACEAAAAAAAAAAAAYwAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-12-19T09:47:57.632Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 6,
-              "Title": "appsettings.json",
-              "DocumentMoniker": "C:\\Users\\zecha\\Documents\\GitHub\\MVC-project\\appsettings.json",
-              "RelativeDocumentMoniker": "appsettings.json",
-              "ToolTip": "C:\\Users\\zecha\\Documents\\GitHub\\MVC-project\\appsettings.json",
-              "RelativeToolTip": "appsettings.json",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAwAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
-              "WhenOpened": "2025-12-07T14:20:11.245Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 2,
+              "DocumentIndex": 5,
               "Title": "Register.cshtml",
               "DocumentMoniker": "C:\\Users\\zecha\\Documents\\GitHub\\MVC-project\\Views\\User\\Register.cshtml",
               "RelativeDocumentMoniker": "Views\\User\\Register.cshtml",
@@ -112,12 +103,11 @@
               "RelativeToolTip": "Views\\User\\Register.cshtml",
               "ViewState": "AgIAAKoBAAAAAAAAAAAAALgBAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2025-12-05T12:13:45.603Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-12-05T12:13:45.603Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 11,
+              "DocumentIndex": 6,
               "Title": "Dashboard.cshtml",
               "DocumentMoniker": "C:\\Users\\zecha\\Documents\\GitHub\\MVC-project\\Views\\Admin\\Dashboard.cshtml",
               "RelativeDocumentMoniker": "Views\\Admin\\Dashboard.cshtml",
@@ -129,7 +119,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 13,
+              "DocumentIndex": 7,
               "Title": "LoginController.cs",
               "DocumentMoniker": "C:\\Users\\zecha\\Documents\\GitHub\\MVC-project\\Controllers\\LoginController.cs",
               "RelativeDocumentMoniker": "Controllers\\LoginController.cs",
@@ -141,7 +131,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 5,
+              "DocumentIndex": 8,
               "Title": "RegisterViewModel.cs",
               "DocumentMoniker": "C:\\Users\\zecha\\Documents\\GitHub\\MVC-project\\ViewModels\\RegisterViewModel.cs",
               "RelativeDocumentMoniker": "ViewModels\\RegisterViewModel.cs",
@@ -149,25 +139,48 @@
               "RelativeToolTip": "ViewModels\\RegisterViewModel.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAABkAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-12-05T12:42:55.733Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-12-05T12:42:55.733Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 4,
+              "DocumentIndex": 0,
               "Title": "UserController.cs",
               "DocumentMoniker": "C:\\Users\\zecha\\Documents\\GitHub\\MVC-project\\Controllers\\UserController.cs",
               "RelativeDocumentMoniker": "Controllers\\UserController.cs",
               "ToolTip": "C:\\Users\\zecha\\Documents\\GitHub\\MVC-project\\Controllers\\UserController.cs",
               "RelativeToolTip": "Controllers\\UserController.cs",
-              "ViewState": "AgIAAAMAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAGQAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-12-07T12:40:10.11Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "appsettings.json",
+              "DocumentMoniker": "C:\\Users\\zecha\\Documents\\GitHub\\MVC-project\\appsettings.json",
+              "RelativeDocumentMoniker": "appsettings.json",
+              "ToolTip": "C:\\Users\\zecha\\Documents\\GitHub\\MVC-project\\appsettings.json",
+              "RelativeToolTip": "appsettings.json",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAwAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
+              "WhenOpened": "2025-12-07T14:20:11.245Z"
+            },
+            {
+              "$type": "Document",
               "DocumentIndex": 3,
+              "Title": "site.js",
+              "DocumentMoniker": "C:\\Users\\zecha\\Documents\\GitHub\\MVC-project\\wwwroot\\js\\site.js",
+              "RelativeDocumentMoniker": "wwwroot\\js\\site.js",
+              "ToolTip": "C:\\Users\\zecha\\Documents\\GitHub\\MVC-project\\wwwroot\\js\\site.js",
+              "RelativeToolTip": "wwwroot\\js\\site.js",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAACEAAAADAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001646|",
+              "WhenOpened": "2025-12-15T08:24:59.851Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 9,
               "Title": "Login.cshtml",
               "DocumentMoniker": "C:\\Users\\zecha\\Documents\\GitHub\\MVC-project\\Views\\Login\\Login.cshtml",
               "RelativeDocumentMoniker": "Views\\Login\\Login.cshtml",
@@ -175,12 +188,11 @@
               "RelativeToolTip": "Views\\Login\\Login.cshtml",
               "ViewState": "AgIAAG0BAAAAAAAAAAAcwIoBAAA4AAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2025-12-05T12:13:16.686Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-12-05T12:13:16.686Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 0,
+              "DocumentIndex": 2,
               "Title": "site.css",
               "DocumentMoniker": "C:\\Users\\zecha\\Documents\\GitHub\\MVC-project\\wwwroot\\css\\site.css",
               "RelativeDocumentMoniker": "wwwroot\\css\\site.css",
@@ -193,7 +205,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 12,
+              "DocumentIndex": 10,
               "Title": "AddTrip.cshtml",
               "DocumentMoniker": "C:\\Users\\zecha\\Documents\\GitHub\\MVC-project\\Views\\Admin\\AddTrip.cshtml",
               "RelativeDocumentMoniker": "Views\\Admin\\AddTrip.cshtml",
@@ -205,7 +217,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 10,
+              "DocumentIndex": 11,
               "Title": "AdminController.cs",
               "DocumentMoniker": "C:\\Users\\zecha\\Documents\\GitHub\\MVC-project\\Controllers\\AdminController.cs",
               "RelativeDocumentMoniker": "Controllers\\AdminController.cs",
@@ -217,7 +229,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 9,
+              "DocumentIndex": 12,
               "Title": "appsettings.Development.json",
               "DocumentMoniker": "C:\\Users\\zecha\\Documents\\GitHub\\MVC-project\\appsettings.Development.json",
               "RelativeDocumentMoniker": "appsettings.Development.json",
@@ -229,7 +241,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 8,
+              "DocumentIndex": 13,
               "Title": "package-lock.json",
               "DocumentMoniker": "C:\\Users\\zecha\\Documents\\GitHub\\MVC-project\\package-lock.json",
               "RelativeDocumentMoniker": "package-lock.json",
@@ -241,7 +253,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 7,
+              "DocumentIndex": 14,
               "Title": "package.json",
               "DocumentMoniker": "C:\\Users\\zecha\\Documents\\GitHub\\MVC-project\\package.json",
               "RelativeDocumentMoniker": "package.json",
@@ -253,7 +265,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 14,
+              "DocumentIndex": 15,
               "Title": "User.cs",
               "DocumentMoniker": "C:\\Users\\zecha\\Documents\\GitHub\\MVC-project\\Models\\User.cs",
               "RelativeDocumentMoniker": "Models\\User.cs",
