@@ -1,0 +1,193 @@
+@model MVC_project.ViewModels.AddUserViewModel
+
+<style>
+    .modal.show .modal-dialog .modal-content {
+        border-radius: 1.5rem;
+        border: none;
+    }
+
+    .add-user-modal-header {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        color: white;
+        border: none;
+        padding: 1.5rem;
+        border-radius: 1.5rem 1.5rem 0 0;
+    }
+
+    .add-user-modal-header .modal-title {
+        font-weight: 700;
+        font-size: 1.25rem;
+    }
+
+    .add-user-modal-header .btn-close {
+        filter: brightness(0) invert(1);
+    }
+
+    .add-user-modal-body {
+        background: #ffffff;
+        padding: 1.5rem;
+    }
+
+    .add-user-form-label {
+        font-weight: 600;
+        color: #1e293b;
+        margin-bottom: 0.5rem;
+        display: block;
+    }
+
+    .add-user-form-control {
+        height: 2.75rem;
+        border-radius: 0.75rem;
+        border: 2px solid #e2e8f0;
+        padding: 0.5rem 0.75rem;
+        font-size: 1rem;
+        background: #f8fafc;
+        transition: all 0.2s;
+        color: #1e293b;
+        width: 100%;
+    }
+
+    .add-user-form-control:focus {
+        border-color: #10b981;
+        background: white;
+        box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.15);
+        outline: none;
+    }
+
+    .add-user-checkbox-group {
+        background: linear-gradient(135deg, #ecfdf5 0%, #dbeafe 100%);
+        border: 1px solid #6ee7b7;
+        border-radius: 0.75rem;
+        padding: 1rem;
+        margin-top: 1rem;
+    }
+
+    .add-user-checkbox-group .form-check-input {
+        width: 1.25rem;
+        height: 1.25rem;
+        border: 2px solid #6ee7b7;
+        border-radius: 0.35rem;
+        cursor: pointer;
+        accent-color: #10b981;
+    }
+
+    .add-user-checkbox-group .form-check-label {
+        margin-left: 0.5rem;
+        cursor: pointer;
+        color: #1e293b;
+        font-weight: 600;
+    }
+
+    .add-user-modal-footer {
+        background: #f8fafc;
+        border-top: 1px solid #e2e8f0;
+        padding: 1rem 1.5rem;
+        border-radius: 0 0 1.5rem 1.5rem;
+        display: flex;
+        gap: 0.75rem;
+        justify-content: flex-end;
+    }
+
+    .btn-create-user {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        color: white;
+        padding: 0.75rem 1.5rem;
+        border-radius: 0.6rem;
+        font-weight: 600;
+        border: none;
+        cursor: pointer;
+        box-shadow: 0 6px 20px rgba(16, 185, 129, 0.35);
+        transition: all 0.2s;
+    }
+
+    .btn-create-user:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 30px rgba(16, 185, 129, 0.5);
+        color: white !important;
+    }
+
+    .btn-close-form {
+        background: #e2e8f0;
+        color: #1e293b;
+        padding: 0.75rem 1.5rem;
+        border-radius: 0.6rem;
+        font-weight: 600;
+        border: none;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .btn-close-form:hover {
+        background: #cbd5e1;
+        color: #1e293b !important;
+    }
+
+    .form-error {
+        color: #dc2626;
+        font-size: 0.875rem;
+        margin-top: 0.25rem;
+        display: none;
+    }
+
+    .form-error.show {
+        display: block;
+    }
+</style>
+
+<div class="add-user-modal-header">
+    <h5 class="modal-title">
+        <i class="bi bi-person-plus me-2"></i>
+        Create New User
+    </h5>
+    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+</div>
+
+<div class="add-user-modal-body">
+    <form id="addUserForm">
+        <div class="mb-3">
+            <label class="add-user-form-label">Email Address</label>
+            <input type="email" class="add-user-form-control" id="newUserEmail" placeholder="user@example.com" required />
+            <div class="form-error" id="emailError"></div>
+        </div>
+
+        <div class="mb-3">
+            <label class="add-user-form-label">First Name</label>
+            <input type="text" class="add-user-form-control" id="newUserFirstName" placeholder="Enter first name" required />
+            <div class="form-error" id="firstNameError"></div>
+        </div>
+
+        <div class="mb-3">
+            <label class="add-user-form-label">Last Name</label>
+            <input type="text" class="add-user-form-control" id="newUserLastName" placeholder="Enter last name" required />
+            <div class="form-error" id="lastNameError"></div>
+        </div>
+
+        <div class="mb-3">
+            <label class="add-user-form-label">Password</label>
+            <input type="password" class="add-user-form-control" id="newUserPassword" placeholder="Enter password (min 6 characters)" required />
+            <div class="form-error" id="passwordError"></div>
+        </div>
+
+        <div class="mb-3">
+            <label class="add-user-form-label">Confirm Password</label>
+            <input type="password" class="add-user-form-control" id="newUserConfirmPassword" placeholder="Confirm password" required />
+            <div class="form-error" id="confirmPasswordError"></div>
+        </div>
+
+        <div class="add-user-checkbox-group">
+            <input class="form-check-input" type="checkbox" id="newUserIsAdmin" />
+            <label class="form-check-label" for="newUserIsAdmin">
+                <i class="bi bi-shield-check me-1"></i>Grant Admin Rights
+            </label>
+        </div>
+    </form>
+</div>
+
+<div class="add-user-modal-footer">
+    <button type="button" class="btn btn-close-form" data-bs-dismiss="modal">
+        <i class="bi bi-x-lg me-2"></i> Cancel
+    </button>
+    <button type="button" class="btn btn-create-user" id="btnCreateUser">
+        <i class="bi bi-check-circle me-2"></i> Create User
+    </button>
+</div>

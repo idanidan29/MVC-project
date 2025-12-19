@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc.ModelBinding;
 using MVC_project.Data;
 using MVC_project.Models;
 using MVC_project.ViewModels;
+using MVC_project.Services;
 
 namespace MVC_project.Controllers
 {
@@ -16,14 +17,16 @@ namespace MVC_project.Controllers
         private readonly TripImageRepository _imageRepo;
         private readonly UserRepository _userRepo;
         private readonly UserTripRepository _userTripRepo;
+        private readonly PasswordService _passwordService;
         private readonly IWebHostEnvironment _webHostEnvironment;
 
-        public AdminController(TripRepository tripRepo, TripImageRepository imageRepo, UserRepository userRepo, UserTripRepository userTripRepo, IWebHostEnvironment webHostEnvironment)
+        public AdminController(TripRepository tripRepo, TripImageRepository imageRepo, UserRepository userRepo, UserTripRepository userTripRepo, PasswordService passwordService, IWebHostEnvironment webHostEnvironment)
         {
             _tripRepo = tripRepo;
             _imageRepo = imageRepo;
             _userRepo = userRepo;
             _userTripRepo = userTripRepo;
+            _passwordService = passwordService;
             _webHostEnvironment = webHostEnvironment;
         }
 
@@ -150,6 +153,39 @@ namespace MVC_project.Controllers
             return Ok(new { success = true, message = "User updated successfully" });
         }
 
+        // GET: /Admin/AddUserModal
+        [HttpGet("AddUserModal")]
+        public IActionResult AddUserModal()
+        {
+            return PartialView("_AddUserPartial", new AddUserViewModel());
+        }
+
+        // POST: /Admin/CreateUser
+        [HttpPost("CreateUser")]
+        public IActionResult CreateUser(AddUserViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(new { success = false, message = "Invalid form data" });
+            }
+
+            if (_userRepo.EmailExists(model.Email))
+            {
+                return BadRequest(new { success = false, message = "Email already exists" });
+            }
+
+            var user = new User
+            {
+                email = model.Email,
+                first_name = model.FirstName,
+                last_name = model.LastName,
+                passwordHash = _passwordService.HashPassword(model.Password),
+                admin = model.IsAdmin
+            };
+
+            _userRepo.Add(user);
+            return Ok(new { success = true, message = "User created successfully" });
+        }
         // GET: /Admin/AddTrip
         [HttpGet("AddTrip")]
         public IActionResult AddTrip()
