@@ -1,3 +1,4 @@
+@model MVC_project.ViewModels.AdminDashboardViewModel
 @{
     ViewData["Title"] = "Admin Dashboard";
 }
@@ -53,10 +54,18 @@
         position: relative;
         min-height: 100vh;
         display: flex;
+        flex-direction: column;
         align-items: center;
-        justify-content: center;
-        padding: 1rem;
+        justify-content: flex-start;
+        padding: 2rem 1rem;
         overflow: hidden;
+        gap: 2rem;
+    }
+
+    @@media (max-width: 1024px) {
+        .dashboard-container {
+            gap: 1.5rem;
+        }
     }
 
     /* Enhanced card styling */
@@ -65,7 +74,6 @@
         backdrop-filter: blur(10px);
         border-radius: 2rem;
         padding: 2.5rem;
-        max-width: 600px;
         width: 100%;
         border: 1px solid rgba(255, 255, 255, 0.3);
         box-shadow: 0 20px 70px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.5);
@@ -195,6 +203,68 @@
         margin-bottom: 0.5rem;
         line-height: 1.6;
     }
+    /* User management */
+    .user-section {
+        margin-top: 2rem;
+    }
+
+    .search-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr auto auto;
+        gap: 1rem;
+        align-items: flex-end;
+        margin-bottom: 1rem;
+    }
+
+    @@media (max-width: 768px) {
+        .search-row {
+            grid-template-columns: 1fr;
+        }
+        .search-row button,
+        .search-row a {
+            width: 100%;
+        }
+    }
+
+    .search-input {
+        height: 2.75rem;
+        border-radius: 0.75rem;
+        border: 2px solid #e2e8f0;
+        padding: 0.5rem 0.75rem;
+        background: #f8fafc;
+        transition: all 0.2s;
+        width: 100%;
+    }
+    .search-input:focus { border-color: #6366f1; outline: none; background: #fff; }
+
+    .table-card {
+        background: rgba(255,255,255,0.97);
+        border: 1px solid rgba(226,232,240,0.6);
+        border-radius: 1rem;
+        box-shadow: 0 15px 40px rgba(0,0,0,0.08);
+        overflow: hidden;
+    }
+
+    .table thead th {
+        background: linear-gradient(135deg, #eef2ff, #e0e7ff);
+        color: #1e293b;
+        border-bottom: 0;
+    }
+
+    .btn-view {
+        background: linear-gradient(135deg, #14b8a6, #0f766e);
+        color: white;
+        border: none;
+        padding: 0.5rem 0.9rem;
+        border-radius: 0.6rem;
+        font-weight: 600;
+        box-shadow: 0 6px 20px rgba(20,184,166,0.35);
+        transition: transform 0.15s ease;
+    }
+    .btn-view:hover { transform: translateY(-2px); }
+
+    .reset-link { color: #6366f1; text-decoration: none; font-weight:600; }
+    .reset-link:hover { color: #3730a3; }
 </style>
 
 <!-- Animated Background -->
@@ -216,8 +286,9 @@
     }
 </script>
 
-<div class="dashboard-container">
-    <div class="dashboard-card">
+<div class="dashboard-container" style="align-items: flex-start; min-height: auto; padding-top: 2rem; padding-bottom: 2rem;">
+    <!-- Card 1: Trip Management -->
+    <div class="dashboard-card" style="max-width: 600px; margin: 0 auto;">
         @if (TempData["SuccessMessage"] != null)
         {
             <div class="success-alert">
@@ -241,4 +312,80 @@
             <p><i class="bi bi-dot"></i> Upload images to make your trips more attractive</p>
         </div>
     </div>
+
+    <!-- Card 2: User Management -->
+    <div class="dashboard-card" style="max-width: 1000px; width: 100%; margin: 0 auto;">
+        <h2 class="dashboard-title" style="font-size: 1.75rem; margin-bottom: 1rem;">
+            <i class="bi bi-people"></i> User Management
+        </h2>
+        <p class="dashboard-subtitle" style="margin-bottom: 1.5rem;">Search and manage users, view bookings</p>
+
+        <form method="get" asp-action="Dashboard" asp-controller="Admin">
+            <div class="search-row">
+                <div>
+                    <label class="form-label">Search by Name</label>
+                    <input name="name" value="@Model?.SearchName" class="search-input" placeholder="First or last name" />
+                </div>
+                <div>
+                    <label class="form-label">Search by Email</label>
+                    <input name="email" value="@Model?.SearchEmail" class="search-input" placeholder="example@domain.com" />
+                </div>
+                <button type="submit" class="action-btn" style="margin:0; padding:.75rem 1rem;">
+                    <i class="bi bi-search"></i> Search
+                </button>
+                <a class="action-btn" style="margin:0; padding:.75rem 1rem; text-decoration: none; text-align: center; background: #e2e8f0; color: #1e293b;" href="@Url.Action("Dashboard","Admin")">
+                    <i class="bi bi-arrow-counterclockwise"></i> Reset
+                </a>
+            </div>
+        </form>
+
+        <div class="table-card" style="margin-top: 1.5rem;">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Role</th>
+                        <th>Bookings</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model != null && Model.Users.Any())
+                    {
+                        foreach (var item in Model.Users)
+                        {
+                            var fullName = $"{item.User.first_name} {item.User.last_name}".Trim();
+                            <tr>
+                                <td>@(string.IsNullOrWhiteSpace(fullName) ? "—" : fullName)</td>
+                                <td>@item.User.email</td>
+                                <td>@(item.User.admin ? "Admin" : "User")</td>
+                                <td>@item.BookingsCount</td>
+                                <td class="text-end">
+                                    <button type="button" class="btn-view view-user-details" data-email="@item.User.email">
+                                        <i class="bi bi-eye"></i> View Details
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="5" class="text-center text-muted py-3">No users found.</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Details Modal Placeholder -->
+<div class="modal fade" id="userDetailsModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content" id="userDetailsContent">
+      <!-- Partial will be injected here -->
+    </div>
+  </div>
 </div>

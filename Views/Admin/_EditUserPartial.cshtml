@@ -1,0 +1,178 @@
+@model MVC_project.Models.User
+
+<style>
+    .modal.show .modal-dialog .modal-content {
+        border-radius: 1.5rem;
+        border: none;
+    }
+
+    .edit-modal-header {
+        background: linear-gradient(135deg, #6366f1 0%, #3730a3 100%);
+        color: white;
+        border: none;
+        padding: 1.5rem;
+        border-radius: 1.5rem 1.5rem 0 0;
+    }
+
+    .edit-modal-header .modal-title {
+        font-weight: 700;
+        font-size: 1.25rem;
+    }
+
+    .edit-modal-header .btn-close {
+        filter: brightness(0) invert(1);
+    }
+
+    .edit-modal-body {
+        background: #ffffff;
+        padding: 1.5rem;
+    }
+
+    .form-label-custom {
+        font-weight: 600;
+        color: #1e293b;
+        margin-bottom: 0.5rem;
+        display: block;
+    }
+
+    .form-control-custom {
+        height: 2.75rem;
+        border-radius: 0.75rem;
+        border: 2px solid #e2e8f0;
+        padding: 0.5rem 0.75rem;
+        font-size: 1rem;
+        background: #f8fafc;
+        transition: all 0.2s;
+        color: #1e293b;
+    }
+
+    .form-control-custom:focus {
+        border-color: #6366f1;
+        background: white;
+        box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.15);
+        outline: none;
+    }
+
+    .form-check-custom {
+        background: linear-gradient(135deg, #f0f9ff 0%, #e0e7ff 100%);
+        border: 1px solid #bae6fd;
+        border-radius: 0.75rem;
+        padding: 1rem;
+        margin-top: 1rem;
+    }
+
+    .form-check-custom .form-check-input {
+        width: 1.25rem;
+        height: 1.25rem;
+        border: 2px solid #bae6fd;
+        border-radius: 0.35rem;
+        cursor: pointer;
+        accent-color: #6366f1;
+    }
+
+    .form-check-custom .form-check-label {
+        margin-left: 0.5rem;
+        cursor: pointer;
+        color: #1e293b;
+        font-weight: 600;
+    }
+
+    .edit-modal-footer {
+        background: #f8fafc;
+        border-top: 1px solid #e2e8f0;
+        padding: 1rem 1.5rem;
+        border-radius: 0 0 1.5rem 1.5rem;
+        display: flex;
+        gap: 0.75rem;
+        justify-content: flex-end;
+    }
+
+    .btn-save {
+        background: linear-gradient(135deg, #6366f1 0%, #3730a3 100%);
+        color: white;
+        padding: 0.75rem 1.5rem;
+        border-radius: 0.6rem;
+        font-weight: 600;
+        border: none;
+        cursor: pointer;
+        box-shadow: 0 6px 20px rgba(99, 102, 241, 0.35);
+        transition: all 0.2s;
+    }
+
+    .btn-save:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 30px rgba(99, 102, 241, 0.5);
+        color: white !important;
+    }
+
+    .btn-cancel {
+        background: #e2e8f0;
+        color: #1e293b;
+        padding: 0.75rem 1.5rem;
+        border-radius: 0.6rem;
+        font-weight: 600;
+        border: none;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .btn-cancel:hover {
+        background: #cbd5e1;
+        color: #1e293b !important;
+    }
+
+    .disabled-note {
+        color: #64748b;
+        font-size: 0.875rem;
+        margin-top: 0.25rem;
+    }
+</style>
+
+<div class="edit-modal-header">
+    <h5 class="modal-title">
+        <i class="bi bi-pencil-square me-2"></i>
+        Edit User
+    </h5>
+    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+</div>
+
+<div class="edit-modal-body">
+    <form id="editUserForm">
+        <input type="hidden" id="userEmail" value="@Model.email" />
+        
+        <div class="mb-3">
+            <label class="form-label-custom">Email Address</label>
+            <input type="email" class="form-control-custom" value="@Model.email" disabled />
+            <p class="disabled-note">
+                <i class="bi bi-info-circle me-1"></i>Email cannot be changed
+            </p>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label-custom">First Name</label>
+            <input type="text" class="form-control-custom" id="firstName" value="@Model.first_name" placeholder="Enter first name" />
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label-custom">Last Name</label>
+            <input type="text" class="form-control-custom" id="lastName" value="@Model.last_name" placeholder="Enter last name" />
+        </div>
+
+        <div class="form-check-custom">
+            <input class="form-check-input" type="checkbox" id="isAdmin" @(Model.admin ? "checked" : "") />
+            <label class="form-check-label" for="isAdmin">
+                <i class="bi bi-shield-check me-1"></i>Grant Admin Rights
+            </label>
+        </div>
+    </form>
+</div>
+
+<div class="edit-modal-footer">
+    <button type="button" class="btn btn-cancel" data-bs-dismiss="modal">
+        <i class="bi bi-x-lg me-2"></i> Cancel
+    </button>
+    <button type="button" class="btn btn-save" id="btnSaveUser">
+        <i class="bi bi-check-circle me-2"></i> Save Changes
+    </button>
+</div>
+

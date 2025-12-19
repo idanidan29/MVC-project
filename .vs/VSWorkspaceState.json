@@ -7,6 +7,6 @@
     "\\wwwroot",
     "\\wwwroot\\css"
   ],
-  "SelectedNode": "\\MVC-project.sln",
+  "SelectedNode": "\\Controllers\\UserController.cs",
   "PreviewInSolutionExplorer": false
 }

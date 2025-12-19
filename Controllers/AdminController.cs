@@ -14,20 +14,140 @@ namespace MVC_project.Controllers
     {
         private readonly TripRepository _tripRepo;
         private readonly TripImageRepository _imageRepo;
+        private readonly UserRepository _userRepo;
+        private readonly UserTripRepository _userTripRepo;
         private readonly IWebHostEnvironment _webHostEnvironment;
 
-        public AdminController(TripRepository tripRepo, TripImageRepository imageRepo, IWebHostEnvironment webHostEnvironment)
+        public AdminController(TripRepository tripRepo, TripImageRepository imageRepo, UserRepository userRepo, UserTripRepository userTripRepo, IWebHostEnvironment webHostEnvironment)
         {
             _tripRepo = tripRepo;
             _imageRepo = imageRepo;
+            _userRepo = userRepo;
+            _userTripRepo = userTripRepo;
             _webHostEnvironment = webHostEnvironment;
         }
 
         // GET: /Admin/Dashboard
         [HttpGet("Dashboard")]
-        public IActionResult Dashboard()
+        public IActionResult Dashboard(string? name, string? email)
         {
-            return View();
+            var users = string.IsNullOrWhiteSpace(name) && string.IsNullOrWhiteSpace(email)
+                ? _userRepo.GetAll()
+                : _userRepo.Search(name, email);
+
+            var vm = new AdminDashboardViewModel
+            {
+                SearchName = name,
+                SearchEmail = email,
+            };
+
+            foreach (var u in users)
+            {
+                vm.Users.Add(new AdminUserItem
+                {
+                    User = u,
+                    BookingsCount = _userTripRepo.GetCount(u.email)
+                });
+            }
+
+            return View(vm);
+        }
+
+        // GET: /Admin/UserDetails?email=foo@bar
+        [HttpGet("UserDetails")]
+        public IActionResult UserDetails(string email)
+        {
+            if (string.IsNullOrWhiteSpace(email))
+            {
+                return BadRequest("Email is required");
+            }
+
+            var user = _userRepo.GetByEmail(email);
+            if (user == null)
+            {
+                return NotFound();
+            }
+
+            var bookings = _userTripRepo.GetByUserEmail(email).ToList();
+            var vm = new UserDetailsViewModel
+            {
+                User = user,
+                Bookings = bookings
+            };
+
+            return PartialView("_UserDetailsPartial", vm);
+        }
+
+        // POST: /Admin/DeleteUser
+        [HttpPost("DeleteUser")]
+        public IActionResult DeleteUser(string email)
+        {
+            if (string.IsNullOrWhiteSpace(email))
+            {
+                return BadRequest(new { success = false, message = "Email is required" });
+            }
+
+            var user = _userRepo.GetByEmail(email);
+            if (user == null)
+            {
+                return NotFound(new { success = false, message = "User not found" });
+            }
+
+            // Prevent deleting self
+            if (user.email == User.Identity.Name)
+            {
+                return BadRequest(new { success = false, message = "Cannot delete your own account" });
+            }
+
+            _userRepo.Delete(email);
+            return Ok(new { success = true, message = "User deleted successfully" });
+        }
+
+        // GET: /Admin/EditUser?email=foo@bar
+        [HttpGet("EditUser")]
+        public IActionResult EditUser(string email)
+        {
+            if (string.IsNullOrWhiteSpace(email))
+            {
+                return BadRequest("Email is required");
+            }
+
+            var user = _userRepo.GetByEmail(email);
+            if (user == null)
+            {
+                return NotFound();
+            }
+
+            return PartialView("_EditUserPartial", user);
+        }
+
+        // POST: /Admin/UpdateUser
+        [HttpPost("UpdateUser")]
+        public IActionResult UpdateUser(string email, string firstName, string lastName, bool isAdmin)
+        {
+            if (string.IsNullOrWhiteSpace(email))
+            {
+                return BadRequest(new { success = false, message = "Email is required" });
+            }
+
+            var user = _userRepo.GetByEmail(email);
+            if (user == null)
+            {
+                return NotFound(new { success = false, message = "User not found" });
+            }
+
+            // Prevent demoting self from admin
+            if (user.email == User.Identity.Name && user.admin && !isAdmin)
+            {
+                return BadRequest(new { success = false, message = "Cannot demote yourself from admin" });
+            }
+
+            user.first_name = firstName?.Trim() ?? user.first_name;
+            user.last_name = lastName?.Trim() ?? user.last_name;
+            user.admin = isAdmin;
+
+            _userRepo.Update(user);
+            return Ok(new { success = true, message = "User updated successfully" });
         }
 
         // GET: /Admin/AddTrip
