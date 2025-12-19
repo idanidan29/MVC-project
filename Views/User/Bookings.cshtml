@@ -1,0 +1,649 @@
+@model List<MVC_project.ViewModels.UserTripViewModel>
+
+@{
+    ViewData["Title"] = "My Bookings";
+}
+
+<style>
+    /* Animated Background */
+    .bookings-bg {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(-45deg, #6366f1, #3730a3, #a78bfa, #6366f1);
+        background-size: 400% 400%;
+        animation: gradient 15s ease infinite;
+        z-index: -1;
+    }
+
+    @@keyframes gradient {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+    }
+
+    /* Floating particles */
+    .particle {
+        position: fixed;
+        pointer-events: none;
+        opacity: 0.5;
+        animation: float 20s infinite linear;
+        z-index: -1;
+    }
+
+    @@keyframes float {
+        0% {
+            transform: translate(0, 0) rotate(0deg);
+            opacity: 0;
+        }
+        10% {
+            opacity: 0.5;
+        }
+        90% {
+            opacity: 0.5;
+        }
+        100% {
+            transform: translate(100px, -100vh) rotate(360deg);
+            opacity: 0;
+        }
+    }
+
+    /* Main container */
+    .bookings-container {
+        position: relative;
+        min-height: 100vh;
+        padding: 2rem 1rem;
+        overflow-y: auto;
+    }
+
+    /* Page header */
+    .page-header {
+        text-align: center;
+        margin-bottom: 3rem;
+        animation: slideInDown 0.8s ease-out;
+    }
+
+    .page-title {
+        color: white;
+        font-size: 3rem;
+        font-weight: 700;
+        text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.3);
+        margin-bottom: 0.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 1rem;
+    }
+
+    .page-subtitle {
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 1.2rem;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+    }
+
+    .trip-count-badge {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        color: white;
+        padding: 0.5rem 1.5rem;
+        border-radius: 2rem;
+        font-size: 1.1rem;
+        font-weight: 600;
+        box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+        display: inline-block;
+        margin-top: 1rem;
+    }
+
+    @@keyframes slideInDown {
+        from {
+            opacity: 0;
+            transform: translateY(-50px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* Empty state */
+    .empty-state {
+        text-align: center;
+        padding: 4rem 2rem;
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        border-radius: 2rem;
+        max-width: 600px;
+        margin: 0 auto;
+        box-shadow: 0 20px 70px rgba(0, 0, 0, 0.2);
+        animation: slideInUp 0.8s ease-out;
+    }
+
+    .empty-state-icon {
+        font-size: 5rem;
+        color: #6366f1;
+        margin-bottom: 1.5rem;
+        opacity: 0.7;
+    }
+
+    .empty-state-title {
+        color: #1e293b;
+        font-size: 2rem;
+        font-weight: 700;
+        margin-bottom: 1rem;
+    }
+
+    .empty-state-text {
+        color: #64748b;
+        font-size: 1.1rem;
+        margin-bottom: 2rem;
+        line-height: 1.6;
+    }
+
+    .btn-browse {
+        background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+        color: white;
+        padding: 0.75rem 2rem;
+        border-radius: 0.75rem;
+        text-decoration: none;
+        font-weight: 600;
+        box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .btn-browse:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(99, 102, 241, 0.6);
+        color: white;
+    }
+
+    /* Trips grid */
+    .trips-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+        gap: 2rem;
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 0 1rem;
+    }
+
+    @@media (max-width: 768px) {
+        .trips-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    /* Trip card */
+    .trip-card {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        border-radius: 1.5rem;
+        overflow: hidden;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        box-shadow: 0 20px 70px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.5);
+        transition: all 0.3s ease;
+        animation: slideInUp 0.8s ease-out;
+        position: relative;
+    }
+
+    .trip-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 30px 90px rgba(99, 102, 241, 0.3);
+        border-color: rgba(99, 102, 241, 0.3);
+    }
+
+    @@keyframes slideInUp {
+        from {
+            opacity: 0;
+            transform: translateY(50px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* Trip image */
+    .trip-image-container {
+        width: 100%;
+        height: 250px;
+        overflow: hidden;
+        background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+        position: relative;
+    }
+
+    .trip-image {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.3s ease;
+    }
+
+    .trip-card:hover .trip-image {
+        transform: scale(1.1);
+    }
+
+    .no-image-placeholder {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%);
+    }
+
+    .no-image-placeholder i {
+        font-size: 4rem;
+        color: #0284c7;
+        opacity: 0.5;
+    }
+
+    /* Package badge */
+    .package-badge {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 0.75rem;
+        font-size: 0.85rem;
+        font-weight: 600;
+        box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+        z-index: 1;
+    }
+
+    /* Trip details */
+    .trip-details {
+        padding: 1.5rem;
+    }
+
+    .trip-destination {
+        color: #1e293b;
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+    }
+
+    .trip-country {
+        color: #64748b;
+        font-size: 1rem;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .trip-country i {
+        color: #6366f1;
+    }
+
+    .trip-info {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+        margin-bottom: 1rem;
+    }
+
+    .info-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: #475569;
+        font-size: 0.95rem;
+    }
+
+    .info-item i {
+        color: #6366f1;
+        width: 20px;
+    }
+
+    .trip-description {
+        color: #64748b;
+        font-size: 0.9rem;
+        line-height: 1.6;
+        margin-bottom: 1rem;
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    /* Price section */
+    .trip-price-section {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding-top: 1rem;
+        border-top: 2px solid #e2e8f0;
+        margin-bottom: 1rem;
+    }
+
+    .price-container {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .trip-price {
+        color: #1e293b;
+        font-size: 1.8rem;
+        font-weight: 700;
+    }
+
+    .original-price {
+        color: #94a3b8;
+        font-size: 1rem;
+        text-decoration: line-through;
+    }
+
+    .discount-badge {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        color: white;
+        padding: 0.25rem 0.75rem;
+        border-radius: 0.5rem;
+        font-size: 0.85rem;
+        font-weight: 600;
+    }
+
+    /* Action buttons */
+    .trip-actions {
+        display: flex;
+        gap: 0.75rem;
+    }
+
+    .btn-remove {
+        flex: 1;
+        background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        color: white;
+        border: none;
+        padding: 0.75rem 1rem;
+        border-radius: 0.75rem;
+        font-size: 0.95rem;
+        font-weight: 600;
+        cursor: pointer;
+        box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+    }
+
+    .btn-remove:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(239, 68, 68, 0.6);
+    }
+
+    .btn-book {
+        flex: 1;
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        color: white;
+        border: none;
+        padding: 0.75rem 1rem;
+        border-radius: 0.75rem;
+        font-size: 0.95rem;
+        font-weight: 600;
+        cursor: pointer;
+        box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+    }
+
+    .btn-book:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(16, 185, 129, 0.6);
+    }
+
+    /* Loading animation */
+    @@keyframes fadeOut {
+        to {
+            opacity: 0;
+            transform: scale(0.9);
+        }
+    }
+</style>
+
+<!-- Background elements -->
+<div class="bookings-bg"></div>
+
+<script>
+    // Create floating particles
+    for (let i = 0; i < 50; i++) {
+        const particle = document.createElement('div');
+        particle.className = 'particle';
+        particle.style.width = Math.random() * 5 + 2 + 'px';
+        particle.style.height = particle.style.width;
+        particle.style.left = Math.random() * 100 + '%';
+        particle.style.background = 'white';
+        particle.style.borderRadius = '50%';
+        particle.style.animationDelay = Math.random() * 20 + 's';
+        particle.style.animationDuration = Math.random() * 10 + 15 + 's';
+        document.body.appendChild(particle);
+    }
+</script>
+
+<div class="bookings-container">
+    <div class="page-header">
+        <h1 class="page-title">
+            <i class="bi bi-cart-check"></i>
+            My Bookings
+        </h1>
+        <p class="page-subtitle">Manage your saved trips and complete your bookings</p>
+        @if (Model != null && Model.Any())
+        {
+            <div class="trip-count-badge">
+                <i class="bi bi-bag-check"></i> @Model.Count @(Model.Count == 1 ? "Trip" : "Trips") in Cart
+            </div>
+        }
+    </div>
+
+    @if (Model == null || !Model.Any())
+    {
+        <div class="empty-state">
+            <div class="empty-state-icon">
+                <i class="bi bi-cart-x"></i>
+            </div>
+            <h2 class="empty-state-title">Your cart is empty</h2>
+            <p class="empty-state-text">
+                You haven't added any trips to your cart yet. 
+                Start exploring amazing destinations and add your favorites!
+            </p>
+            <a href="/Dashboard/Index" class="btn-browse">
+                <i class="bi bi-compass"></i>
+                Browse Trips
+            </a>
+        </div>
+    }
+    else
+    {
+        <div class="trips-grid">
+            @foreach (var trip in Model)
+            {
+                <div class="trip-card" data-trip-id="@trip.TripID">
+                    <div class="trip-image-container">
+                        @if (trip.Images.Any())
+                        {
+                            <img src="data:image/jpeg;base64,@Convert.ToBase64String(trip.Images.First())" alt="@trip.Destination" class="trip-image" />
+                        }
+                        else
+                        {
+                            <div class="no-image-placeholder">
+                                <i class="bi bi-image"></i>
+                            </div>
+                        }
+                        <span class="package-badge">
+                            <i class="bi bi-tag"></i> @trip.PackageType
+                        </span>
+                    </div>
+
+                    <div class="trip-details">
+                        <h3 class="trip-destination">@trip.Destination</h3>
+                        <div class="trip-country">
+                            <i class="bi bi-geo-alt-fill"></i>
+                            <span>@trip.Country</span>
+                        </div>
+
+                        <div class="trip-info">
+                            <div class="info-item">
+                                <i class="bi bi-calendar-event"></i>
+                                <span>@trip.StartDate.ToString("MMM dd") - @trip.EndDate.ToString("MMM dd, yyyy")</span>
+                            </div>
+                            <div class="info-item">
+                                <i class="bi bi-clock"></i>
+                                <span>@trip.DurationDays days</span>
+                            </div>
+                            <div class="info-item">
+                                <i class="bi bi-door-open"></i>
+                                <span>@trip.AvailableRooms rooms available</span>
+                            </div>
+                        </div>
+
+                        <p class="trip-description">@trip.Description</p>
+
+                        <div class="trip-price-section">
+                            <div class="price-container">
+                                @if (trip.HasDiscount)
+                                {
+                                    <span class="original-price">$@trip.Price.ToString("N2")</span>
+                                    <span class="trip-price">$@trip.FinalPrice.ToString("N2")</span>
+                                }
+                                else
+                                {
+                                    <span class="trip-price">$@trip.Price.ToString("N2")</span>
+                                }
+                            </div>
+                            @if (trip.HasDiscount)
+                            {
+                                var discount = Math.Round((trip.Price - trip.FinalPrice) / trip.Price * 100);
+                                <span class="discount-badge">-@discount%</span>
+                            }
+                        </div>
+
+                        <div class="trip-actions">
+                            <button class="btn-remove" onclick="removeFromCart(@trip.TripID, '@trip.Destination')">
+                                <i class="bi bi-trash"></i>
+                                Remove
+                            </button>
+                            <button class="btn-book" onclick="bookTrip(@trip.TripID)">
+                                <i class="bi bi-check-circle"></i>
+                                Book Now
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+<script>
+    async function removeFromCart(tripId, destination) {
+        if (!confirm(`Are you sure you want to remove ${destination} from your cart?`)) {
+            return;
+        }
+
+        try {
+            const response = await fetch('/User/RemoveFromCart', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ tripId: tripId })
+            });
+
+            const data = await response.json();
+            
+            if (data.success) {
+                // Remove card with animation
+                const card = document.querySelector(`[data-trip-id="${tripId}"]`);
+                if (card) {
+                    card.style.animation = 'fadeOut 0.4s ease forwards';
+                    setTimeout(() => {
+                        card.remove();
+                        
+                        // Check if cart is now empty
+                        const remainingCards = document.querySelectorAll('.trip-card');
+                        if (remainingCards.length === 0) {
+                            location.reload(); // Reload to show empty state
+                        } else {
+                            // Update count badge
+                            const badge = document.querySelector('.trip-count-badge');
+                            if (badge) {
+                                const count = remainingCards.length;
+                                badge.innerHTML = `<i class="bi bi-bag-check"></i> ${count} ${count === 1 ? 'Trip' : 'Trips'} in Cart`;
+                            }
+                        }
+                        
+                        showNotification('✓ Trip removed from cart', 'success');
+                    }, 400);
+                }
+            } else {
+                showNotification(data.message, 'error');
+            }
+        } catch (error) {
+            console.error('Error removing from cart:', error);
+            showNotification('Failed to remove trip. Please try again.', 'error');
+        }
+    }
+
+    function bookTrip(tripId) {
+        // Placeholder for future booking functionality
+        alert(`Booking trip ${tripId}. This feature will be implemented soon!`);
+        // window.location.href = `/Booking/Book?tripId=${tripId}`;
+    }
+
+    function showNotification(message, type = 'info') {
+        const notification = document.createElement('div');
+        notification.style.cssText = `
+            position: fixed;
+            top: 2rem;
+            right: 2rem;
+            background: ${type === 'success' ? 'linear-gradient(135deg, #10b981, #059669)' : 'linear-gradient(135deg, #ef4444, #dc2626)'};
+            color: white;
+            padding: 1rem 1.5rem;
+            border-radius: 0.75rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            z-index: 10000;
+            animation: slideInRight 0.3s ease;
+            font-weight: 600;
+        `;
+        notification.textContent = message;
+        document.body.appendChild(notification);
+        
+        setTimeout(() => {
+            notification.style.animation = 'slideOutRight 0.3s ease';
+            setTimeout(() => notification.remove(), 300);
+        }, 3000);
+    }
+
+    const style = document.createElement('style');
+    style.textContent = `
+        @@keyframes slideInRight {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        @@keyframes slideOutRight {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+        }
+    `;
+    document.head.appendChild(style);
+</script>
