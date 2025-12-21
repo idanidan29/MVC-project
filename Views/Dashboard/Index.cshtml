@@ -309,7 +309,7 @@
         z-index: 1;
     }
 
-    /* Button container */
+    /* Button container - visible by default */
     .trip-actions {
         position: absolute;
         bottom: 1rem;
@@ -318,16 +318,58 @@
         display: flex;
         gap: 0.75rem;
         z-index: 10;
-        opacity: 0;
-        transform: translateY(10px);
-        transition: all 0.3s ease;
-        pointer-events: none;
-    }
-
-    .trip-card:hover .trip-actions {
         opacity: 1;
         transform: translateY(0);
         pointer-events: all;
+    }
+
+    /* User action buttons */
+    .btn-add-cart {
+        background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+        color: white;
+        border: none;
+        padding: 0.5rem 0.75rem;
+        border-radius: 0.75rem;
+        font-size: 0.9rem;
+        font-weight: 600;
+        cursor: pointer;
+        box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.4rem;
+        flex: 1;
+    }
+
+    .btn-add-cart:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(99, 102, 241, 0.6);
+        color: white;
+    }
+
+    .btn-book-now {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        color: white;
+        border: none;
+        padding: 0.5rem 0.75rem;
+        border-radius: 0.75rem;
+        font-size: 0.9rem;
+        font-weight: 600;
+        cursor: pointer;
+        box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.4rem;
+        flex: 1;
+    }
+
+    .btn-book-now:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(16, 185, 129, 0.6);
+        color: white;
     }
 
     /* Delete button (admin only) */
@@ -421,6 +463,22 @@
                     inset 0 1px 0 rgba(255, 255, 255, 0.8);
         border: 1px solid rgba(255, 255, 255, 0.5);
         transform-origin: center;
+    }
+
+    /* Modal quantity row responsiveness */
+    .modal-qty-row {
+        flex-wrap: wrap;
+        margin-bottom: 1rem;
+    }
+
+    .qty-control { 
+        min-width: 160px;
+    }
+
+    @@media (max-width: 700px) {
+        .modal-content { padding: 1rem; margin: 1rem; }
+        .modal-qty-row { gap: 0.5rem; }
+        .qty-control { min-width: 120px; }
     }
 
     .modal-content.expand-animation {
@@ -967,10 +1025,10 @@
                         </div>
                     </div>
 
-                    <!-- Admin Action Buttons (appear on hover) -->
-                    @if (User?.IsInRole("Admin") ?? false)
-                    {
-                        <div class="trip-actions">
+                    <!-- Action Buttons -->
+                    <div class="trip-actions">
+                        @if (User?.IsInRole("Admin") ?? false)
+                        {
                             <a href="@Url.Action("EditTrip", "Admin", new { id = trip.TripID })" 
                                class="edit-btn" 
                                onclick="event.stopPropagation();"
@@ -984,8 +1042,20 @@
                                 <i class="bi bi-trash"></i>
                                 <span>Delete</span>
                             </button>
-                        </div>
-                    }
+                        }
+                        else
+                        {
+                            <!-- Quantity is selected in the trip modal only -->
+                            <button type="button" class="btn-add-cart" onclick="event.stopPropagation(); addToCart(@trip.TripID, '@trip.Destination');" title="Add to cart">
+                                <i class="bi bi-cart-plus"></i>
+                                <span>Add to Cart</span>
+                            </button>
+                            <button type="button" class="btn-book-now" onclick="event.stopPropagation(); bookNow(@trip.TripID);" title="Buy now">
+                                <i class="bi bi-lightning-charge"></i>
+                                <span>Buy Now</span>
+                            </button>
+                        }
+                    </div>
                 </div>
             }
         </div>
@@ -1154,6 +1224,23 @@
         // Store trip ID for actions
         tripModal.dataset.tripId = tripId;
         tripModal.dataset.destination = data.destination;
+        // Configure modal quantity control
+        try {
+            const roomsCount = parseInt(data.rooms || '1', 10) || 1;
+            const qtyControl = tripModal.querySelector('#modal-qty-control');
+            const qtyDisplay = tripModal.querySelector('#modal-qty-display');
+            const roomsHint = tripModal.querySelector('#modal-rooms-hint');
+            if (qtyControl && qtyDisplay) {
+                qtyControl.dataset.max = roomsCount;
+                qtyDisplay.value = '1';
+                roomsHint.textContent = `${roomsCount} available`;
+                // initialize buttons disabled state
+                const btnInc = qtyControl.querySelector('.qty-increase');
+                const btnDec = qtyControl.querySelector('.qty-decrease');
+                if (btnInc) btnInc.disabled = false;
+                if (btnDec) btnDec.disabled = true;
+            }
+        } catch (e) { console.error(e); }
         
         // Load images
         loadCarouselImages(tripId);
@@ -1221,6 +1308,16 @@
                     </div>
                 </div>
                 
+                <div class="modal-qty-row" style="display:flex;align-items:center;justify-content:center;padding:1rem 1.5rem;gap:1rem;">
+                    <div class="qty-label" style="color:#475569;font-weight:600;">Quantity</div>
+                    <div class="qty-control" id="modal-qty-control" data-max="1" style="display:flex;align-items:center;gap:0.5rem;background:linear-gradient(180deg,#fff,#f8fafc);padding:0.25rem;border-radius:0.75rem;box-shadow:0 6px 18px rgba(2,6,23,0.06);">
+                        <button type="button" class="qty-btn qty-decrease" onclick="changeModalQty(-1)" style="background:transparent;border:none;font-size:1.4rem;padding:0.25rem 0.6rem;color:#475569;">−</button>
+                        <input type="text" id="modal-qty-display" value="1" readonly style="width:48px;text-align:center;border:none;background:transparent;font-weight:700;color:#111827;font-size:1rem;">
+                        <button type="button" class="qty-btn qty-increase" onclick="changeModalQty(1)" style="background:transparent;border:none;font-size:1.2rem;padding:0.25rem 0.6rem;color:#475569;">+</button>
+                    </div>
+                    <div id="modal-rooms-hint" style="color:#64748b;font-size:0.9rem;">&nbsp;</div>
+                </div>
+
                 <div class="trip-actions">
                     <button class="btn-action btn-add-cart" onclick="addToCartFromModal()">
                         <i class="bi bi-cart-plus"></i>
@@ -1359,23 +1456,76 @@
     function addToCartFromModal() {
         const tripId = parseInt(tripModal.dataset.tripId);
         const destination = tripModal.dataset.destination;
-        addToCart(tripId, destination);
+        const qtyDisplay = tripModal.querySelector('#modal-qty-display');
+        const quantity = qtyDisplay ? parseInt(qtyDisplay.value || '1', 10) : 1;
+        // Directly call endpoint with quantity
+        fetch('/User/AddToCart', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ tripId, quantity })
+        }).then(r => r.json()).then(data => {
+            if (data.success) {
+                showNotification(data.message, 'success');
+            } else {
+                showNotification(data.message, 'error');
+            }
+        }).catch(err => {
+            console.error('Error adding to cart:', err);
+            showNotification('Failed to add trip to cart. Please try again.', 'error');
+        });
     }
 
     function bookNowFromModal() {
         const tripId = parseInt(tripModal.dataset.tripId);
-        bookNow(tripId);
+        const qtyDisplay = tripModal.querySelector('#modal-qty-display');
+        const quantity = qtyDisplay ? parseInt(qtyDisplay.value || '1', 10) : 1;
+        fetch('/Booking/BuyNow', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ tripId, quantity })
+        }).then(r => r.json()).then(data => {
+            if (data.success) {
+                showNotification(data.message, 'success');
+                closeTripModal();
+            } else {
+                showNotification(data.message, 'error');
+            }
+        }).catch(err => {
+            console.error('Error buying trip:', err);
+            showNotification('Failed to complete purchase. Please try again.', 'error');
+        });
+    }
+
+    function changeModalQty(delta) {
+        if (!tripModal) return;
+        const control = tripModal.querySelector('#modal-qty-control');
+        const display = tripModal.querySelector('#modal-qty-display');
+        if (!control || !display) return;
+        const max = parseInt(control.dataset.max || '1', 10) || 1;
+        let value = parseInt(display.value || '1', 10) || 1;
+        value += delta;
+        if (value < 1) value = 1;
+        if (value > max) value = max;
+        display.value = String(value);
+        // Update button disabled state
+        const btnInc = control.querySelector('.qty-increase');
+        const btnDec = control.querySelector('.qty-decrease');
+        if (btnInc) btnInc.disabled = value >= max;
+        if (btnDec) btnDec.disabled = value <= 1;
     }
 
     // Shopping cart functionality
     async function addToCart(tripId, destination) {
+        const card = document.querySelector(`[data-trip-id="${tripId}"]`);
+        const qtyInput = card ? card.querySelector('.qty-input') : null;
+        const quantity = qtyInput ? parseInt(qtyInput.value || '1', 10) : 1;
         try {
             const response = await fetch('/User/AddToCart', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ tripId: tripId })
+                body: JSON.stringify({ tripId: tripId, quantity })
             });
 
             const data = await response.json();
@@ -1391,10 +1541,28 @@
         }
     }
 
-    function bookNow(tripId) {
-        // Redirect to booking page (you can create this later)
-        alert(`Booking trip ${tripId}. This will redirect to the booking page.`);
-        // window.location.href = `/Booking/Book?tripId=${tripId}`;
+    async function bookNow(tripId) {
+        const card = document.querySelector(`[data-trip-id="${tripId}"]`);
+        const qtyInput = card ? card.querySelector('.qty-input') : null;
+        const quantity = qtyInput ? parseInt(qtyInput.value || '1', 10) : 1;
+        try {
+            const response = await fetch('/Booking/BuyNow', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ tripId, quantity })
+            });
+            const data = await response.json();
+            if (data.success) {
+                showNotification(data.message, 'success');
+            } else {
+                showNotification(data.message, 'error');
+            }
+        } catch (error) {
+            console.error('Error buying trip:', error);
+            showNotification('Failed to complete purchase. Please try again.', 'error');
+        }
     }
 
     function showNotification(message, type = 'info') {

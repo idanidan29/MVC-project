@@ -19,6 +19,10 @@ namespace MVC_project.Models
         [Column("TripID")]
         public int TripID { get; set; }
 
+        [Required]
+        [Column("Quantity")]
+        public int Quantity { get; set; } = 1;
+
         // Navigation properties
         [ForeignKey("UserEmail")]
         public User? User { get; set; }

@@ -92,6 +92,7 @@ namespace MVC_project.Controllers
                 PackageType = ut.Trip.PackageType,
                 AvailableRooms = ut.Trip.AvailableRooms,
                 Description = ut.Trip.Description,
+                Quantity = ut.Quantity <= 0 ? 1 : ut.Quantity,
                 Images = _tripRepo.GetById(ut.TripID) != null 
                     ? _imageRepo.GetByTripId(ut.TripID).Select(img => img.ImageData).ToList()
                     : new List<byte[]>()
@@ -153,15 +154,22 @@ namespace MVC_project.Controllers
                     return Json(new { success = false, message = "Trip not found" });
                 }
 
-                // Add to cart
-                bool added = _userTripRepo.Add(userEmail, request.TripId);
+                // Validate quantity
+                var qty = request.Quantity <= 0 ? 1 : request.Quantity;
+                if (qty > trip.AvailableRooms)
+                {
+                    return Json(new { success = false, message = $"Only {trip.AvailableRooms} rooms available for {trip.Destination}." });
+                }
+
+                // Add to cart with quantity (updates if existing)
+                bool added = _userTripRepo.Add(userEmail, request.TripId, qty);
                 
                 if (!added)
                 {
                     return Json(new { success = false, message = $"{trip.Destination} is already in your cart!" });
                 }
 
-                return Json(new { success = true, message = $"✓ {trip.Destination} added to cart!" });
+                return Json(new { success = true, message = $"✓ {trip.Destination} added to cart (x{qty})!" });
             }
             catch (Exception ex)
             {
@@ -174,6 +182,7 @@ namespace MVC_project.Controllers
     public class AddToCartRequest
     {
         public int TripId { get; set; }
+        public int Quantity { get; set; }
     }
 
     // Request model for RemoveFromCart

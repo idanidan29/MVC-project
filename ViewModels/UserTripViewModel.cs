@@ -14,6 +14,9 @@ namespace MVC_project.ViewModels
         public int AvailableRooms { get; set; }
         public string Description { get; set; } = string.Empty;
         public List<byte[]> Images { get; set; } = new List<byte[]>();
+
+        // Quantity selected by the user (cart item)
+        public int Quantity { get; set; } = 1;
         
         // Computed properties
         public decimal FinalPrice => (DiscountPrice.HasValue && DiscountEndDate.HasValue && DiscountEndDate > DateTime.Now) 

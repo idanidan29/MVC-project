@@ -12,22 +12,47 @@ namespace MVC_project.Data
             _context = context;
         }
 
-        // Add a trip to user's cart
+        // Add a trip to user's cart (default quantity = 1)
         public bool Add(string userEmail, int tripId)
         {
+            return Add(userEmail, tripId, 1);
+        }
+
+        // Add a trip to user's cart with quantity
+        public bool Add(string userEmail, int tripId, int quantity)
+        {
             // Check if already exists
-            if (Exists(userEmail, tripId))
+            var existing = _context.UserTrips
+                .FirstOrDefault(ut => ut.UserEmail == userEmail && ut.TripID == tripId);
+
+            if (existing != null)
             {
-                return false; // Already in cart
+                // Update quantity instead of duplicating
+                existing.Quantity = quantity;
+                _context.SaveChanges();
+                return true;
             }
 
             var userTrip = new UserTrip
             {
                 UserEmail = userEmail,
-                TripID = tripId
+                TripID = tripId,
+                Quantity = quantity
             };
 
             _context.UserTrips.Add(userTrip);
+            _context.SaveChanges();
+            return true;
+        }
+
+        public bool UpdateQuantity(string userEmail, int tripId, int quantity)
+        {
+            var userTrip = _context.UserTrips
+                .FirstOrDefault(ut => ut.UserEmail == userEmail && ut.TripID == tripId);
+
+            if (userTrip == null) return false;
+
+            userTrip.Quantity = quantity;
             _context.SaveChanges();
             return true;
         }
@@ -68,6 +93,16 @@ namespace MVC_project.Data
         public int GetCount(string userEmail)
         {
             return _context.UserTrips.Count(ut => ut.UserEmail == userEmail);
+        }
+
+        // Remove all trips from user's cart
+        public int RemoveAll(string userEmail)
+        {
+            var items = _context.UserTrips.Where(ut => ut.UserEmail == userEmail).ToList();
+            if (!items.Any()) return 0;
+            _context.UserTrips.RemoveRange(items);
+            _context.SaveChanges();
+            return items.Count;
         }
     }
 }
