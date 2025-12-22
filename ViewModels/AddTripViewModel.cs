@@ -57,5 +57,25 @@ namespace MVC_project.ViewModels
 
         [Display(Name = "Trip Images (Optional)")]
         public List<IFormFile>? Images { get; set; }
+
+        // Multiple date variations
+        public List<TripDateItem>? AdditionalDates { get; set; }
+    }
+
+    public class TripDateItem
+    {
+        public int? TripDateID { get; set; } // For editing existing dates
+        
+        [Required(ErrorMessage = "Start date is required")]
+        [DataType(DataType.Date)]
+        public DateTime StartDate { get; set; }
+
+        [Required(ErrorMessage = "End date is required")]
+        [DataType(DataType.Date)]
+        public DateTime EndDate { get; set; }
+
+        [Required(ErrorMessage = "Available rooms is required")]
+        [Range(0, 10000, ErrorMessage = "Available rooms must be between 0 and 10,000")]
+        public int AvailableRooms { get; set; }
     }
 }

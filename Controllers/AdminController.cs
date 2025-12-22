@@ -15,15 +15,17 @@ namespace MVC_project.Controllers
     {
         private readonly TripRepository _tripRepo;
         private readonly TripImageRepository _imageRepo;
+        private readonly TripDateRepository _tripDateRepo;
         private readonly UserRepository _userRepo;
         private readonly UserTripRepository _userTripRepo;
         private readonly PasswordService _passwordService;
         private readonly IWebHostEnvironment _webHostEnvironment;
 
-        public AdminController(TripRepository tripRepo, TripImageRepository imageRepo, UserRepository userRepo, UserTripRepository userTripRepo, PasswordService passwordService, IWebHostEnvironment webHostEnvironment)
+        public AdminController(TripRepository tripRepo, TripImageRepository imageRepo, TripDateRepository tripDateRepo, UserRepository userRepo, UserTripRepository userTripRepo, PasswordService passwordService, IWebHostEnvironment webHostEnvironment)
         {
             _tripRepo = tripRepo;
             _imageRepo = imageRepo;
+            _tripDateRepo = tripDateRepo;
             _userRepo = userRepo;
             _userTripRepo = userTripRepo;
             _passwordService = passwordService;
@@ -272,6 +274,33 @@ namespace MVC_project.Controllers
                 }
             }
 
+            // Handle additional date variations
+            if (model.AdditionalDates != null && model.AdditionalDates.Any())
+            {
+                var tripDates = new List<TripDate>();
+
+                foreach (var dateItem in model.AdditionalDates)
+                {
+                    // Validate each date range
+                    if (dateItem.EndDate > dateItem.StartDate)
+                    {
+                        tripDates.Add(new TripDate
+                        {
+                            TripID = trip.TripID,
+                            StartDate = dateItem.StartDate,
+                            EndDate = dateItem.EndDate,
+                            AvailableRooms = dateItem.AvailableRooms,
+                            CreatedAt = DateTime.Now
+                        });
+                    }
+                }
+
+                if (tripDates.Any())
+                {
+                    _tripDateRepo.AddRange(tripDates);
+                }
+            }
+
             TempData["SuccessMessage"] = "Trip added successfully!";
             return RedirectToAction("Dashboard");
         }
@@ -283,6 +312,15 @@ namespace MVC_project.Controllers
             var trip = _tripRepo.GetById(id);
             if (trip == null)
                 return NotFound();
+
+            // Load existing dates
+            var existingDates = _tripDateRepo.GetByTripId(id).Select(td => new TripDateItem
+            {
+                TripDateID = td.TripDateID,
+                StartDate = td.StartDate,
+                EndDate = td.EndDate,
+                AvailableRooms = td.AvailableRooms
+            }).ToList();
 
             var model = new AddTripViewModel
             {
@@ -296,7 +334,8 @@ namespace MVC_project.Controllers
                 AvailableRooms = trip.AvailableRooms,
                 PackageType = trip.PackageType,
                 AgeLimit = trip.AgeLimit,
-                Description = trip.Description
+                Description = trip.Description,
+                AdditionalDates = existingDates
             };
 
             ViewBag.TripId = id;
@@ -382,6 +421,37 @@ namespace MVC_project.Controllers
                 if (tripImages.Any())
                 {
                     _imageRepo.AddRange(tripImages);
+                }
+            }
+
+            // Handle additional date variations
+            if (model.AdditionalDates != null && model.AdditionalDates.Any())
+            {
+                // Delete all existing dates for this trip
+                _tripDateRepo.DeleteByTripId(id);
+
+                // Add updated dates
+                var tripDates = new List<TripDate>();
+
+                foreach (var dateItem in model.AdditionalDates)
+                {
+                    // Validate each date range
+                    if (dateItem.EndDate > dateItem.StartDate)
+                    {
+                        tripDates.Add(new TripDate
+                        {
+                            TripID = id,
+                            StartDate = dateItem.StartDate,
+                            EndDate = dateItem.EndDate,
+                            AvailableRooms = dateItem.AvailableRooms,
+                            CreatedAt = DateTime.Now
+                        });
+                    }
+                }
+
+                if (tripDates.Any())
+                {
+                    _tripDateRepo.AddRange(tripDates);
                 }
             }
 

@@ -778,6 +778,63 @@
         box-shadow: 0 6px 20px rgba(245, 158, 11, 0.6);
     }
 
+    /* Date Variations Section */
+    .date-variations-section {
+        padding: 1.5rem;
+        margin: 1.5rem 0;
+        background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+        border-radius: 1rem;
+        border: 2px solid #e2e8f0;
+    }
+
+    .date-variations-list {
+        display: grid;
+        gap: 0.75rem;
+    }
+
+    .date-variation-item {
+        background: white;
+        padding: 1rem;
+        border-radius: 0.75rem;
+        border: 2px solid #e2e8f0;
+        transition: all 0.3s ease;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+    }
+
+    .date-variation-item:hover {
+        border-color: #6366f1;
+        box-shadow: 0 4px 12px rgba(99, 102, 241, 0.15);
+        transform: translateY(-2px);
+    }
+
+    .date-variation-info {
+        display: flex;
+        gap: 1.5rem;
+        flex-wrap: wrap;
+        align-items: center;
+    }
+
+    .date-variation-info > div {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: #475569;
+        font-size: 0.95rem;
+    }
+
+    .date-variation-info i {
+        color: #6366f1;
+    }
+
+    .date-variation-info strong {
+        font-weight: 600;
+        color: #1e293b;
+    }
+
     /* Image lightbox */
     .lightbox {
         display: none;
@@ -1288,7 +1345,7 @@
                      data-country="@trip.Country.ToLower()" 
                      data-category="@trip.PackageType" 
                      data-price="@trip.DiscountPrice.HasValue ? trip.DiscountPrice.Value : trip.Price" 
-                     data-start-date="@trip.StartDate.ToString("yyyy-MM-dd")"
+                     data-start-date="@trip.ClosestStartDate.ToString("yyyy-MM-dd")"
                      data-is-discount="@(trip.DiscountPrice.HasValue && trip.DiscountPrice < trip.Price ? "true" : "false")">
                     <!-- Package Type Badge -->
                     <div class="package-badge">
@@ -1322,12 +1379,19 @@
                         <div class="trip-info">
                             <div class="info-item">
                                 <i class="bi bi-calendar-check"></i>
-                                <span>@trip.StartDate.ToString("MMM dd, yyyy") - @trip.EndDate.ToString("MMM dd, yyyy")</span>
+                                <span>@trip.ClosestStartDate.ToString("MMM dd, yyyy") - @trip.ClosestEndDate.ToString("MMM dd, yyyy")</span>
                             </div>
                             <div class="info-item">
                                 <i class="bi bi-clock"></i>
-                                <span>@((trip.EndDate - trip.StartDate).Days) days</span>
+                                <span>@((trip.ClosestEndDate - trip.ClosestStartDate).Days) days</span>
                             </div>
+                            @if (trip.DateVariations.Any())
+                            {
+                                <div class="info-item" style="color: #6366f1; font-weight: 600;">
+                                    <i class="bi bi-calendar-range"></i>
+                                    <span>+@trip.DateVariations.Count more date@(trip.DateVariations.Count == 1 ? "" : "s")</span>
+                                </div>
+                            }
                         </div>
 
                         <p class="trip-description">@trip.Description</p>
@@ -1361,10 +1425,10 @@
                             data-destination="@trip.Destination"
                             data-country="@trip.Country"
                             data-description="@trip.Description"
-                            data-start-date='@trip.StartDate.ToString("MMM dd, yyyy")'
-                            data-end-date='@trip.EndDate.ToString("MMM dd, yyyy")'
-                            data-duration="@((trip.EndDate - trip.StartDate).Days)"
-                            data-rooms="@trip.AvailableRooms"
+                            data-start-date='@trip.ClosestStartDate.ToString("MMM dd, yyyy")'
+                            data-end-date='@trip.ClosestEndDate.ToString("MMM dd, yyyy")'
+                            data-duration="@((trip.ClosestEndDate - trip.ClosestStartDate).Days)"
+                            data-rooms="@trip.ClosestAvailableRooms"
                             data-package="@trip.PackageType"
                             data-price='@(trip.DiscountPrice.HasValue && trip.DiscountPrice < trip.Price ? trip.DiscountPrice.Value.ToString("N2") : trip.Price.ToString("N2"))'
                             data-image-count="@trip.ImageCount"
@@ -1461,6 +1525,9 @@
         // Load images
         loadCarouselImages(tripId);
         
+        // Load and display date variations
+        loadDateVariations(tripId);
+        
         // Show modal with animation
         tripModal.classList.add('active');
         modalContent.classList.add('expand-animation');
@@ -1532,6 +1599,13 @@
                         <button type="button" class="qty-btn qty-increase" onclick="changeModalQty(1)" style="background:transparent;border:none;font-size:1.2rem;padding:0.25rem 0.6rem;color:#475569;">+</button>
                     </div>
                     <div id="modal-rooms-hint" style="color:#64748b;font-size:0.9rem;">&nbsp;</div>
+                </div>
+
+                <div id="modal-date-variations" class="date-variations-section" style="display:none;">
+                    <h4 style="color:#1e293b;font-size:1.2rem;font-weight:700;margin-bottom:1rem;display:flex;align-items:center;gap:0.5rem;">
+                        <i class="bi bi-calendar-range"></i> Available Date Options
+                    </h4>
+                    <div id="date-variations-list" class="date-variations-list"></div>
                 </div>
 
                 <div class="trip-actions">
@@ -1668,6 +1742,54 @@
             nextImage();
         }
     });
+
+    // Load and display date variations
+    function loadDateVariations(tripId) {
+        const section = document.getElementById('modal-date-variations');
+        const list = document.getElementById('date-variations-list');
+        
+        if (!section || !list) return;
+        
+        // Find the trip in the model
+        const trips = @Html.Raw(Json.Serialize(Model));
+        const trip = trips.find(t => t.tripID === tripId);
+        
+        if (!trip || !trip.dateVariations || trip.dateVariations.length === 0) {
+            section.style.display = 'none';
+            return;
+        }
+        
+        // Display date variations
+        section.style.display = 'block';
+        list.innerHTML = trip.dateVariations.map((dateVar, index) => {
+            const startDate = new Date(dateVar.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+            const endDate = new Date(dateVar.endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+            const days = Math.ceil((new Date(dateVar.endDate) - new Date(dateVar.startDate)) / (1000 * 60 * 60 * 24));
+            
+            return `
+                <div class="date-variation-item">
+                    <div class="date-variation-info">
+                        <div>
+                            <i class="bi bi-calendar-check"></i>
+                            <strong>Option ${index + 1}:</strong>
+                        </div>
+                        <div>
+                            <i class="bi bi-calendar-event"></i>
+                            ${startDate} - ${endDate}
+                        </div>
+                        <div>
+                            <i class="bi bi-clock"></i>
+                            ${days} days
+                        </div>
+                        <div>
+                            <i class="bi bi-door-open"></i>
+                            ${dateVar.availableRooms} rooms available
+                        </div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
 
     function addToCartFromModal() {
         const tripId = parseInt(tripModal.dataset.tripId);

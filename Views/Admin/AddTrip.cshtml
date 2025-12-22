@@ -549,6 +549,22 @@
                 </div>
             </div>
 
+            <!-- Additional Date Variations -->
+            <div class="form-group mt-4">
+                <label class="form-label">
+                    <i class="bi bi-calendar-range"></i> Additional Date Variations (Optional)
+                </label>
+                <p class="text-muted small mb-3">Add alternative dates for this trip to give customers more options</p>
+                
+                <div id="dateVariationsContainer">
+                    <!-- Date variations will be added here -->
+                </div>
+                
+                <button type="button" class="btn btn-outline-primary btn-sm" id="addDateVariation">
+                    <i class="bi bi-plus-circle"></i> Add Date Variation
+                </button>
+            </div>
+
             <!-- Submit Button -->
             <button type="submit" class="btn-submit">
                 <i class="bi bi-check-circle"></i> Create Trip Package
@@ -644,4 +660,84 @@
             if (e.key === 'Escape' && status.classList.contains('show')) resetState();
         });
     })();
+
+    // Date Variations Management
+    (function(){
+        let dateVariationCount = 0;
+        const container = document.getElementById('dateVariationsContainer');
+        const addBtn = document.getElementById('addDateVariation');
+
+        if (!container || !addBtn) return;
+
+        function addDateVariation() {
+            const index = dateVariationCount++;
+            const variationHtml = `
+                <div class="date-variation-item" data-index="${index}">
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h6 class="mb-0"><i class="bi bi-calendar3"></i> Date Option ${index + 1}</h6>
+                                <button type="button" class="btn btn-sm btn-danger remove-date-variation" data-index="${index}">
+                                    <i class="bi bi-trash"></i> Remove
+                                </button>
+                            </div>
+                            <div class="row g-3">
+                                <div class="col-md-4">
+                                    <label class="form-label">Start Date</label>
+                                    <input type="date" name="AdditionalDates[${index}].StartDate" class="form-control" required />
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">End Date</label>
+                                    <input type="date" name="AdditionalDates[${index}].EndDate" class="form-control" required />
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Available Rooms</label>
+                                    <input type="number" name="AdditionalDates[${index}].AvailableRooms" class="form-control" min="0" value="10" required />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            container.insertAdjacentHTML('beforeend', variationHtml);
+        }
+
+        addBtn.addEventListener('click', addDateVariation);
+
+        // Handle remove buttons using event delegation
+        container.addEventListener('click', function(e) {
+            const removeBtn = e.target.closest('.remove-date-variation');
+            if (removeBtn) {
+                const item = removeBtn.closest('.date-variation-item');
+                if (item) {
+                    item.style.animation = 'fadeOut 0.3s ease';
+                    setTimeout(() => item.remove(), 300);
+                }
+            }
+        });
+    })();
 </script>
+
+<style>
+    .date-variation-item {
+        animation: slideInUp 0.3s ease;
+    }
+
+    .date-variation-item .card {
+        border: 2px solid #e2e8f0;
+        border-radius: 0.75rem;
+        background: #f8fafc;
+    }
+
+    .date-variation-item .card:hover {
+        border-color: #6366f1;
+        box-shadow: 0 4px 12px rgba(99, 102, 241, 0.1);
+    }
+
+    @@keyframes fadeOut {
+        to {
+            opacity: 0;
+            transform: scale(0.95);
+        }
+    }
+</style>

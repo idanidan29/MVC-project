@@ -9,11 +9,13 @@ namespace MVC_project.Controllers
     {
         private readonly TripRepository _tripRepo;
         private readonly TripImageRepository _imageRepo;
+        private readonly TripDateRepository _tripDateRepo;
 
-        public FilterController(TripRepository tripRepo, TripImageRepository imageRepo)
+        public FilterController(TripRepository tripRepo, TripImageRepository imageRepo, TripDateRepository tripDateRepo)
         {
             _tripRepo = tripRepo;
             _imageRepo = imageRepo;
+            _tripDateRepo = tripDateRepo;
         }
 
         /// <summary>
@@ -103,6 +105,8 @@ namespace MVC_project.Controllers
                 // Map to view models with image check
                 var tripViewModels = trips.Select(trip => {
                     var images = _imageRepo.GetByTripId(trip.TripID);
+                    var dates = _tripDateRepo.GetByTripId(trip.TripID);
+                    
                     return new TripDashboardViewModel
                     {
                         TripID = trip.TripID,
@@ -116,7 +120,14 @@ namespace MVC_project.Controllers
                         Description = trip.Description,
                         HasImage = images.Any(),
                         ImageCount = images.Count(),
-                        AvailableRooms = trip.AvailableRooms
+                        AvailableRooms = trip.AvailableRooms,
+                        DateVariations = dates.Select(d => new TripDateVariation
+                        {
+                            TripDateID = d.TripDateID,
+                            StartDate = d.StartDate,
+                            EndDate = d.EndDate,
+                            AvailableRooms = d.AvailableRooms
+                        }).ToList()
                     };
                 }).ToList();
 
