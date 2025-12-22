@@ -31,6 +31,53 @@ namespace MVC_project.Controllers
             return Json(new { success = true, checkout = info });
         }
 
+        // GET: /Booking/CartCheckoutInfo
+        [HttpGet]
+        [Authorize]
+        public IActionResult CartCheckoutInfo()
+        {
+            var userEmail = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrWhiteSpace(userEmail))
+                return Json(new { success = false, message = "User not authenticated" });
+
+            var cartItems = _userTripRepo.GetByUserEmail(userEmail).ToList();
+            if (!cartItems.Any())
+                return Json(new { success = false, message = "Your cart is empty." });
+
+            decimal total = 0m;
+            var packages = new List<object>();
+            
+            foreach (var item in cartItems)
+            {
+                var trip = item.Trip ?? _tripRepo.GetById(item.TripID);
+                if (trip == null) continue;
+
+                var qty = item.Quantity <= 0 ? 1 : item.Quantity;
+                var unit = trip.DiscountPrice.HasValue && trip.DiscountPrice < trip.Price
+                    ? trip.DiscountPrice.Value
+                    : trip.Price;
+                var itemTotal = unit * qty;
+                total += itemTotal;
+                
+                packages.Add(new
+                {
+                    destination = trip.Destination,
+                    country = trip.Country,
+                    packageType = trip.PackageType,
+                    quantity = qty,
+                    unitPrice = unit,
+                    originalPrice = trip.Price,
+                    discountPrice = trip.DiscountPrice,
+                    itemTotal = itemTotal,
+                    startDate = trip.StartDate,
+                    endDate = trip.EndDate,
+                    ageLimit = trip.AgeLimit
+                });
+            }
+
+            return Json(new { success = true, checkout = new { itemCount = cartItems.Count, total = total, packages = packages } });
+        }
+
         // POST: /Booking/BuyNow
         [HttpPost]
         public IActionResult BuyNow([FromBody] BuyNowRequest request)
@@ -121,6 +168,56 @@ namespace MVC_project.Controllers
             _userTripRepo.Remove(userEmail, request.TripId);
 
             return Json(new { success = true, message = $"PayPal payment successful. {qty} room(s) for {trip.Destination} booked!" });
+        }
+
+        // POST: /Booking/PayPalCartSimulate
+        [HttpPost]
+        public IActionResult PayPalCartSimulate()
+        {
+            var userEmail = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrWhiteSpace(userEmail))
+                return Json(new { success = false, message = "User not authenticated" });
+
+            var cartItems = _userTripRepo.GetByUserEmail(userEmail).ToList();
+            if (!cartItems.Any())
+                return Json(new { success = false, message = "Your cart is empty." });
+
+            decimal grandTotal = 0m;
+            foreach (var item in cartItems)
+            {
+                var trip = item.Trip ?? _tripRepo.GetById(item.TripID);
+                if (trip == null)
+                    return Json(new { success = false, message = $"Trip with ID {item.TripID} not found." });
+
+                var qty = item.Quantity <= 0 ? 1 : item.Quantity;
+                if (qty > trip.AvailableRooms)
+                    return Json(new { success = false, message = $"Only {trip.AvailableRooms} rooms available for {trip.Destination}." });
+
+                var unit = trip.DiscountPrice.HasValue && trip.DiscountPrice < trip.Price
+                    ? trip.DiscountPrice.Value
+                    : trip.Price;
+                grandTotal += unit * qty;
+            }
+
+            var currency = HttpContext.Request.Headers["X-Currency"].FirstOrDefault() ?? "USD";
+            var orderId = _paymentService.CreatePayPalOrder(grandTotal, currency);
+            var captured = _paymentService.CapturePayPalOrder(orderId);
+            if (!captured)
+                return Json(new { success = false, message = "PayPal capture failed." });
+
+            foreach (var item in cartItems)
+            {
+                var trip = item.Trip ?? _tripRepo.GetById(item.TripID);
+                if (trip == null) continue;
+
+                var qty = item.Quantity <= 0 ? 1 : item.Quantity;
+                trip.AvailableRooms -= qty;
+                if (trip.AvailableRooms < 0) trip.AvailableRooms = 0;
+                _tripRepo.Update(trip);
+            }
+
+            _userTripRepo.RemoveAll(userEmail);
+            return Json(new { success = true, message = $"PayPal payment successful. {cartItems.Count} trip(s) booked!" });
         }
 
         // POST: /Booking/Checkout

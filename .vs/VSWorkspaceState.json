@@ -3,11 +3,12 @@
     "",
     "\\Controllers",
     "\\Data",
+    "\\Services",
     "\\Views",
     "\\Views\\Shared",
     "\\wwwroot",
     "\\wwwroot\\css"
   ],
-  "SelectedNode": "\\Data\\AppDbContext.cs",
+  "SelectedNode": "\\Services\\PaymentService.cs",
   "PreviewInSolutionExplorer": false
 }

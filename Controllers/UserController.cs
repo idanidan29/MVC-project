@@ -156,12 +156,18 @@ namespace MVC_project.Controllers
 
                 // Validate quantity
                 var qty = request.Quantity <= 0 ? 1 : request.Quantity;
-                if (qty > trip.AvailableRooms)
+                
+                // Check if trip is already in cart and calculate total quantity
+                var existingInCart = _userTripRepo.GetByUserEmail(userEmail)
+                    .FirstOrDefault(ut => ut.TripID == request.TripId);
+                var totalQty = existingInCart != null ? existingInCart.Quantity + qty : qty;
+                
+                if (totalQty > trip.AvailableRooms)
                 {
-                    return Json(new { success = false, message = $"Only {trip.AvailableRooms} rooms available for {trip.Destination}." });
+                    return Json(new { success = false, message = $"Only {trip.AvailableRooms} rooms available for {trip.Destination}. You already have {existingInCart?.Quantity ?? 0} in your cart." });
                 }
 
-                // Add to cart with quantity (updates if existing)
+                // Add to cart with quantity (increments if existing)
                 bool added = _userTripRepo.Add(userEmail, request.TripId, qty);
                 
                 if (!added)

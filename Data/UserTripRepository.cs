@@ -27,8 +27,8 @@ namespace MVC_project.Data
 
             if (existing != null)
             {
-                // Update quantity instead of duplicating
-                existing.Quantity = quantity;
+                // Increment quantity instead of duplicating
+                existing.Quantity += quantity;
                 _context.SaveChanges();
                 return true;
             }

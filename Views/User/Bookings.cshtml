@@ -1,7 +1,15 @@
 @model List<MVC_project.ViewModels.UserTripViewModel>
+@inject Microsoft.Extensions.Configuration.IConfiguration Configuration
 
 @{
     ViewData["Title"] = "My Bookings";
+    var cartTotal = Model?.Sum(trip => {
+        var unit = trip.DiscountPrice.HasValue && trip.DiscountPrice < trip.Price
+            ? trip.DiscountPrice.Value
+            : trip.Price;
+        var qty = trip.Quantity <= 0 ? 1 : trip.Quantity;
+        return unit * qty;
+    }) ?? 0m;
 }
 
 <style>
@@ -93,6 +101,19 @@
         box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
         display: inline-block;
         margin-top: 1rem;
+    }
+
+    .checkout-actions {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: center;
+        gap: 0.75rem;
+        margin-top: 1rem;
+    }
+
+    .paypal-cart-buttons {
+        min-width: 220px;
     }
 
     @@keyframes slideInDown {
@@ -597,9 +618,9 @@
             <div class="trip-count-badge">
                 <i class="bi bi-bag-check"></i> @Model.Count @(Model.Count == 1 ? "Trip" : "Trips") in Cart
             </div>
-            <div class="mt-3">
-                <button class="btn-book" style="min-width: 200px;" onclick="checkoutAll()">
-                    <i class="bi bi-credit-card"></i> Checkout All
+            <div class="checkout-actions">
+                <button class="btn-book" style="min-width: 220px;" onclick="openPaymentModal(0)">
+                    <i class="bi bi-paypal"></i> Checkout All with PayPal
                 </button>
             </div>
         }
@@ -793,29 +814,8 @@
         openPaymentModal(tripId, quantity);
     }
 
-    async function checkoutAll() {
-        try {
-            const response = await fetch('/Booking/Checkout', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' }
-            });
-            const data = await response.json();
-            if (data.success) {
-                showNotification(data.message, 'success');
-                // Clear UI
-                document.querySelectorAll('.trip-card').forEach(card => {
-                    card.style.animation = 'fadeOut 0.4s ease forwards';
-                    setTimeout(() => card.remove(), 400);
-                });
-                setTimeout(() => location.reload(), 500);
-            } else {
-                showNotification(data.message, 'error');
-            }
-        } catch (error) {
-            console.error('Error during checkout:', error);
-            showNotification('Checkout failed. Please try again.', 'error');
-        }
-    }
+    const cartTotal = parseFloat('@cartTotal.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture)');
+    const cartCurrency = '@(Configuration["Payment:Currency"] ?? "USD")';
 
     function showNotification(message, type = 'info') {
         const notification = document.createElement('div');
