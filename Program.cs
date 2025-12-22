@@ -40,6 +40,7 @@ builder.Services.AddScoped<TripRepository>();
 builder.Services.AddScoped<TripImageRepository>();
 builder.Services.AddScoped<UserTripRepository>();
 builder.Services.AddScoped<PasswordService>();
+builder.Services.AddScoped<PaymentService>();
 
 var app = builder.Build();
 

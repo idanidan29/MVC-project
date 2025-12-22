@@ -348,6 +348,13 @@
         font-weight: 600;
     }
 
+    .per-trip-note {
+        color: #64748b;
+        font-size: 0.9rem;
+        font-weight: 600;
+        margin-top: 0.15rem;
+    }
+
     /* Action buttons */
     .trip-actions {
         display: flex;
@@ -673,6 +680,10 @@
                                 {
                                     <span class="trip-price">$@total.ToString("N2")</span>
                                 }
+                                @if (trip.Quantity > 1)
+                                {
+                                    <span class="per-trip-note">$@trip.FinalPrice.ToString("N2") per trip</span>
+                                }
                             </div>
                             <div class="qty-badge" style="display:flex;align-items:center;gap:0.5rem;padding:0.5rem 0.75rem;background:linear-gradient(135deg,#f8fafc,#ffffff);border-radius:0.75rem;border:1px solid #e6edf6;font-weight:700;color:#111827;">
                                 <i class="bi bi-people-fill" style="color:#6366f1"></i>
@@ -690,7 +701,7 @@
                                 <i class="bi bi-trash"></i>
                                 Remove
                             </button>
-                            <button class="btn-book" onclick="bookTrip(@trip.TripID)">
+                            <button class="btn-book" onclick="openPaymentModal(@trip.TripID, (function(){var c=document.querySelector('[data-trip-id=\"'+@trip.TripID+'\"]');return c?parseInt(c.dataset.quantity||'1',10):1;})())">
                                 <i class="bi bi-check-circle"></i>
                                 Book Now
                             </button>
@@ -776,45 +787,10 @@
         }
     }
 
-    async function bookTrip(tripId) {
+    function bookTrip(tripId) {
         const card = document.querySelector(`[data-trip-id="${tripId}"]`);
         const quantity = card ? parseInt(card.dataset.quantity || '1', 10) : 1;
-        try {
-            const response = await fetch('/Booking/BuyNow', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ tripId, quantity })
-            });
-            const data = await response.json();
-            if (data.success) {
-                // Remove card and show success
-                const card = document.querySelector(`[data-trip-id="${tripId}"]`);
-                if (card) {
-                    card.style.animation = 'fadeOut 0.4s ease forwards';
-                    setTimeout(() => {
-                        card.remove();
-                        const remainingCards = document.querySelectorAll('.trip-card');
-                        if (remainingCards.length === 0) {
-                            location.reload();
-                        } else {
-                            const badge = document.querySelector('.trip-count-badge');
-                            if (badge) {
-                                const count = remainingCards.length;
-                                badge.innerHTML = `<i class="bi bi-bag-check"></i> ${count} ${count === 1 ? 'Trip' : 'Trips'} in Cart`;
-                            }
-                        }
-                    }, 400);
-                }
-                showNotification(data.message, 'success');
-            } else {
-                showNotification(data.message, 'error');
-            }
-        } catch (error) {
-            console.error('Error buying trip:', error);
-            showNotification('Failed to complete purchase. Please try again.', 'error');
-        }
+        openPaymentModal(tripId, quantity);
     }
 
     async function checkoutAll() {

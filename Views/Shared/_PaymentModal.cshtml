@@ -1,0 +1,190 @@
+@* Shared Payment Modal with Card and PayPal (simulated) *@
+<style>
+  .pay-modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(15,23,42,.5);backdrop-filter:blur(4px);z-index:2000;overflow-y:auto;padding:1rem}
+  .pay-modal.show{display:flex}
+  .pay-card{width:min(900px,95vw);max-height:85vh;border-radius:20px;background:linear-gradient(180deg,#0f172a,#111827);color:#fff;box-shadow:0 30px 80px rgba(2,6,23,.35);overflow-y:auto}
+  .pay-header{display:flex;align-items:center;justify-content:space-between;padding:1rem 1.25rem;border-bottom:1px solid rgba(226,232,240,.1)}
+  .pay-title{font-weight:800;letter-spacing:.3px}
+  .pay-close{background:transparent;border:none;color:#e5e7eb;font-size:1.4rem}
+  .pay-body{display:grid;grid-template-columns:1.2fr .8fr;gap:0}
+  .pay-left{padding:1rem 1.25rem}
+  .trip-summary{display:grid;grid-template-columns:64px 1fr;gap:1rem;margin-bottom:1.5rem;padding:1rem;background:linear-gradient(135deg,rgba(99,102,241,.15),rgba(79,70,229,.1));border-radius:14px;border:1px solid rgba(99,102,241,.2)}
+  .trip-thumb{width:64px;height:64px;border-radius:12px;background:linear-gradient(135deg,#6366f1,#4f46e5);display:flex;align-items:center;justify-content:center;color:#fff;font-size:1.5rem;box-shadow:0 8px 20px rgba(99,102,241,.3)}
+  .summary-lines{display:grid;gap:.5rem}
+  .summary-lines .dest{font-weight:800;font-size:1.1rem;color:#fff}
+  .summary-lines .tiny{color:#cbd5e1;font-size:.9rem}
+  .sum-grid{display:grid;grid-template-columns:1fr auto;gap:.75rem;margin-top:1rem;padding:1rem;background:rgba(255,255,255,.05);border-radius:12px}
+  .sum-grid .label{color:#cbd5e1;font-size:.95rem}
+  .sum-grid .value{font-weight:800;color:#fff;font-size:1rem}
+  .method-tabs{display:flex;gap:.5rem;margin-top:1rem}
+  .tab-btn{flex:1;border:1px solid rgba(255,255,255,.15);background:rgba(99,102,241,.08);color:#fff;padding:.6rem .8rem;border-radius:12px;font-weight:700}
+  .tab-btn.active{background:linear-gradient(135deg,#6366f1,#4f46e5);box-shadow:0 12px 28px rgba(79,70,229,.35)}
+  .method-panel{margin-top:1rem;border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:1rem;background:rgba(30,41,59,.35)}
+  .method-panel p{color:#fff}
+  .form-row{display:grid;grid-template-columns:1fr 1fr;gap:.75rem}
+  .form-row input{border:none;border-radius:10px;padding:.6rem .8rem;background:rgba(255,255,255,.08);color:#fff;font-weight:600}
+  .form-row input::placeholder{color:#94a3b8}
+  .pay-actions{display:flex;gap:.75rem;margin-top:1rem}
+  .btn-primary{background:linear-gradient(135deg,#10b981,#059669);color:#fff;border:none;border-radius:12px;padding:.7rem 1rem;font-weight:800}
+  .btn-secondary{background:linear-gradient(135deg,#6366f1,#4f46e5);color:#fff;border:none;border-radius:12px;padding:.7rem 1rem;font-weight:800}
+  .pay-right{padding:1rem 1.25rem;background:linear-gradient(180deg,rgba(79,70,229,.12),rgba(30,27,75,.2));border-left:1px solid rgba(226,232,240,.08);max-height:calc(85vh - 60px);overflow-y:auto}
+  .totals{display:grid;gap:.75rem;padding:.5rem 0}
+  .totals .row{display:flex;justify-content:space-between;color:#fff;font-weight:600;font-size:.95rem}
+  .totals .row span:last-child{color:#e0e7ff;font-weight:700}
+  .totals .grand{border-top:2px solid rgba(99,102,241,.3);margin-top:1rem;padding-top:1rem;font-size:1.2rem;font-weight:900;color:#fff;display:flex;justify-content:space-between}
+  .totals .grand span:last-child{color:#10b981}
+  @@media(max-width:900px){.pay-body{grid-template-columns:1fr}.pay-right{border-left:none;border-top:1px solid rgba(226,232,240,.08);max-height:none}.pay-card{max-height:none}}
+</style>
+<div id="payModal" class="pay-modal" role="dialog" aria-modal="true" aria-labelledby="payTitle">
+  <div class="pay-card">
+    <div class="pay-header">
+      <div class="pay-title" id="payTitle"><i class="bi bi-credit-card"></i> Checkout</div>
+      <button class="pay-close" onclick="PaymentModal.close()"><i class="bi bi-x"></i></button>
+    </div>
+    <div class="pay-body">
+      <div class="pay-left">
+        <div class="trip-summary">
+          <div class="trip-thumb"><i class="bi bi-geo-alt-fill"></i></div>
+          <div class="summary-lines">
+            <div class="dest" id="pmDest">Destination</div>
+            <div class="tiny" id="pmQty">Qty: 1</div>
+          </div>
+        </div>
+        <div class="sum-grid">
+          <div class="label">Unit Price</div><div class="value" id="pmUnit">$0.00</div>
+          <div class="label">Total</div><div class="value" id="pmTotal">$0.00</div>
+        </div>
+        <div class="method-panel" id="panelPayPal">
+          <p style="color:#cbd5e1;margin:0 0 .75rem">Secure checkout via PayPal Sandbox.</p>
+          <div id="paypalButtonsContainer"></div>
+          <div class="pay-actions" style="display:none">
+            <button class="btn-secondary" onclick="PaymentModal.payPayPalSim()"><i class="bi bi-paypal"></i> Continue with PayPal (Sim)</button>
+          </div>
+        </div>
+      </div>
+      <div class="pay-right">
+        <div class="totals">
+          <div class="row"><span>Destination</span><span id="pmCountry">—</span></div>
+          <div class="row"><span>Package</span><span id="pmPackage">—</span></div>
+          <div class="row"><span>Rooms available</span><span id="pmRooms">—</span></div>
+          <div class="row"><span>Dates</span><span id="pmDates">—</span></div>
+          <div class="row"><span>Age limit</span><span id="pmAge">—</span></div>
+          <div class="row"><span>Discount</span><span id="pmDiscount">—</span></div>
+          <div class="grand"><span>Total</span><span id="pmGrand">$0.00</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+  const PaymentModal = (()=>{
+    let state = { tripId: null, quantity: 1, currency: 'USD' };
+    const el = id => document.getElementById(id);
+    function fmt(n){return new Intl.NumberFormat(undefined,{style:'currency',currency:state.currency}).format(n)}
+
+    async function open(tripId, quantity=1){
+      state.tripId = tripId; state.quantity = quantity||1;
+      try{
+        const res = await fetch(`/Booking/CheckoutInfo?tripId=${tripId}&quantity=${state.quantity}`);
+        const data = await res.json();
+        if(!data.success){ notify(data.message||'Failed to load checkout','error'); return; }
+        const c = data.checkout;
+        el('pmDest').textContent = c.destination;
+        el('pmQty').textContent = `Qty: ${c.quantity}`;
+        el('pmUnit').textContent = fmt(c.unitPrice);
+        el('pmTotal').textContent = fmt(c.total);
+        el('pmGrand').textContent = fmt(c.total);
+        state.total = c.total; // store for PayPal order amount
+        // Trip details on the right panel
+        el('pmRooms').textContent = c.availableRooms ?? '—';
+        el('pmPackage').textContent = c.packageType ?? '—';
+        el('pmCountry').textContent = c.country ?? '—';
+        el('pmAge').textContent = c.ageLimit != null ? `${c.ageLimit}+` : '—';
+        if (c.discountPrice && c.discountEndDate) {
+          try {
+            const until = new Date(c.discountEndDate);
+            el('pmDiscount').textContent = !isNaN(until) ? `${fmt(c.discountPrice)} until ${until.toLocaleDateString()}` : fmt(c.discountPrice);
+          } catch { el('pmDiscount').textContent = fmt(c.discountPrice); }
+        } else {
+          el('pmDiscount').textContent = '—';
+        }
+        try {
+          const start = c.startDate ? new Date(c.startDate) : null;
+          const end = c.endDate ? new Date(c.endDate) : null;
+          if (start && end && !isNaN(start) && !isNaN(end)) {
+            el('pmDates').textContent = `${start.toLocaleDateString()} - ${end.toLocaleDateString()}`;
+          } else {
+            el('pmDates').textContent = '—';
+          }
+        } catch { el('pmDates').textContent = '—'; }
+      }catch(e){ console.error(e); notify('Failed to prepare checkout','error'); }
+      document.getElementById('payModal').classList.add('show');
+      document.body.style.overflow='hidden';
+      // Initialize PayPal buttons on modal open
+      initPayPalButtons();
+    }
+    function close(){ document.getElementById('payModal').classList.remove('show'); document.body.style.overflow=''; }
+    function select(which){
+      // PayPal-only, no tab switching needed
+    }
+    function initPayPalButtons(){
+      const container = el('paypalButtonsContainer');
+      if(!container) return;
+      container.innerHTML = '';
+      if(window.paypal && paypal.Buttons){
+        try{
+          paypal.Buttons({
+            style: { layout: 'vertical', color: 'gold', shape: 'rect', label: 'paypal' },
+            createOrder: (data, actions) => {
+              return actions.order.create({
+                purchase_units: [{ amount: { value: (Number(state.total||0)).toFixed(2), currency_code: state.currency } }]
+              });
+            },
+            onApprove: async (data, actions) => {
+              try{
+                await actions.order.capture();
+                // finalize booking in backend
+                const res = await fetch('/Booking/PayPalSimulate',{ method:'POST', headers:{'Content-Type':'application/json','X-Currency': state.currency}, body: JSON.stringify({ tripId: state.tripId, quantity: state.quantity }) });
+                const out = await res.json();
+                if(out.success){ notify(out.message,'success'); }
+                else{ notify(out.message,'error'); }
+              }catch(err){ console.error(err); notify('PayPal capture failed','error'); }
+            },
+            onError: (err) => { console.error(err); notify('PayPal error','error'); }
+          }).render('#paypalButtonsContainer');
+        }catch(e){ console.error(e); notify('Failed to initialize PayPal','error'); }
+      } else {
+        // Fallback to simulated button
+        const actionBar = el('panelPayPal').querySelector('.pay-actions');
+        if(actionBar){ actionBar.style.display='flex'; }
+      }
+    }
+    async function payCard(){
+      close(); // Close modal so payment window is visible
+      try{
+        const res = await fetch('/Booking/PayCard',{ method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ tripId: state.tripId, quantity: state.quantity }) });
+        const data = await res.json();
+        if(data.success){ notify(data.message,'success'); }
+        else{ notify(data.message,'error'); }
+      }catch(e){ console.error(e); notify('Payment failed','error'); }
+    }
+    async function payPayPalSim(){
+      close(); // Close modal so payment window is visible
+      try{
+        const res = await fetch('/Booking/PayPalSimulate',{ method:'POST', headers:{'Content-Type':'application/json','X-Currency': state.currency}, body: JSON.stringify({ tripId: state.tripId, quantity: state.quantity }) });
+        const data = await res.json();
+        if(data.success){ notify(data.message,'success'); }
+        else{ notify(data.message,'error'); }
+      }catch(e){ console.error(e); notify('PayPal payment failed','error'); }
+    }
+    function notify(message,type='info'){
+      const n=document.createElement('div');
+      n.style.cssText=`position:fixed;top:2rem;right:2rem;background:${type==='success'?'linear-gradient(135deg,#10b981,#059669)':'linear-gradient(135deg,#ef4444,#dc2626)'};color:#fff;padding:1rem 1.5rem;border-radius:.75rem;box-shadow:0 10px 30px rgba(0,0,0,.3);z-index:3000;animation:slideInRight .3s ease;font-weight:700`;
+      n.textContent=message; document.body.appendChild(n);
+      setTimeout(()=>{ n.style.animation='slideOutRight .3s ease'; setTimeout(()=>n.remove(),300); },3000);
+    }
+    return { open, close, select, payCard, payPayPalSim };
+  })();
+  // Make globally callable
+  window.openPaymentModal = (tripId, quantity=1)=> PaymentModal.open(tripId, quantity);
+</script>

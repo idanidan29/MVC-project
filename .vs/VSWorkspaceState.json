@@ -2,11 +2,12 @@
   "ExpandedNodes": [
     "",
     "\\Controllers",
+    "\\Data",
     "\\Views",
     "\\Views\\Shared",
     "\\wwwroot",
     "\\wwwroot\\css"
   ],
-  "SelectedNode": "\\Controllers\\LoginController.cs",
+  "SelectedNode": "\\Data\\AppDbContext.cs",
   "PreviewInSolutionExplorer": false
 }

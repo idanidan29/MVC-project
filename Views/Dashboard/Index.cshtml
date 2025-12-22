@@ -958,7 +958,7 @@
                      data-rooms="@trip.AvailableRooms"
                      data-package="@trip.PackageType"
                      data-image-count="@trip.ImageCount"
-                     onclick="openTripModal(this, @trip.TripID)">
+                     onclick="openTripModal(event, this, @trip.TripID)">
                     <!-- Package Type Badge -->
                     <div class="package-badge">
                         <i class="bi bi-star-fill"></i> @trip.PackageType
@@ -1186,7 +1186,12 @@
     let currentImages = [];
     let currentImageIndex = 0;
 
-    function openTripModal(button, tripId) {
+    function openTripModal(evt, button, tripId) {
+        // If click originated from Buy/Add buttons, skip opening the trip modal
+        if (evt && (evt.target.closest('.btn-book-now') || evt.target.closest('.btn-add-cart') || evt.target.closest('.delete-btn') || evt.target.closest('.edit-btn'))) {
+            return;
+        }
+
         const data = button.dataset;
         
         if (!tripModal) {
@@ -1479,21 +1484,9 @@
         const tripId = parseInt(tripModal.dataset.tripId);
         const qtyDisplay = tripModal.querySelector('#modal-qty-display');
         const quantity = qtyDisplay ? parseInt(qtyDisplay.value || '1', 10) : 1;
-        fetch('/Booking/BuyNow', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ tripId, quantity })
-        }).then(r => r.json()).then(data => {
-            if (data.success) {
-                showNotification(data.message, 'success');
-                closeTripModal();
-            } else {
-                showNotification(data.message, 'error');
-            }
-        }).catch(err => {
-            console.error('Error buying trip:', err);
-            showNotification('Failed to complete purchase. Please try again.', 'error');
-        });
+        // Close trip modal so checkout modal is fully visible
+        closeTripModal();
+        openPaymentModal(tripId, quantity);
     }
 
     function changeModalQty(delta) {
@@ -1541,28 +1534,11 @@
         }
     }
 
-    async function bookNow(tripId) {
+    function bookNow(tripId) {
         const card = document.querySelector(`[data-trip-id="${tripId}"]`);
         const qtyInput = card ? card.querySelector('.qty-input') : null;
         const quantity = qtyInput ? parseInt(qtyInput.value || '1', 10) : 1;
-        try {
-            const response = await fetch('/Booking/BuyNow', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ tripId, quantity })
-            });
-            const data = await response.json();
-            if (data.success) {
-                showNotification(data.message, 'success');
-            } else {
-                showNotification(data.message, 'error');
-            }
-        } catch (error) {
-            console.error('Error buying trip:', error);
-            showNotification('Failed to complete purchase. Please try again.', 'error');
-        }
+        openPaymentModal(tripId, quantity);
     }
 
     function showNotification(message, type = 'info') {
