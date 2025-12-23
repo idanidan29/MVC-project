@@ -36,11 +36,11 @@ namespace MVC_project.Controllers
         [Authorize]
         public IActionResult CartCheckoutInfo()
         {
-            var userEmail = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (string.IsNullOrWhiteSpace(userEmail))
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
                 return Json(new { success = false, message = "User not authenticated" });
 
-            var cartItems = _userTripRepo.GetByUserEmail(userEmail).ToList();
+            var cartItems = _userTripRepo.GetByUserId(userId).ToList();
             if (!cartItems.Any())
                 return Json(new { success = false, message = "Your cart is empty." });
 
@@ -78,12 +78,55 @@ namespace MVC_project.Controllers
             return Json(new { success = true, checkout = new { itemCount = cartItems.Count, total = total, packages = packages } });
         }
 
+        // GET: /Booking/DateCheckoutInfo?userTripId=123
+        [HttpGet]
+        [Authorize]
+        public IActionResult DateCheckoutInfo(int userTripId)
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
+                return Json(new { success = false, message = "User not authenticated" });
+
+            var userTrip = _userTripRepo.GetByUserId(userId).FirstOrDefault(ut => ut.UserTripID == userTripId);
+            if (userTrip == null)
+                return Json(new { success = false, message = "Date not found in cart" });
+
+            var trip = userTrip.Trip ?? _tripRepo.GetById(userTrip.TripID);
+            if (trip == null)
+                return Json(new { success = false, message = "Trip not found" });
+
+            var qty = userTrip.Quantity <= 0 ? 1 : userTrip.Quantity;
+            var unitPrice = trip.DiscountPrice.HasValue && trip.DiscountPrice < trip.Price
+                ? trip.DiscountPrice.Value
+                : trip.Price;
+            var total = unitPrice * qty;
+
+            var checkoutInfo = new
+            {
+                userTripId = userTripId,
+                destination = trip.Destination,
+                country = trip.Country,
+                packageType = trip.PackageType,
+                quantity = qty,
+                unitPrice = unitPrice,
+                total = total,
+                availableRooms = trip.AvailableRooms,
+                ageLimit = trip.AgeLimit,
+                discountPrice = trip.DiscountPrice,
+                discountEndDate = trip.DiscountEndDate,
+                startDate = trip.StartDate,
+                endDate = trip.EndDate
+            };
+
+            return Json(new { success = true, checkout = checkoutInfo });
+        }
+
         // POST: /Booking/BuyNow
         [HttpPost]
         public IActionResult BuyNow([FromBody] BuyNowRequest request)
         {
-            var userEmail = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (string.IsNullOrWhiteSpace(userEmail))
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
             {
                 return Json(new { success = false, message = "User not authenticated" });
             }
@@ -101,8 +144,8 @@ namespace MVC_project.Controllers
             }
 
             // Legacy direct purchase (kept for backward compatibility)
-            _userTripRepo.Add(userEmail, request.TripId, qty);
-            _userTripRepo.Remove(userEmail, request.TripId);
+            _userTripRepo.Add(userId, request.TripId, qty);
+            _userTripRepo.Remove(userId, request.TripId);
             return Json(new { success = true, message = $"Purchase completed for {trip.Destination} (x{qty})." });
         }
 
@@ -110,8 +153,8 @@ namespace MVC_project.Controllers
         [HttpPost]
         public IActionResult PayCard([FromBody] BuyNowRequest request)
         {
-            var userEmail = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (string.IsNullOrWhiteSpace(userEmail))
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
                 return Json(new { success = false, message = "User not authenticated" });
 
             var trip = _tripRepo.GetById(request.TripId);
@@ -123,14 +166,14 @@ namespace MVC_project.Controllers
                 return Json(new { success = false, message = $"Only {trip.AvailableRooms} rooms available for {trip.Destination}." });
 
             // Simulate card payment success
-            var ok = _paymentService.SimulateCardCharge(userEmail, trip, qty);
+            var ok = _paymentService.SimulateCardCharge(userId, trip, qty);
             if (!ok)
                 return Json(new { success = false, message = "Payment failed. Please try another method." });
 
             // On success: decrement availability and clear from cart
             trip.AvailableRooms -= qty;
             _tripRepo.Update(trip);
-            _userTripRepo.Remove(userEmail, request.TripId);
+            _userTripRepo.Remove(userId, request.TripId);
 
             return Json(new { success = true, message = $"Payment successful. {qty} room(s) for {trip.Destination} booked!" });
         }
@@ -139,8 +182,8 @@ namespace MVC_project.Controllers
         [HttpPost]
         public IActionResult PayPalSimulate([FromBody] BuyNowRequest request)
         {
-            var userEmail = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (string.IsNullOrWhiteSpace(userEmail))
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
                 return Json(new { success = false, message = "User not authenticated" });
 
             var trip = _tripRepo.GetById(request.TripId);
@@ -165,7 +208,7 @@ namespace MVC_project.Controllers
             // On success: decrement availability and clear from cart
             trip.AvailableRooms -= qty;
             _tripRepo.Update(trip);
-            _userTripRepo.Remove(userEmail, request.TripId);
+            _userTripRepo.Remove(userId, request.TripId);
 
             return Json(new { success = true, message = $"PayPal payment successful. {qty} room(s) for {trip.Destination} booked!" });
         }
@@ -174,11 +217,11 @@ namespace MVC_project.Controllers
         [HttpPost]
         public IActionResult PayPalCartSimulate()
         {
-            var userEmail = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (string.IsNullOrWhiteSpace(userEmail))
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
                 return Json(new { success = false, message = "User not authenticated" });
 
-            var cartItems = _userTripRepo.GetByUserEmail(userEmail).ToList();
+            var cartItems = _userTripRepo.GetByUserId(userId).ToList();
             if (!cartItems.Any())
                 return Json(new { success = false, message = "Your cart is empty." });
 
@@ -216,21 +259,61 @@ namespace MVC_project.Controllers
                 _tripRepo.Update(trip);
             }
 
-            _userTripRepo.RemoveAll(userEmail);
+            _userTripRepo.RemoveAll(userId);
             return Json(new { success = true, message = $"PayPal payment successful. {cartItems.Count} trip(s) booked!" });
+        }
+
+        // POST: /Booking/PayPalDateSimulate
+        [HttpPost]
+        [Authorize]
+        public IActionResult PayPalDateSimulate([FromBody] PayPalDateRequest request)
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
+                return Json(new { success = false, message = "User not authenticated" });
+
+            var userTrip = _userTripRepo.GetByUserId(userId).FirstOrDefault(ut => ut.UserTripID == request.UserTripId);
+            if (userTrip == null)
+                return Json(new { success = false, message = "Date not found in cart" });
+
+            var trip = userTrip.Trip ?? _tripRepo.GetById(userTrip.TripID);
+            if (trip == null)
+                return Json(new { success = false, message = "Trip not found" });
+
+            var qty = userTrip.Quantity <= 0 ? 1 : userTrip.Quantity;
+            if (qty > trip.AvailableRooms)
+                return Json(new { success = false, message = $"Only {trip.AvailableRooms} rooms available" });
+
+            var unitPrice = trip.DiscountPrice.HasValue && trip.DiscountPrice < trip.Price
+                ? trip.DiscountPrice.Value
+                : trip.Price;
+            var total = unitPrice * qty;
+
+            var currency = HttpContext.Request.Headers["X-Currency"].FirstOrDefault() ?? "USD";
+            var orderId = _paymentService.CreatePayPalOrder(total, currency);
+            var captured = _paymentService.CapturePayPalOrder(orderId);
+            if (!captured)
+                return Json(new { success = false, message = "PayPal capture failed." });
+
+            trip.AvailableRooms -= qty;
+            if (trip.AvailableRooms < 0) trip.AvailableRooms = 0;
+            _tripRepo.Update(trip);
+
+            _userTripRepo.RemoveByUserTripId(request.UserTripId);
+            return Json(new { success = true, message = $"Payment successful! Booked {trip.Destination} for {qty} person(s)." });
         }
 
         // POST: /Booking/Checkout
         [HttpPost]
         public IActionResult Checkout()
         {
-            var userEmail = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (string.IsNullOrWhiteSpace(userEmail))
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
             {
                 return Json(new { success = false, message = "User not authenticated" });
             }
 
-            var removed = _userTripRepo.RemoveAll(userEmail);
+            var removed = _userTripRepo.RemoveAll(userId);
             if (removed == 0)
             {
                 return Json(new { success = false, message = "Your cart is empty" });
@@ -244,5 +327,10 @@ namespace MVC_project.Controllers
     {
         public int TripId { get; set; }
         public int Quantity { get; set; }
+    }
+
+    public class PayPalDateRequest
+    {
+        public int UserTripId { get; set; }
     }
 }

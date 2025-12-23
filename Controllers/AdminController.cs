@@ -51,7 +51,7 @@ namespace MVC_project.Controllers
                 vm.Users.Add(new AdminUserItem
                 {
                     User = u,
-                    BookingsCount = _userTripRepo.GetCount(u.email)
+                    BookingsCount = _userTripRepo.GetCount(u.Id)
                 });
             }
 
@@ -73,7 +73,7 @@ namespace MVC_project.Controllers
                 return NotFound();
             }
 
-            var bookings = _userTripRepo.GetByUserEmail(email).ToList();
+            var bookings = _userTripRepo.GetByUserId(user.Id).ToList();
             var vm = new UserDetailsViewModel
             {
                 User = user,
@@ -104,7 +104,7 @@ namespace MVC_project.Controllers
                 return BadRequest(new { success = false, message = "Cannot delete your own account" });
             }
 
-            _userRepo.Delete(email);
+            _userRepo.Delete(user.Id);
             return Ok(new { success = true, message = "User deleted successfully" });
         }
 

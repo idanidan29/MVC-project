@@ -12,22 +12,33 @@ namespace MVC_project.Data
             _context = context;
         }
 
+        // Check if email already exists (for registration)
         public bool EmailExists(string email)
         {
             return _context.Users.Any(u => u.email == email);
         }
 
+        // Add a new user
         public void Add(User user)
         {
             _context.Users.Add(user);
             _context.SaveChanges();
         }
 
+        // Get user by email (for login) - case-insensitive
         public User GetByEmail(string email)
         {
-            return _context.Users.FirstOrDefault(u => u.email == email);
+            var normalizedEmail = email.Trim().ToLower();
+            return _context.Users.FirstOrDefault(u => u.email.ToLower() == normalizedEmail);
         }
 
+        // Get user by Id (for other operations)
+        public User GetById(int id)
+        {
+            return _context.Users.FirstOrDefault(u => u.Id == id);
+        }
+
+        // Get all users
         public IEnumerable<User> GetAll()
         {
             return _context.Users
@@ -36,6 +47,7 @@ namespace MVC_project.Data
                 .ToList();
         }
 
+        // Search users by name or email
         public IEnumerable<User> Search(string? name, string? email)
         {
             var query = _context.Users.AsQueryable();
@@ -60,15 +72,17 @@ namespace MVC_project.Data
                 .ToList();
         }
 
+        // Update user (use Id)
         public void Update(User user)
         {
             _context.Users.Update(user);
             _context.SaveChanges();
         }
 
-        public void Delete(string email)
+        // Delete user by Id
+        public void Delete(int id)
         {
-            var user = _context.Users.FirstOrDefault(u => u.email == email);
+            var user = _context.Users.FirstOrDefault(u => u.Id == id);
             if (user != null)
             {
                 _context.Users.Remove(user);

@@ -200,12 +200,6 @@
     /* Trip details */
     .trip-details {
         padding: 1.5rem;
-        padding-bottom: 1.5rem; /* Default for non-admin users */
-    }
-
-    /* Extra padding only for admin users (to make room for buttons) */
-    .trip-card.has-admin-actions .trip-details {
-        padding-bottom: 4.5rem;
     }
 
     .trip-destination {
@@ -253,10 +247,9 @@
         font-size: 0.9rem;
         line-height: 1.6;
         margin-bottom: 1rem;
-        display: -webkit-box;
-        -webkit-line-clamp: 3;
-        -webkit-box-orient: vertical;
+        white-space: nowrap;
         overflow: hidden;
+        text-overflow: ellipsis;
     }
 
     /* Price section */
@@ -309,18 +302,12 @@
         z-index: 1;
     }
 
-    /* Button container - visible by default */
+    /* Button container - in normal flow */
     .trip-actions {
-        position: absolute;
-        bottom: 1rem;
-        left: 1.5rem;
-        right: 1.5rem;
         display: flex;
         gap: 0.75rem;
-        z-index: 10;
-        opacity: 1;
-        transform: translateY(0);
-        pointer-events: all;
+        padding: 0 1.5rem 1.5rem 1.5rem;
+        margin-top: 1rem;
     }
 
     /* User action buttons */
@@ -1050,10 +1037,6 @@
                                 <i class="bi bi-calendar-check"></i>
                                 <span>@trip.ClosestStartDate.ToString("MMM dd, yyyy") - @trip.ClosestEndDate.ToString("MMM dd, yyyy")</span>
                             </div>
-                            <div class="info-item">
-                                <i class="bi bi-clock"></i>
-                                <span>@((trip.ClosestEndDate - trip.ClosestStartDate).Days) days</span>
-                            </div>
                             @if (trip.DateVariations.Any())
                             {
                                 <div class="info-item" style="color: #6366f1; font-weight: 600;">
@@ -1087,10 +1070,9 @@
                                 </div>
                             }
                         </div>
-                    </div>
 
-                    <!-- Action Buttons -->
-                    <div class="trip-actions">
+                        <!-- Action Buttons -->
+                        <div class="trip-actions">
                         @if (User?.IsInRole("Admin") ?? false)
                         {
                             <a href="@Url.Action("EditTrip", "Admin", new { id = trip.TripID })" 
@@ -1119,6 +1101,7 @@
                                 <span>Buy Now</span>
                             </button>
                         }
+                        </div>
                     </div>
                 </div>
             }
@@ -1284,7 +1267,11 @@
         document.getElementById('modal-title').textContent = data.destination;
         document.getElementById('modal-location').innerHTML = `<i class="bi bi-geo-alt-fill"></i> ${data.country}`;
         document.getElementById('modal-description').textContent = data.description;
-        document.getElementById('modal-dates').textContent = `${data.startDate} - ${data.endDate}`;
+        
+        // Format dates properly
+        const mainStartDate = new Date(data.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        const mainEndDate = new Date(data.endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        document.getElementById('modal-dates').textContent = `${mainStartDate} - ${mainEndDate}`;
         document.getElementById('modal-duration').textContent = `${data.duration} days`;
         document.getElementById('modal-rooms').textContent = `${data.rooms} rooms`;
         document.getElementById('modal-package').textContent = data.package;
@@ -1293,6 +1280,10 @@
         // Store trip ID for actions
         tripModal.dataset.tripId = tripId;
         tripModal.dataset.destination = data.destination;
+        tripModal.dataset.mainStartDate = data.startDate;
+        tripModal.dataset.mainEndDate = data.endDate;
+        tripModal.dataset.mainRooms = data.rooms;
+        tripModal.dataset.mainDuration = data.duration;
         // Configure modal quantity control
         try {
             const roomsCount = parseInt(data.rooms || '1', 10) || 1;
@@ -1543,24 +1534,59 @@
         const trips = @Html.Raw(Json.Serialize(Model));
         const trip = trips.find(t => t.tripID === tripId);
         
-        if (!trip || !trip.dateVariations || trip.dateVariations.length === 0) {
+        if (!trip) {
             section.style.display = 'none';
             return;
         }
         
-        // Display date variations
+        // Get main trip dates from modal dataset
+        const mainStartDate = new Date(tripModal.dataset.mainStartDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        const mainEndDate = new Date(tripModal.dataset.mainEndDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        const mainRooms = parseInt(tripModal.dataset.mainRooms || '0');
+        const mainDuration = parseInt(tripModal.dataset.mainDuration || '0');
+        
+        // Always show the section (main date + variations)
         section.style.display = 'block';
-        list.innerHTML = trip.dateVariations.map((dateVar, index) => {
+        
+        // Create main date option (Option 1)
+        let optionsHtml = `
+            <div class="date-variation-item" onclick="selectDateVariation(-1, ${mainRooms}, '${mainStartDate}', '${mainEndDate}', ${mainDuration})" style="cursor: pointer; transition: all 0.2s;">
+                <input type="radio" name="selected-date" value="-1" checked style="margin-right: 0.75rem;" />
+                <div class="date-variation-info">
+                    <div>
+                        <i class="bi bi-calendar-check"></i>
+                        <strong>Option 1 (Main):</strong>
+                    </div>
+                    <div>
+                        <i class="bi bi-calendar-event"></i>
+                        ${mainStartDate} - ${mainEndDate}
+                    </div>
+                    <div>
+                        <i class="bi bi-clock"></i>
+                        ${mainDuration} days
+                    </div>
+                    <div>
+                        <i class="bi bi-door-open"></i>
+                        ${mainRooms} rooms available
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        // Add additional date variations (Option 2, 3, etc.) if they exist
+        if (trip.dateVariations && trip.dateVariations.length > 0) {
+            optionsHtml += trip.dateVariations.map((dateVar, index) => {
             const startDate = new Date(dateVar.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
             const endDate = new Date(dateVar.endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
             const days = Math.ceil((new Date(dateVar.endDate) - new Date(dateVar.startDate)) / (1000 * 60 * 60 * 24));
             
             return `
-                <div class="date-variation-item">
+                <div class="date-variation-item" onclick="selectDateVariation(${index}, ${dateVar.availableRooms}, '${startDate}', '${endDate}', ${days})" style="cursor: pointer; transition: all 0.2s;">
+                    <input type="radio" name="selected-date" value="${index}" style="margin-right: 0.75rem;" />
                     <div class="date-variation-info">
                         <div>
                             <i class="bi bi-calendar-check"></i>
-                            <strong>Option ${index + 1}:</strong>
+                            <strong>Option ${index + 2}:</strong>
                         </div>
                         <div>
                             <i class="bi bi-calendar-event"></i>
@@ -1577,7 +1603,39 @@
                     </div>
                 </div>
             `;
-        }).join('');
+            }).join('');
+        }
+        
+        list.innerHTML = optionsHtml;
+    }
+
+    function selectDateVariation(index, rooms, startDate, endDate, days) {
+        // Update the radio button by value, not by index position
+        const radios = document.querySelectorAll('input[name="selected-date"]');
+        radios.forEach((radio) => {
+            radio.checked = (parseInt(radio.value) === index);
+        });
+        
+        // Update modal display with selected date
+        document.getElementById('modal-dates').textContent = `${startDate} - ${endDate}`;
+        document.getElementById('modal-duration').textContent = `${days} days`;
+        document.getElementById('modal-rooms').textContent = `${rooms} rooms`;
+        
+        // Update quantity control max
+        const qtyControl = tripModal.querySelector('#modal-qty-control');
+        const qtyDisplay = tripModal.querySelector('#modal-qty-display');
+        if (qtyControl && qtyDisplay) {
+            qtyControl.dataset.max = rooms;
+            const currentQty = parseInt(qtyDisplay.value || '1', 10);
+            if (currentQty > rooms) {
+                qtyDisplay.value = rooms;
+            }
+        }
+        
+        // Store selected date index
+        if (tripModal) {
+            tripModal.dataset.selectedDateIndex = index;
+        }
     }
 
     function addToCartFromModal() {
@@ -1585,11 +1643,13 @@
         const destination = tripModal.dataset.destination;
         const qtyDisplay = tripModal.querySelector('#modal-qty-display');
         const quantity = qtyDisplay ? parseInt(qtyDisplay.value || '1', 10) : 1;
-        // Directly call endpoint with quantity
+        const selectedDateIndex = parseInt(tripModal.dataset.selectedDateIndex || '-1', 10);
+        
+        // Directly call endpoint with quantity and selected date
         fetch('/User/AddToCart', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ tripId, quantity })
+            body: JSON.stringify({ tripId, quantity, selectedDateIndex })
         }).then(r => r.json()).then(data => {
             if (data.success) {
                 showNotification(data.message, 'success');
@@ -1634,13 +1694,15 @@
         const card = document.querySelector(`[data-trip-id="${tripId}"]`);
         const qtyInput = card ? card.querySelector('.qty-input') : null;
         const quantity = qtyInput ? parseInt(qtyInput.value || '1', 10) : 1;
+        const selectedDateIndex = -1; // Main date when adding from card
+        
         try {
             const response = await fetch('/User/AddToCart', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ tripId: tripId, quantity })
+                body: JSON.stringify({ tripId: tripId, quantity, selectedDateIndex })
             });
 
             const data = await response.json();

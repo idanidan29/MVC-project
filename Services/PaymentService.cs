@@ -55,7 +55,7 @@ namespace MVC_project.Services
         }
 
         // Simulated card charge: always succeeds for placeholder implementation
-        public bool SimulateCardCharge(string userEmail, Trip trip, int quantity)
+        public bool SimulateCardCharge(int userId, Trip trip, int quantity)
         {
             // In a real gateway integration, call provider to authorize/capture.
             // Here we just return success without storing any card data.

@@ -327,10 +327,9 @@
         font-size: 0.9rem;
         line-height: 1.6;
         margin-bottom: 1rem;
-        display: -webkit-box;
-        -webkit-line-clamp: 3;
-        -webkit-box-orient: vertical;
+        white-space: nowrap;
         overflow: hidden;
+        text-overflow: ellipsis;
     }
 
     /* Price section */
@@ -648,7 +647,7 @@
         <div class="trips-grid">
             @foreach (var trip in Model)
             {
-                <div class="trip-card" data-trip-id="@trip.TripID" data-quantity="@trip.Quantity">
+                <div class="trip-card clickable-card" data-trip-id="@trip.TripID" data-quantity="@trip.Quantity" onclick="toggleTripDates(@trip.TripID)" style="cursor: pointer;">
                     <div class="trip-image-container">
                         @if (trip.Images.Any())
                         {
@@ -672,22 +671,58 @@
                             <span>@trip.Country</span>
                         </div>
 
-                        <div class="trip-info">
-                            <div class="info-item">
-                                <i class="bi bi-calendar-event"></i>
-                                <span>@trip.StartDate.ToString("MMM dd") - @trip.EndDate.ToString("MMM dd, yyyy")</span>
+                        @if (trip.UserSelectedDates.Count > 1)
+                        {
+                            <div class="info-item" style="color: #6366f1; font-weight: 600; margin-bottom: 1rem; display: flex; align-items: center;">
+                                <i class="bi bi-calendar-range-fill"></i>
+                                <span style="flex: 1;">@trip.UserSelectedDates.Count different dates selected - Click to view</span>
+                                <i class="bi bi-chevron-down" id="chevron-@trip.TripID" style="transition: transform 0.3s;"></i>
                             </div>
-                            <div class="info-item">
-                                <i class="bi bi-clock"></i>
-                                <span>@trip.DurationDays days</span>
-                            </div>
-                            <div class="info-item">
-                                <i class="bi bi-door-open"></i>
-                                <span>@trip.AvailableRooms rooms available</span>
-                            </div>
-                        </div>
+                        }
 
                         <p class="trip-description">@trip.Description</p>
+
+                        <!-- Expandable dates section -->
+                        <div class="selected-dates-container" id="dates-@trip.TripID" style="display: none; margin-top: 1rem; padding: 1rem; background: #f8fafc; border-radius: 0.75rem;">
+                            <h4 style="color: #1e293b; font-size: 1rem; font-weight: 600; margin-bottom: 0.75rem;">
+                                <i class="bi bi-calendar-check"></i> Your Selected Dates
+                            </h4>
+                            @foreach (var selectedDate in trip.UserSelectedDates)
+                            {
+                                var dateInfo = trip.GetDateByIndex(selectedDate.SelectedDateIndex);
+                                <div class="date-option-item" style="background: white; padding: 0.75rem; border-radius: 0.5rem; margin-bottom: 0.5rem; border: 2px solid #e2e8f0;">
+                                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                                        <div style="flex: 1;">
+                                            <div style="color: #475569; font-size: 0.9rem; margin-bottom: 0.25rem;">
+                                                <i class="bi bi-calendar-event"></i>
+                                                <strong>@dateInfo.StartDate.ToString("MMM dd") - @dateInfo.EndDate.ToString("MMM dd, yyyy")</strong>
+                                            </div>
+                                            <div style="color: #64748b; font-size: 0.85rem;">
+                                                <i class="bi bi-clock"></i> @dateInfo.DurationDays days
+                                                @if (!dateInfo.IsMainDate)
+                                                {
+                                                    <span style="color: #6366f1; font-weight: 600; margin-left: 0.5rem;">
+                                                        <i class="bi bi-star-fill"></i> Alternative Date
+                                                    </span>
+                                                }
+                                            </div>
+                                            <div style="color: #64748b; font-size: 0.85rem;">
+                                                <i class="bi bi-people-fill"></i> Quantity: @selectedDate.Quantity
+                                            </div>
+                                        </div>
+                                        <div style="display: flex; gap: 0.5rem; align-items: center;">
+                                            <button class="btn-pay-date" onclick="event.stopPropagation(); openPaymentModalForDate(@selectedDate.UserTripID, @selectedDate.Quantity);" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none; padding: 0.5rem 1rem; border-radius: 0.5rem; cursor: pointer; font-size: 0.85rem; font-weight: 600; display: flex; align-items: center; gap: 0.3rem; box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3); transition: all 0.3s ease;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(16, 185, 129, 0.5)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(16, 185, 129, 0.3)';">
+                                                <i class="bi bi-credit-card"></i>
+                                                Pay Now
+                                            </button>
+                                            <button class="btn-remove-date" onclick="event.stopPropagation(); removeFromCart(@selectedDate.UserTripID, '@trip.Destination');" style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: white; border: none; padding: 0.5rem 0.75rem; border-radius: 0.5rem; cursor: pointer; font-size: 0.85rem;">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
 
                         <div class="trip-price-section" style="align-items:center;gap:1rem;">
                             <div class="price-container">
@@ -708,7 +743,7 @@
                             </div>
                             <div class="qty-badge" style="display:flex;align-items:center;gap:0.5rem;padding:0.5rem 0.75rem;background:linear-gradient(135deg,#f8fafc,#ffffff);border-radius:0.75rem;border:1px solid #e6edf6;font-weight:700;color:#111827;">
                                 <i class="bi bi-people-fill" style="color:#6366f1"></i>
-                                <span>Qty: <strong>@trip.Quantity</strong></span>
+                                <span>Total Qty: <strong>@trip.Quantity</strong></span>
                             </div>
                             @if (trip.HasDiscount)
                             {
@@ -717,14 +752,10 @@
                             }
                         </div>
 
-                        <div class="trip-actions">
-                            <button class="btn-remove" onclick="removeFromCart(@trip.TripID, '@trip.Destination')">
-                                <i class="bi bi-trash"></i>
-                                Remove
-                            </button>
-                            <button class="btn-book" onclick="openPaymentModal(@trip.TripID, (function(){var c=document.querySelector('[data-trip-id=\"'+@trip.TripID+'\"]');return c?parseInt(c.dataset.quantity||'1',10):1;})())">
+                        <div class="trip-actions" onclick="event.stopPropagation();">
+                            <button class="btn-book" onclick="openPaymentModal(@trip.TripID, @trip.Quantity)">
                                 <i class="bi bi-check-circle"></i>
-                                Book Now
+                                Pay for All Dates (@trip.UserSelectedDates.Count)
                             </button>
                         </div>
                     </div>
@@ -735,29 +766,124 @@
 </div>
 
 <script>
-    async function removeFromCart(tripId, destination) {
-        // Store the trip data in global variables for use in confirmRemoveFromCart
-        window.pendingRemovalTripId = tripId;
-        window.pendingRemovalDestination = destination;
+    function toggleTripDates(tripId) {
+        const datesContainer = document.getElementById(`dates-${tripId}`);
+        const chevron = document.getElementById(`chevron-${tripId}`);
         
-        // Update modal with trip name
-        document.getElementById('tripNamePlaceholder').textContent = destination;
-        
-        // Show modal
-        document.getElementById('confirmationModal').classList.add('show');
+        if (datesContainer) {
+            if (datesContainer.style.display === 'none') {
+                datesContainer.style.display = 'block';
+                if (chevron) chevron.style.transform = 'rotate(180deg)';
+            } else {
+                datesContainer.style.display = 'none';
+                if (chevron) chevron.style.transform = 'rotate(0deg)';
+            }
+        }
+    }
+
+    async function removeFromCart(userTripId, destination) {
+        // Don't show modal, remove immediately
+        try {
+            const response = await fetch('/User/RemoveFromCart', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ userTripID: userTripId })
+            });
+
+            const data = await response.json();
+            
+            if (data.success) {
+                // Find the date item in the expanded list
+                const dateItems = document.querySelectorAll('.date-option-item');
+                let removedDateItem = null;
+                let tripCard = null;
+                
+                // Find which date item was removed
+                dateItems.forEach(item => {
+                    const button = item.querySelector(`button[onclick*="${userTripId}"]`);
+                    if (button) {
+                        removedDateItem = item;
+                        // Find the parent trip card
+                        tripCard = item.closest('.trip-card');
+                    }
+                });
+                
+                if (removedDateItem && tripCard) {
+                    const tripId = tripCard.getAttribute('data-trip-id');
+                    const datesContainer = document.getElementById(`dates-${tripId}`);
+                    
+                    // Count remaining dates for this trip (before removal)
+                    const dateItemsInTrip = datesContainer.querySelectorAll('.date-option-item');
+                    const remainingDatesCount = dateItemsInTrip.length - 1;
+                    
+                    if (remainingDatesCount === 0) {
+                        // Last date - remove entire trip card
+                        tripCard.style.animation = 'fadeOut 0.4s ease forwards';
+                        setTimeout(() => {
+                            tripCard.remove();
+                            
+                            // Check if cart is now empty
+                            const remainingCards = document.querySelectorAll('.trip-card');
+                            if (remainingCards.length === 0) {
+                                location.reload(); // Reload to show empty state
+                            } else {
+                                // Update count badge
+                                const badge = document.querySelector('.trip-count-badge');
+                                if (badge) {
+                                    const count = remainingCards.length;
+                                    badge.innerHTML = `<i class="bi bi-bag-check"></i> ${count} ${count === 1 ? 'Trip' : 'Trips'} in Cart`;
+                                }
+                            }
+                        }, 400);
+                    } else {
+                        // Not last date - just remove this date item
+                        removedDateItem.style.animation = 'fadeOut 0.3s ease forwards';
+                        setTimeout(() => {
+                            removedDateItem.remove();
+                            
+                            // Update the "X different dates selected" message
+                            const infoItem = tripCard.querySelector('.info-item');
+                            if (infoItem && remainingDatesCount === 1) {
+                                // Only one date left, hide the multi-date message
+                                infoItem.style.display = 'none';
+                                // Close the expanded section
+                                datesContainer.style.display = 'none';
+                                const chevron = document.getElementById(`chevron-${tripId}`);
+                                if (chevron) chevron.style.transform = 'rotate(0deg)';
+                            } else if (infoItem) {
+                                // Update count
+                                const span = infoItem.querySelector('span');
+                                if (span) {
+                                    span.textContent = `${remainingDatesCount} different dates selected - Click to view`;
+                                }
+                            }
+                        }, 300);
+                    }
+                }
+                
+                showNotification('✓ Date removed from cart', 'success');
+            } else {
+                showNotification(data.message, 'error');
+            }
+        } catch (error) {
+            console.error('Error removing from cart:', error);
+            showNotification('Failed to remove date. Please try again.', 'error');
+        }
     }
 
     function closeConfirmationModal() {
         document.getElementById('confirmationModal').classList.remove('show');
-        window.pendingRemovalTripId = null;
+        window.pendingRemovalUserTripId = null;
         window.pendingRemovalDestination = null;
     }
 
     async function confirmRemoveFromCart() {
-        const tripId = window.pendingRemovalTripId;
+        const userTripId = window.pendingRemovalUserTripId;
         const destination = window.pendingRemovalDestination;
 
-        if (!tripId) return;
+        if (!userTripId) return;
 
         try {
             const response = await fetch('/User/RemoveFromCart', {
@@ -765,7 +891,7 @@
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ tripId: tripId })
+                body: JSON.stringify({ userTripID: userTripId })
             });
 
             const data = await response.json();
@@ -775,7 +901,7 @@
                 closeConfirmationModal();
                 
                 // Remove card with animation
-                const card = document.querySelector(`[data-trip-id="${tripId}"]`);
+                const card = document.querySelector(`[data-usertrip-id="${userTripId}"]`);
                 if (card) {
                     card.style.animation = 'fadeOut 0.4s ease forwards';
                     setTimeout(() => {
@@ -812,6 +938,12 @@
         const card = document.querySelector(`[data-trip-id="${tripId}"]`);
         const quantity = card ? parseInt(card.dataset.quantity || '1', 10) : 1;
         openPaymentModal(tripId, quantity);
+    }
+
+    function openPaymentModalForDate(userTripId, quantity) {
+        // Open payment modal for a specific date using userTripId
+        // Pass negative number to distinguish from tripId
+        openPaymentModal(-userTripId, quantity);
     }
 
     const cartTotal = parseFloat('@cartTotal.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture)');

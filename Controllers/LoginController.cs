@@ -36,15 +36,17 @@ namespace MVC_project.Controllers
             var user = _repo.GetByEmail(model.Email);
             if (user == null || !_passwordService.VerifyPassword(model.Password, user.passwordHash))
             {
-                ModelState.AddModelError("", "Invalid email or password");
+                ModelState.AddModelError(string.Empty, "Invalid login attempt. Please check your credentials.");
                 return View(model);
             }
 
             // Create user claims and sign in with cookie authentication
+            // Store UserId in NameIdentifier claim instead of email
             var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.Name, user.email ?? ""),
-                new Claim(ClaimTypes.NameIdentifier, user.email ?? ""),
+                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+                new Claim(ClaimTypes.Email, user.email ?? ""),
                 new Claim(ClaimTypes.Role, user.admin ? "Admin" : "User")
             };
 

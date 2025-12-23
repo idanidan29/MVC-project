@@ -11,9 +11,8 @@ namespace MVC_project.Models
         public int UserTripID { get; set; }
 
         [Required]
-        [Column("user_email")]
-        [MaxLength(450)]
-        public string UserEmail { get; set; } = string.Empty;
+        [Column("UserId")]
+        public int UserId { get; set; }
 
         [Required]
         [Column("TripID")]
@@ -23,8 +22,12 @@ namespace MVC_project.Models
         [Column("Quantity")]
         public int Quantity { get; set; } = 1;
 
+        // Selected date index: -1 for main date, 0+ for date variations
+        [Column("SelectedDateIndex")]
+        public int SelectedDateIndex { get; set; } = -1;
+
         // Navigation properties
-        [ForeignKey("UserEmail")]
+        [ForeignKey("UserId")]
         public User? User { get; set; }
 
         [ForeignKey("TripID")]

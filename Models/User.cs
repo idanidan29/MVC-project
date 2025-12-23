@@ -7,6 +7,12 @@ namespace MVC_project.Models
     public class User
     {
         [Key]
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        [Column("Id")]
+        public int Id { get; set; }
+
+        [Required]
+        [MaxLength(450)]
         [Column("email")]
         public string email { get; set; }
 

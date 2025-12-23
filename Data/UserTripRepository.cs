@@ -13,31 +13,33 @@ namespace MVC_project.Data
         }
 
         // Add a trip to user's cart (default quantity = 1)
-        public bool Add(string userEmail, int tripId)
+        public bool Add(int userId, int tripId)
         {
-            return Add(userEmail, tripId, 1);
+            return Add(userId, tripId, 1);
         }
 
-        // Add a trip to user's cart with quantity
-        public bool Add(string userEmail, int tripId, int quantity)
+        // Add a trip to user's cart with quantity and selected date
+        public bool Add(int userId, int tripId, int quantity, int selectedDateIndex = -1)
         {
-            // Check if already exists
+            // Check if this exact combination (trip + date) already exists
             var existing = _context.UserTrips
-                .FirstOrDefault(ut => ut.UserEmail == userEmail && ut.TripID == tripId);
+                .FirstOrDefault(ut => ut.UserId == userId && ut.TripID == tripId && ut.SelectedDateIndex == selectedDateIndex);
 
             if (existing != null)
             {
-                // Increment quantity instead of duplicating
+                // Increment quantity for the same trip with same date
                 existing.Quantity += quantity;
                 _context.SaveChanges();
                 return true;
             }
 
+            // Add as new entry (same trip but different date)
             var userTrip = new UserTrip
             {
-                UserEmail = userEmail,
+                UserId = userId,
                 TripID = tripId,
-                Quantity = quantity
+                Quantity = quantity,
+                SelectedDateIndex = selectedDateIndex
             };
 
             _context.UserTrips.Add(userTrip);
@@ -45,10 +47,10 @@ namespace MVC_project.Data
             return true;
         }
 
-        public bool UpdateQuantity(string userEmail, int tripId, int quantity)
+        public bool UpdateQuantity(int userId, int tripId, int quantity)
         {
             var userTrip = _context.UserTrips
-                .FirstOrDefault(ut => ut.UserEmail == userEmail && ut.TripID == tripId);
+                .FirstOrDefault(ut => ut.UserId == userId && ut.TripID == tripId);
 
             if (userTrip == null) return false;
 
@@ -57,27 +59,42 @@ namespace MVC_project.Data
             return true;
         }
 
-        // Check if user already has this trip in cart
-        public bool Exists(string userEmail, int tripId)
+        // Check if user already has this trip with this specific date in cart
+        public bool Exists(int userId, int tripId, int selectedDateIndex = -1)
         {
             return _context.UserTrips
-                .Any(ut => ut.UserEmail == userEmail && ut.TripID == tripId);
+                .Any(ut => ut.UserId == userId && ut.TripID == tripId && ut.SelectedDateIndex == selectedDateIndex);
         }
 
         // Get all trips for a user
-        public IEnumerable<UserTrip> GetByUserEmail(string userEmail)
+        public IEnumerable<UserTrip> GetByUserId(int userId)
         {
             return _context.UserTrips
                 .Include(ut => ut.Trip)
-                .Where(ut => ut.UserEmail == userEmail)
+                .Where(ut => ut.UserId == userId)
                 .ToList();
         }
 
-        // Remove a trip from user's cart
-        public bool Remove(string userEmail, int tripId)
+        // Remove a trip from user's cart by UserTripID (specific entry)
+        public bool RemoveByUserTripId(int userTripId)
+        {
+            var userTrip = _context.UserTrips.FirstOrDefault(ut => ut.UserTripID == userTripId);
+            
+            if (userTrip == null)
+            {
+                return false;
+            }
+
+            _context.UserTrips.Remove(userTrip);
+            _context.SaveChanges();
+            return true;
+        }
+
+        // Remove a trip from user's cart (all entries for this trip)
+        public bool Remove(int userId, int tripId)
         {
             var userTrip = _context.UserTrips
-                .FirstOrDefault(ut => ut.UserEmail == userEmail && ut.TripID == tripId);
+                .FirstOrDefault(ut => ut.UserId == userId && ut.TripID == tripId);
 
             if (userTrip == null)
             {
@@ -90,15 +107,15 @@ namespace MVC_project.Data
         }
 
         // Get count of trips in user's cart
-        public int GetCount(string userEmail)
+        public int GetCount(int userId)
         {
-            return _context.UserTrips.Count(ut => ut.UserEmail == userEmail);
+            return _context.UserTrips.Count(ut => ut.UserId == userId);
         }
 
         // Remove all trips from user's cart
-        public int RemoveAll(string userEmail)
+        public int RemoveAll(int userId)
         {
-            var items = _context.UserTrips.Where(ut => ut.UserEmail == userEmail).ToList();
+            var items = _context.UserTrips.Where(ut => ut.UserId == userId).ToList();
             if (!items.Any()) return 0;
             _context.UserTrips.RemoveRange(items);
             _context.SaveChanges();

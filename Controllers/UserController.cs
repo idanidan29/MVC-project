@@ -14,14 +14,16 @@ namespace MVC_project.Controllers
         private readonly UserTripRepository _userTripRepo;
         private readonly TripRepository _tripRepo;
         private readonly TripImageRepository _imageRepo;
+        private readonly TripDateRepository _dateRepo;
         private readonly PasswordService _passwordService;
 
-        public UserController(UserRepository repo, UserTripRepository userTripRepo, TripRepository tripRepo, TripImageRepository imageRepo, PasswordService passwordService)
+        public UserController(UserRepository repo, UserTripRepository userTripRepo, TripRepository tripRepo, TripImageRepository imageRepo, TripDateRepository dateRepo, PasswordService passwordService)
         {
             _repo = repo;
             _userTripRepo = userTripRepo;
             _tripRepo = tripRepo;
             _imageRepo = imageRepo;
+            _dateRepo = dateRepo;
             _passwordService = passwordService;
         }
 
@@ -67,38 +69,57 @@ namespace MVC_project.Controllers
         [Authorize]
         public IActionResult Bookings()
         {
-            // Get current user's email from claims
-            var userEmail = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            // Get current user's ID from claims
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             
-            if (string.IsNullOrEmpty(userEmail))
+            if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
             {
                 return RedirectToAction("Login", "Login");
             }
 
             // Get user's trips from database
-            var userTrips = _userTripRepo.GetByUserEmail(userEmail);
+            var userTrips = _userTripRepo.GetByUserId(userId);
             
-            // Create view models with trip details and images
-            var viewModels = userTrips.Select(ut => new UserTripViewModel
+            // Group by TripID to show one card per trip
+            var groupedTrips = userTrips.GroupBy(ut => ut.TripID).Select(group =>
             {
-                TripID = ut.Trip.TripID,
-                Destination = ut.Trip.Destination,
-                Country = ut.Trip.Country,
-                StartDate = ut.Trip.StartDate,
-                EndDate = ut.Trip.EndDate,
-                Price = ut.Trip.Price,
-                DiscountPrice = ut.Trip.DiscountPrice,
-                DiscountEndDate = ut.Trip.DiscountEndDate,
-                PackageType = ut.Trip.PackageType,
-                AvailableRooms = ut.Trip.AvailableRooms,
-                Description = ut.Trip.Description,
-                Quantity = ut.Quantity <= 0 ? 1 : ut.Quantity,
-                Images = _tripRepo.GetById(ut.TripID) != null 
-                    ? _imageRepo.GetByTripId(ut.TripID).Select(img => img.ImageData).ToList()
-                    : new List<byte[]>()
+                var firstTrip = group.First();
+                var tripDates = _dateRepo.GetByTripId(firstTrip.TripID);
+                
+                return new UserTripViewModel
+                {
+                    TripID = firstTrip.Trip.TripID,
+                    Destination = firstTrip.Trip.Destination,
+                    Country = firstTrip.Trip.Country,
+                    StartDate = firstTrip.Trip.StartDate,
+                    EndDate = firstTrip.Trip.EndDate,
+                    Price = firstTrip.Trip.Price,
+                    DiscountPrice = firstTrip.Trip.DiscountPrice,
+                    DiscountEndDate = firstTrip.Trip.DiscountEndDate,
+                    PackageType = firstTrip.Trip.PackageType,
+                    AvailableRooms = firstTrip.Trip.AvailableRooms,
+                    Description = firstTrip.Trip.Description,
+                    Quantity = group.Sum(ut => ut.Quantity),  // Total quantity across all dates
+                    DateVariations = tripDates.Select(td => new DateVariationInfo
+                    {
+                        StartDate = td.StartDate,
+                        EndDate = td.EndDate,
+                        AvailableRooms = td.AvailableRooms
+                    }).ToList(),
+                    // List of all user's selected dates for this trip
+                    UserSelectedDates = group.Select(ut => new UserSelectedDateInfo
+                    {
+                        UserTripID = ut.UserTripID,
+                        SelectedDateIndex = ut.SelectedDateIndex,
+                        Quantity = ut.Quantity
+                    }).ToList(),
+                    Images = _tripRepo.GetById(firstTrip.TripID) != null 
+                        ? _imageRepo.GetByTripId(firstTrip.TripID).Select(img => img.ImageData).ToList()
+                        : new List<byte[]>()
+                };
             }).ToList();
 
-            return View(viewModels);
+            return View(groupedTrips);
         }
 
         // POST: /User/RemoveFromCart
@@ -108,16 +129,16 @@ namespace MVC_project.Controllers
         {
             try
             {
-                // Get current user's email from claims
-                var userEmail = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                // Get current user's ID from claims
+                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 
-                if (string.IsNullOrEmpty(userEmail))
+                if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
                 {
                     return Json(new { success = false, message = "User not authenticated" });
                 }
 
-                // Remove from cart
-                bool removed = _userTripRepo.Remove(userEmail, request.TripId);
+                // Remove specific cart entry by UserTripID
+                bool removed = _userTripRepo.RemoveByUserTripId(request.UserTripID);
                 
                 if (!removed)
                 {
@@ -139,10 +160,10 @@ namespace MVC_project.Controllers
         {
             try
             {
-                // Get current user's email from claims (stored as Name/NameIdentifier in login)
-                var userEmail = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                // Get current user's ID from claims
+                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 
-                if (string.IsNullOrEmpty(userEmail))
+                if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
                 {
                     return Json(new { success = false, message = "User not authenticated" });
                 }
@@ -158,7 +179,7 @@ namespace MVC_project.Controllers
                 var qty = request.Quantity <= 0 ? 1 : request.Quantity;
                 
                 // Check if trip is already in cart and calculate total quantity
-                var existingInCart = _userTripRepo.GetByUserEmail(userEmail)
+                var existingInCart = _userTripRepo.GetByUserId(userId)
                     .FirstOrDefault(ut => ut.TripID == request.TripId);
                 var totalQty = existingInCart != null ? existingInCart.Quantity + qty : qty;
                 
@@ -167,8 +188,8 @@ namespace MVC_project.Controllers
                     return Json(new { success = false, message = $"Only {trip.AvailableRooms} rooms available for {trip.Destination}. You already have {existingInCart?.Quantity ?? 0} in your cart." });
                 }
 
-                // Add to cart with quantity (increments if existing)
-                bool added = _userTripRepo.Add(userEmail, request.TripId, qty);
+                // Add to cart with quantity and selected date (increments if existing)
+                bool added = _userTripRepo.Add(userId, request.TripId, qty, request.SelectedDateIndex);
                 
                 if (!added)
                 {
@@ -179,7 +200,12 @@ namespace MVC_project.Controllers
             }
             catch (Exception ex)
             {
-                return Json(new { success = false, message = "An error occurred while adding to cart" });
+                // Log the actual error for debugging
+                var innerMessage = ex.InnerException?.Message ?? "No inner exception";
+                Console.WriteLine($"AddToCart Error: {ex.Message}");
+                Console.WriteLine($"Inner Exception: {innerMessage}");
+                Console.WriteLine($"Stack Trace: {ex.StackTrace}");
+                return Json(new { success = false, message = $"Database error: {innerMessage}" });
             }
         }
     }
@@ -189,11 +215,12 @@ namespace MVC_project.Controllers
     {
         public int TripId { get; set; }
         public int Quantity { get; set; }
+        public int SelectedDateIndex { get; set; } = -1; // -1 for main date, 0+ for variations
     }
 
     // Request model for RemoveFromCart
     public class RemoveFromCartRequest
     {
-        public int TripId { get; set; }
+        public int UserTripID { get; set; }  // Specific cart entry ID
     }
 }

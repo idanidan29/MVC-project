@@ -21,9 +21,15 @@ namespace MVC_project.Data
             modelBuilder.Entity<User>()
                 .ToTable("Users", "dbo");
 
-            // Set 'email' as the primary key of the User entity
+            // Set 'Id' as the primary key of the User entity
             modelBuilder.Entity<User>()
-                .HasKey(u => u.email);
+                .HasKey(u => u.Id);
+
+            // Email should be unique
+            modelBuilder.Entity<User>()
+                .HasIndex(u => u.email)
+                .IsUnique()
+                .HasDatabaseName("UQ_Users_Email");
 
             // Configure Trip entity
             modelBuilder.Entity<Trip>()
@@ -53,9 +59,9 @@ namespace MVC_project.Data
             modelBuilder.Entity<UserTrip>()
                 .HasKey(ut => ut.UserTripID);
 
-            // Unique constraint on user_email and TripID
+            // Unique constraint on UserId and TripID
             modelBuilder.Entity<UserTrip>()
-                .HasIndex(ut => new { ut.UserEmail, ut.TripID })
+                .HasIndex(ut => new { ut.UserId, ut.TripID })
                 .IsUnique()
                 .HasDatabaseName("UQ_UserTrips_User_Trip");
 
@@ -63,7 +69,7 @@ namespace MVC_project.Data
             modelBuilder.Entity<UserTrip>()
                 .HasOne(ut => ut.User)
                 .WithMany()
-                .HasForeignKey(ut => ut.UserEmail)
+                .HasForeignKey(ut => ut.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
 
             modelBuilder.Entity<UserTrip>()

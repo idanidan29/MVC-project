@@ -97,7 +97,7 @@
     function fmt(n){return new Intl.NumberFormat(undefined,{style:'currency',currency:state.currency}).format(n)}
 
     async function open(tripId, quantity=1){
-      state.tripId = tripId; state.quantity = quantity||1; state.isCart = (tripId === 0);
+      state.tripId = tripId; state.quantity = quantity||1; state.isCart = (tripId === 0); state.isDate = (tripId < 0);
       try{
         let res, data, c;
         if(state.isCart){
@@ -143,6 +143,45 @@
             });
             packagesList.innerHTML += `<div class="grand" style="margin-top:1rem;padding-top:1rem;border-top:2px solid rgba(99,102,241,.3)"><span>Grand Total</span><span>${fmt(c.total)}</span></div>`;
           }
+        } else if(state.isDate) {
+          // Single date payment - use absolute value as userTripId
+          const userTripId = Math.abs(tripId);
+          state.userTripId = userTripId;
+          res = await fetch(`/Booking/DateCheckoutInfo?userTripId=${userTripId}`);
+          data = await res.json();
+          if(!data.success){ notify(data.message||'Failed to load checkout','error'); return; }
+          c = data.checkout;
+          el('pmDest').textContent = c.destination;
+          el('pmQty').textContent = `Qty: ${c.quantity}`;
+          el('pmUnit').textContent = fmt(c.unitPrice);
+          el('pmTotal').textContent = fmt(c.total);
+          el('pmGrand').textContent = fmt(c.total);
+          state.total = c.total;
+          // Show single trip details, hide order summary
+          document.querySelector('.totals').style.display = 'grid';
+          el('orderSummarySection').style.display = 'none';
+          // Trip details on the right panel
+          el('pmRooms').textContent = c.availableRooms ?? '—';
+          el('pmPackage').textContent = c.packageType ?? '—';
+          el('pmCountry').textContent = c.country ?? '—';
+          el('pmAge').textContent = c.ageLimit != null ? `${c.ageLimit}+` : '—';
+          if (c.discountPrice && c.discountEndDate) {
+            try {
+              const until = new Date(c.discountEndDate);
+              el('pmDiscount').textContent = !isNaN(until) ? `${fmt(c.discountPrice)} until ${until.toLocaleDateString()}` : fmt(c.discountPrice);
+            } catch { el('pmDiscount').textContent = fmt(c.discountPrice); }
+          } else {
+            el('pmDiscount').textContent = '—';
+          }
+          try {
+            const start = c.startDate ? new Date(c.startDate) : null;
+            const end = c.endDate ? new Date(c.endDate) : null;
+            if (start && end && !isNaN(start) && !isNaN(end)) {
+              el('pmDates').textContent = `${start.toLocaleDateString()} - ${end.toLocaleDateString()}`;
+            } else {
+              el('pmDates').textContent = '—';
+            }
+          } catch { el('pmDates').textContent = '—'; }
         } else {
           res = await fetch(`/Booking/CheckoutInfo?tripId=${tripId}&quantity=${state.quantity}`);
           data = await res.json();
@@ -207,8 +246,18 @@
               try{
                 await actions.order.capture();
                 // finalize booking in backend
-                const endpoint = state.isCart ? '/Booking/PayPalCartSimulate' : '/Booking/PayPalSimulate';
-                const res = await fetch(endpoint,{ method:'POST', headers:{'Content-Type':'application/json','X-Currency': state.currency}, body: JSON.stringify(state.isCart ? {} : { tripId: state.tripId, quantity: state.quantity }) });
+                let endpoint, body;
+                if(state.isCart){
+                  endpoint = '/Booking/PayPalCartSimulate';
+                  body = {};
+                } else if(state.isDate){
+                  endpoint = '/Booking/PayPalDateSimulate';
+                  body = { userTripId: state.userTripId };
+                } else {
+                  endpoint = '/Booking/PayPalSimulate';
+                  body = { tripId: state.tripId, quantity: state.quantity };
+                }
+                const res = await fetch(endpoint,{ method:'POST', headers:{'Content-Type':'application/json','X-Currency': state.currency}, body: JSON.stringify(body) });
                 const out = await res.json();
                 if(out.success){ notify(out.message,'success'); PaymentModal.close(); setTimeout(()=>location.reload(),600); }
                 else{ notify(out.message,'error'); }
@@ -235,8 +284,18 @@
     async function payPayPalSim(){
       close(); // Close modal so payment window is visible
       try{
-        const endpoint = state.isCart ? '/Booking/PayPalCartSimulate' : '/Booking/PayPalSimulate';
-        const res = await fetch(endpoint,{ method:'POST', headers:{'Content-Type':'application/json','X-Currency': state.currency}, body: JSON.stringify(state.isCart ? {} : { tripId: state.tripId, quantity: state.quantity }) });
+        let endpoint, body;
+        if(state.isCart){
+          endpoint = '/Booking/PayPalCartSimulate';
+          body = {};
+        } else if(state.isDate){
+          endpoint = '/Booking/PayPalDateSimulate';
+          body = { userTripId: state.userTripId };
+        } else {
+          endpoint = '/Booking/PayPalSimulate';
+          body = { tripId: state.tripId, quantity: state.quantity };
+        }
+        const res = await fetch(endpoint,{ method:'POST', headers:{'Content-Type':'application/json','X-Currency': state.currency}, body: JSON.stringify(body) });
         const data = await res.json();
         if(data.success){ notify(data.message,'success'); setTimeout(()=>location.reload(),600); }
         else{ notify(data.message,'error'); }

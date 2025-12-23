@@ -5,10 +5,11 @@
     "\\Data",
     "\\Services",
     "\\Views",
+    "\\Views\\Dashboard",
     "\\Views\\Shared",
     "\\wwwroot",
     "\\wwwroot\\css"
   ],
-  "SelectedNode": "\\Services\\PaymentService.cs",
+  "SelectedNode": "\\MVC-project.sln",
   "PreviewInSolutionExplorer": false
 }
