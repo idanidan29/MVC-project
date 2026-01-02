@@ -148,19 +148,32 @@
         border: 2px solid #e2e8f0;
         border-radius: 0.75rem;
         font-size: 1rem;
+        color: #1e293b !important;
         transition: all 0.3s ease;
         background: white;
+    }
+
+    .form-control::placeholder {
+        color: #94a3b8;
+        opacity: 1;
     }
 
     .form-control:focus, .form-select:focus {
         outline: none;
         border-color: #6366f1;
         box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        color: #1e293b !important;
     }
 
     textarea.form-control {
         resize: vertical;
         min-height: 120px;
+        color: #1e293b !important;
+    }
+
+    textarea.form-control::placeholder {
+        color: #94a3b8;
+        opacity: 1;
     }
 
     /* Two column layout for dates and numbers */

@@ -1,14 +1,15 @@
 {
   "ExpandedNodes": [
     "",
-    "\\Controllers",
     "\\Data",
     "\\Services",
     "\\Views",
     "\\Views\\Dashboard",
     "\\Views\\Shared",
     "\\wwwroot",
-    "\\wwwroot\\css"
+    "\\wwwroot\\css",
+    "\\wwwroot\\lib",
+    "\\wwwroot\\lib\\bootstrap"
   ],
   "SelectedNode": "\\MVC-project.sln",
   "PreviewInSolutionExplorer": false
