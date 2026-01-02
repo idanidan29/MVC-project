@@ -29,6 +29,7 @@ namespace MVC_project.Data
             {
                 // Increment quantity for the same trip with same date
                 existing.Quantity += quantity;
+                existing.ExpiresAt = DateTime.Now.AddHours(24); // Reset expiration to 24 hours
                 _context.SaveChanges();
                 return true;
             }
@@ -39,7 +40,8 @@ namespace MVC_project.Data
                 UserId = userId,
                 TripID = tripId,
                 Quantity = quantity,
-                SelectedDateIndex = selectedDateIndex
+                SelectedDateIndex = selectedDateIndex,
+                ExpiresAt = DateTime.Now.AddHours(24) // User has 24 hours to pay
             };
 
             _context.UserTrips.Add(userTrip);
@@ -75,19 +77,30 @@ namespace MVC_project.Data
                 .ToList();
         }
 
-        // Remove a trip from user's cart by UserTripID (specific entry)
-        public bool RemoveByUserTripId(int userTripId)
+        // Get specific cart item by user ID and trip ID (first matching entry)
+        public UserTrip? GetByUserIdAndTripId(int userId, int tripId)
         {
-            var userTrip = _context.UserTrips.FirstOrDefault(ut => ut.UserTripID == userTripId);
+            return _context.UserTrips
+                .Include(ut => ut.Trip)
+                .FirstOrDefault(ut => ut.UserId == userId && ut.TripID == tripId);
+        }
+
+        // Remove a trip from user's cart by UserTripID (specific entry)
+        // Returns the removed UserTrip with Trip info (for restoring AvailableRooms)
+        public UserTrip? RemoveByUserTripId(int userTripId)
+        {
+            var userTrip = _context.UserTrips
+                .Include(ut => ut.Trip)
+                .FirstOrDefault(ut => ut.UserTripID == userTripId);
             
             if (userTrip == null)
             {
-                return false;
+                return null;
             }
 
             _context.UserTrips.Remove(userTrip);
             _context.SaveChanges();
-            return true;
+            return userTrip;
         }
 
         // Remove a trip from user's cart (all entries for this trip)

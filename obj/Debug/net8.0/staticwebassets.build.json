@@ -1,6 +1,6 @@
 {
   "Version": 1,
-  "Hash": "SG2MztTK3p5JWpjmkUNodVUFBZjxYqev1i9u6iddBmg=",
+  "Hash": "82Ylxt35ad/3+qOAVWSMnNaprVOzDQ6bUIfNOGNIPdk=",
   "Source": "MVC-project",
   "BasePath": "_content/MVC-project",
   "Mode": "Default",
@@ -115,11 +115,32 @@
       "RelatedAsset": "",
       "AssetTraitName": "",
       "AssetTraitValue": "",
-      "Fingerprint": "znovviue71",
-      "Integrity": "YQrZFAla8QnFxrAhYek8H+OOqMLN3oXAZz/5EmjGTps=",
+      "Fingerprint": "3ok61kx8hp",
+      "Integrity": "Iy9bNppOCiBdLqNhAHuVGbjULz5Y4mgZ+ZL72ih948s=",
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
       "OriginalItemSpec": "wwwroot\\js\\site.js"
+    },
+    {
+      "Identity": "C:\\Users\\zecha\\Documents\\GitHub\\MVC-project\\wwwroot\\js\\waitlist.js",
+      "SourceId": "MVC-project",
+      "SourceType": "Discovered",
+      "ContentRoot": "C:\\Users\\zecha\\Documents\\GitHub\\MVC-project\\wwwroot\\",
+      "BasePath": "_content/MVC-project",
+      "RelativePath": "js/waitlist#[.{fingerprint}]?.js",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "Fingerprint": "43wg100phz",
+      "Integrity": "kBi5AGpt4azHvUh7Je89fqzha3AGmjDwjXnC+xBgt18=",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\js\\waitlist.js"
     },
     {
       "Identity": "C:\\Users\\zecha\\Documents\\GitHub\\MVC-project\\wwwroot\\lib\\bootstrap\\dist\\css\\bootstrap.css",
@@ -1485,6 +1506,51 @@
       ]
     },
     {
+      "Route": "js/site.3ok61kx8hp.js",
+      "AssetFile": "C:\\Users\\zecha\\Documents\\GitHub\\MVC-project\\wwwroot\\js\\site.js",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "10902"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "text/javascript"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"Iy9bNppOCiBdLqNhAHuVGbjULz5Y4mgZ+ZL72ih948s=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Tue, 30 Dec 2025 18:47:12 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "3ok61kx8hp"
+        },
+        {
+          "Name": "label",
+          "Value": "js/site.js"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-Iy9bNppOCiBdLqNhAHuVGbjULz5Y4mgZ+ZL72ih948s="
+        }
+      ]
+    },
+    {
       "Route": "js/site.js",
       "AssetFile": "C:\\Users\\zecha\\Documents\\GitHub\\MVC-project\\wwwroot\\js\\site.js",
       "Selectors": [],
@@ -1495,7 +1561,7 @@
         },
         {
           "Name": "Content-Length",
-          "Value": "10785"
+          "Value": "10902"
         },
         {
           "Name": "Content-Type",
@@ -1503,11 +1569,11 @@
         },
         {
           "Name": "ETag",
-          "Value": "\"YQrZFAla8QnFxrAhYek8H+OOqMLN3oXAZz/5EmjGTps=\""
+          "Value": "\"Iy9bNppOCiBdLqNhAHuVGbjULz5Y4mgZ+ZL72ih948s=\""
         },
         {
           "Name": "Last-Modified",
-          "Value": "Mon, 22 Dec 2025 08:07:22 GMT"
+          "Value": "Tue, 30 Dec 2025 18:47:12 GMT"
         },
         {
           "Name": "Cache-Control",
@@ -1517,13 +1583,13 @@
       "EndpointProperties": [
         {
           "Name": "integrity",
-          "Value": "sha256-YQrZFAla8QnFxrAhYek8H+OOqMLN3oXAZz/5EmjGTps="
+          "Value": "sha256-Iy9bNppOCiBdLqNhAHuVGbjULz5Y4mgZ+ZL72ih948s="
         }
       ]
     },
     {
-      "Route": "js/site.znovviue71.js",
-      "AssetFile": "C:\\Users\\zecha\\Documents\\GitHub\\MVC-project\\wwwroot\\js\\site.js",
+      "Route": "js/waitlist.43wg100phz.js",
+      "AssetFile": "C:\\Users\\zecha\\Documents\\GitHub\\MVC-project\\wwwroot\\js\\waitlist.js",
       "Selectors": [],
       "ResponseHeaders": [
         {
@@ -1532,7 +1598,7 @@
         },
         {
           "Name": "Content-Length",
-          "Value": "10785"
+          "Value": "6258"
         },
         {
           "Name": "Content-Type",
@@ -1540,11 +1606,11 @@
         },
         {
           "Name": "ETag",
-          "Value": "\"YQrZFAla8QnFxrAhYek8H+OOqMLN3oXAZz/5EmjGTps=\""
+          "Value": "\"kBi5AGpt4azHvUh7Je89fqzha3AGmjDwjXnC+xBgt18=\""
         },
         {
           "Name": "Last-Modified",
-          "Value": "Mon, 22 Dec 2025 08:07:22 GMT"
+          "Value": "Fri, 02 Jan 2026 00:26:43 GMT"
         },
         {
           "Name": "Cache-Control",
@@ -1554,15 +1620,52 @@
       "EndpointProperties": [
         {
           "Name": "fingerprint",
-          "Value": "znovviue71"
+          "Value": "43wg100phz"
         },
         {
           "Name": "label",
-          "Value": "js/site.js"
+          "Value": "js/waitlist.js"
         },
         {
           "Name": "integrity",
-          "Value": "sha256-YQrZFAla8QnFxrAhYek8H+OOqMLN3oXAZz/5EmjGTps="
+          "Value": "sha256-kBi5AGpt4azHvUh7Je89fqzha3AGmjDwjXnC+xBgt18="
+        }
+      ]
+    },
+    {
+      "Route": "js/waitlist.js",
+      "AssetFile": "C:\\Users\\zecha\\Documents\\GitHub\\MVC-project\\wwwroot\\js\\waitlist.js",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "6258"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "text/javascript"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"kBi5AGpt4azHvUh7Je89fqzha3AGmjDwjXnC+xBgt18=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Fri, 02 Jan 2026 00:26:43 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "no-cache"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-kBi5AGpt4azHvUh7Je89fqzha3AGmjDwjXnC+xBgt18="
         }
       ]
     },

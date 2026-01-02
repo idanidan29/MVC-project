@@ -14,6 +14,7 @@ namespace MVC_project.Data
         public DbSet<TripImage> TripImages { get; set; }
         public DbSet<UserTrip> UserTrips { get; set; }
         public DbSet<TripDate> TripDates { get; set; }
+        public DbSet<Waitlist> Waitlist { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -90,6 +91,26 @@ namespace MVC_project.Data
                 .HasOne(td => td.Trip)
                 .WithMany()
                 .HasForeignKey(td => td.TripID)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Configure Waitlist entity
+            modelBuilder.Entity<Waitlist>()
+                .ToTable("Waitlist", "dbo");
+
+            modelBuilder.Entity<Waitlist>()
+                .HasKey(w => w.WaitlistID);
+
+            // Configure relationships for Waitlist
+            modelBuilder.Entity<Waitlist>()
+                .HasOne(w => w.User)
+                .WithMany()
+                .HasForeignKey(w => w.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<Waitlist>()
+                .HasOne(w => w.Trip)
+                .WithMany()
+                .HasForeignKey(w => w.TripId)
                 .OnDelete(DeleteBehavior.Cascade);
 
             base.OnModelCreating(modelBuilder);

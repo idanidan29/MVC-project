@@ -16,8 +16,10 @@ namespace MVC_project.Controllers
         private readonly TripImageRepository _imageRepo;
         private readonly TripDateRepository _dateRepo;
         private readonly PasswordService _passwordService;
+        private readonly WaitlistRepository _waitlistRepo;
+        private readonly EmailService _emailService;
 
-        public UserController(UserRepository repo, UserTripRepository userTripRepo, TripRepository tripRepo, TripImageRepository imageRepo, TripDateRepository dateRepo, PasswordService passwordService)
+        public UserController(UserRepository repo, UserTripRepository userTripRepo, TripRepository tripRepo, TripImageRepository imageRepo, TripDateRepository dateRepo, PasswordService passwordService, WaitlistRepository waitlistRepo, EmailService emailService)
         {
             _repo = repo;
             _userTripRepo = userTripRepo;
@@ -25,6 +27,8 @@ namespace MVC_project.Controllers
             _imageRepo = imageRepo;
             _dateRepo = dateRepo;
             _passwordService = passwordService;
+            _waitlistRepo = waitlistRepo;
+            _emailService = emailService;
         }
 
         // GET: /User/Register
@@ -125,7 +129,7 @@ namespace MVC_project.Controllers
         // POST: /User/RemoveFromCart
         [HttpPost]
         [Authorize]
-        public IActionResult RemoveFromCart([FromBody] RemoveFromCartRequest request)
+        public async Task<IActionResult> RemoveFromCart([FromBody] RemoveFromCartRequest request)
         {
             try
             {
@@ -138,14 +142,24 @@ namespace MVC_project.Controllers
                 }
 
                 // Remove specific cart entry by UserTripID
-                bool removed = _userTripRepo.RemoveByUserTripId(request.UserTripID);
+                var removedItem = _userTripRepo.RemoveByUserTripId(request.UserTripID);
                 
-                if (!removed)
+                if (removedItem == null)
                 {
                     return Json(new { success = false, message = "Trip not found in cart" });
                 }
 
-                return Json(new { success = true, message = "Trip removed from cart" });
+                // Restore available rooms
+                if (removedItem.Trip != null)
+                {
+                    removedItem.Trip.AvailableRooms += removedItem.Quantity;
+                    _tripRepo.Update(removedItem.Trip);
+                    
+                    // Process waitlist - notify next users
+                    await ProcessWaitlistForTrip(removedItem.TripID, removedItem.Quantity);
+                }
+
+                return Json(new { success = true, message = "Trip removed from cart", tripId = removedItem.TripID, availableRooms = removedItem.Trip?.AvailableRooms ?? 0 });
             }
             catch (Exception ex)
             {
@@ -178,14 +192,32 @@ namespace MVC_project.Controllers
                 // Validate quantity
                 var qty = request.Quantity <= 0 ? 1 : request.Quantity;
                 
-                // Check if trip is already in cart and calculate total quantity
-                var existingInCart = _userTripRepo.GetByUserId(userId)
-                    .FirstOrDefault(ut => ut.TripID == request.TripId);
-                var totalQty = existingInCart != null ? existingInCart.Quantity + qty : qty;
-                
-                if (totalQty > trip.AvailableRooms)
+                // Check if no rooms available - add to waitlist
+                if (trip.AvailableRooms == 0)
                 {
-                    return Json(new { success = false, message = $"Only {trip.AvailableRooms} rooms available for {trip.Destination}. You already have {existingInCart?.Quantity ?? 0} in your cart." });
+                    // Check if user is already on waitlist
+                    if (_waitlistRepo.IsUserOnWaitlist(userId, request.TripId))
+                    {
+                        return Json(new { success = false, onWaitlist = true, message = $"You are already on the waitlist for {trip.Destination}. We'll notify you when a room becomes available!" });
+                    }
+
+                    // Add to waitlist
+                    var addedToWaitlist = _waitlistRepo.AddToWaitlist(userId, request.TripId);
+                    if (addedToWaitlist)
+                    {
+                        return Json(new { success = true, onWaitlist = true, message = $"No rooms available for {trip.Destination}. You've been added to the waitlist and will be notified via email when a room opens up!" });
+                    }
+                    else
+                    {
+                        return Json(new { success = false, message = "Failed to add to waitlist." });
+                    }
+                }
+                
+                // Check if enough rooms available for the NEW quantity being added
+                // (existing quantity already deducted from AvailableRooms)
+                if (qty > trip.AvailableRooms)
+                {
+                    return Json(new { success = false, message = $"Only {trip.AvailableRooms} room(s) available for {trip.Destination}." });
                 }
 
                 // Add to cart with quantity and selected date (increments if existing)
@@ -196,7 +228,12 @@ namespace MVC_project.Controllers
                     return Json(new { success = false, message = $"{trip.Destination} is already in your cart!" });
                 }
 
-                return Json(new { success = true, message = $"✓ {trip.Destination} added to cart (x{qty})!" });
+                // Decrease available rooms (reserve them in cart)
+                trip.AvailableRooms -= qty;
+                if (trip.AvailableRooms < 0) trip.AvailableRooms = 0;
+                _tripRepo.Update(trip);
+
+                return Json(new { success = true, message = $"✓ {trip.Destination} added to cart (x{qty})!", tripId = request.TripId, availableRooms = trip.AvailableRooms });
             }
             catch (Exception ex)
             {
@@ -206,6 +243,47 @@ namespace MVC_project.Controllers
                 Console.WriteLine($"Inner Exception: {innerMessage}");
                 Console.WriteLine($"Stack Trace: {ex.StackTrace}");
                 return Json(new { success = false, message = $"Database error: {innerMessage}" });
+            }
+        }
+
+        // Process waitlist when rooms become available
+        private async Task ProcessWaitlistForTrip(int tripId, int roomsFreed)
+        {
+            try
+            {
+                var trip = _tripRepo.GetById(tripId);
+                if (trip == null) return;
+
+                // Process waitlist users one by one until no more rooms or no more waiting users
+                while (roomsFreed > 0 && trip.AvailableRooms > 0)
+                {
+                    var nextWaitlistUser = _waitlistRepo.GetNextWaitingUser(tripId);
+                    if (nextWaitlistUser == null) break; // No more users waiting
+
+                    // Add trip to their cart (1 room per waitlist user)
+                    _userTripRepo.Add(nextWaitlistUser.UserId, tripId, 1);
+
+                    // Decrease available rooms
+                    trip.AvailableRooms -= 1;
+                    _tripRepo.Update(trip);
+
+                    // Mark as notified and set email sent time
+                    _waitlistRepo.MarkEmailSent(nextWaitlistUser.WaitlistID);
+                    nextWaitlistUser.Status = "Notified";
+                    
+                    // Send email notification
+                    await _emailService.SendWaitlistNotificationAsync(
+                        nextWaitlistUser.User!.email,
+                        nextWaitlistUser.User.first_name,
+                        trip.Destination
+                    );
+
+                    roomsFreed--;
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error processing waitlist: {ex.Message}");
             }
         }
     }

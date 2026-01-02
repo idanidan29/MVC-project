@@ -17,6 +17,10 @@
       "PackagePath": "staticwebassets\\js\\site.js"
     },
     {
+      "Id": "C:\\Users\\zecha\\Documents\\GitHub\\MVC-project\\wwwroot\\js\\waitlist.js",
+      "PackagePath": "staticwebassets\\js\\waitlist.js"
+    },
+    {
       "Id": "C:\\Users\\zecha\\Documents\\GitHub\\MVC-project\\wwwroot\\lib\\bootstrap\\LICENSE",
       "PackagePath": "staticwebassets\\lib\\bootstrap"
     },
