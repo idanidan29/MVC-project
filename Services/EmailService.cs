@@ -50,17 +50,8 @@ namespace MVC_project.Services
                                 </p>
                             </div>
 
-                            <div style='text-align: center; margin: 30px 0;'>
-                                <a href='http://localhost:5000/User/Bookings' 
-                                   style='display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
-                                          color: white; padding: 15px 40px; text-decoration: none; border-radius: 25px; 
-                                          font-weight: bold; font-size: 16px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);'>
-                                    Complete Payment Now
-                                </a>
-                            </div>
-
                             <p style='color: #64748b; font-size: 0.9em; margin-top: 30px;'>
-                                The trip is already in your cart. Click the button above to proceed with payment. Don't miss this opportunity!
+                                The trip is already in your cart. Please log in to complete your payment. Don't miss this opportunity!
                             </p>
                             
                             <hr style='border: none; border-top: 1px solid #e2e8f0; margin: 20px 0;'>
