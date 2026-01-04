@@ -50,7 +50,8 @@
                 <ul class="nav ms-3">
                     <li class="nav-item"><a class="nav-link" asp-controller="Dashboard" asp-action="Index">Trips</a></li>
                     <li class="nav-item"><a class="nav-link" href="/Dashboard?search=">Search</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/User/Bookings">My Bookings</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/User/MyBookings">My Bookings</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/User/Cart">My Cart</a></li>
                     @if (User?.IsInRole("Admin") ?? false)
                     {
                         <li class="nav-item"><a class="nav-link" asp-controller="Admin" asp-action="AddTrip">Add Trip</a></li>

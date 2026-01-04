@@ -69,9 +69,66 @@ namespace MVC_project.Controllers
             return RedirectToAction("Login", "Login"); // Specify controller if Login is in another controller
         }
 
-        // GET: /User/Bookings
+        // GET: /User/MyBookings
         [Authorize]
-        public IActionResult Bookings()
+        public IActionResult MyBookings()
+        {
+            // For now, show the same cart view as a placeholder
+            // In future, this would show completed bookings/orders
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            
+            if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
+            {
+                return RedirectToAction("Login", "Login");
+            }
+
+            // Get user's trips from database (for now showing all trips)
+            var userTrips = _userTripRepo.GetByUserId(userId);
+            
+            // Group by TripID to show one card per trip
+            var groupedTrips = userTrips.GroupBy(ut => ut.TripID).Select(group =>
+            {
+                var firstTrip = group.First();
+                var tripDates = _dateRepo.GetByTripId(firstTrip.TripID);
+                
+                return new UserTripViewModel
+                {
+                    TripID = firstTrip.Trip.TripID,
+                    Destination = firstTrip.Trip.Destination,
+                    Country = firstTrip.Trip.Country,
+                    StartDate = firstTrip.Trip.StartDate,
+                    EndDate = firstTrip.Trip.EndDate,
+                    Price = firstTrip.Trip.Price,
+                    DiscountPrice = firstTrip.Trip.DiscountPrice,
+                    DiscountEndDate = firstTrip.Trip.DiscountEndDate,
+                    PackageType = firstTrip.Trip.PackageType,
+                    AvailableRooms = firstTrip.Trip.AvailableRooms,
+                    Description = firstTrip.Trip.Description,
+                    Quantity = group.Sum(ut => ut.Quantity),
+                    DateVariations = tripDates.Select(td => new DateVariationInfo
+                    {
+                        StartDate = td.StartDate,
+                        EndDate = td.EndDate,
+                        AvailableRooms = td.AvailableRooms
+                    }).ToList(),
+                    UserSelectedDates = group.Select(ut => new UserSelectedDateInfo
+                    {
+                        UserTripID = ut.UserTripID,
+                        SelectedDateIndex = ut.SelectedDateIndex,
+                        Quantity = ut.Quantity
+                    }).ToList(),
+                    Images = _tripRepo.GetById(firstTrip.TripID) != null 
+                        ? _imageRepo.GetByTripId(firstTrip.TripID).Select(img => img.ImageData).ToList()
+                        : new List<byte[]>()
+                };
+            }).ToList();
+
+            return View(groupedTrips);
+        }
+
+        // GET: /User/Cart
+        [Authorize]
+        public IActionResult Cart()
         {
             // Get current user's ID from claims
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;

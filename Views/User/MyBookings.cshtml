@@ -1,0 +1,633 @@
+@model List<MVC_project.ViewModels.UserTripViewModel>
+
+@{
+    ViewData["Title"] = "My Bookings";
+}
+
+<style>
+    /* Animated Background */
+    .bookings-bg {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(-45deg, #10b981, #059669, #34d399, #10b981);
+        background-size: 400% 400%;
+        animation: gradient 15s ease infinite;
+        z-index: -1;
+    }
+
+    @@keyframes gradient {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+    }
+
+    /* Floating particles */
+    .particle {
+        position: fixed;
+        pointer-events: none;
+        opacity: 0.5;
+        animation: float 20s infinite linear;
+        z-index: -1;
+    }
+
+    @@keyframes float {
+        0% {
+            transform: translate(0, 0) rotate(0deg);
+            opacity: 0;
+        }
+        10% {
+            opacity: 0.5;
+        }
+        90% {
+            opacity: 0.5;
+        }
+        100% {
+            transform: translate(100px, -100vh) rotate(360deg);
+            opacity: 0;
+        }
+    }
+
+    /* Main container */
+    .bookings-container {
+        position: relative;
+        min-height: 100vh;
+        padding: 2rem 1rem;
+        overflow-y: auto;
+    }
+
+    /* Page header */
+    .page-header {
+        text-align: center;
+        margin-bottom: 3rem;
+        animation: slideInDown 0.8s ease-out;
+    }
+
+    .page-title {
+        color: white;
+        font-size: 3rem;
+        font-weight: 700;
+        text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.3);
+        margin-bottom: 0.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 1rem;
+    }
+
+    .page-subtitle {
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 1.2rem;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+    }
+
+    .trip-count-badge {
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+        padding: 0.5rem 1.5rem;
+        border-radius: 2rem;
+        font-size: 1.1rem;
+        font-weight: 600;
+        box-shadow: 0 4px 15px rgba(255, 255, 255, 0.2);
+        backdrop-filter: blur(10px);
+        display: inline-block;
+        margin-top: 1rem;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+
+    @@keyframes slideInDown {
+        from {
+            opacity: 0;
+            transform: translateY(-50px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* Empty state */
+    .empty-state {
+        text-align: center;
+        padding: 4rem 2rem;
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        border-radius: 2rem;
+        max-width: 600px;
+        margin: 0 auto;
+        box-shadow: 0 20px 70px rgba(0, 0, 0, 0.2);
+        animation: slideInUp 0.8s ease-out;
+    }
+
+    .empty-state-icon {
+        font-size: 5rem;
+        color: #10b981;
+        margin-bottom: 1.5rem;
+        opacity: 0.7;
+    }
+
+    .empty-state-title {
+        color: #1e293b;
+        font-size: 2rem;
+        font-weight: 700;
+        margin-bottom: 1rem;
+    }
+
+    .empty-state-text {
+        color: #64748b;
+        font-size: 1.1rem;
+        margin-bottom: 2rem;
+        line-height: 1.6;
+    }
+
+    .btn-browse {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        color: white;
+        padding: 0.75rem 2rem;
+        border-radius: 0.75rem;
+        text-decoration: none;
+        font-weight: 600;
+        box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .btn-browse:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(16, 185, 129, 0.6);
+        color: white;
+    }
+
+    /* Trips grid */
+    .trips-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+        gap: 2rem;
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 0 1rem;
+    }
+
+    @@media (max-width: 768px) {
+        .trips-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    /* Trip card */
+    .trip-card {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        border-radius: 1.5rem;
+        overflow: hidden;
+        border: 2px solid rgba(16, 185, 129, 0.2);
+        box-shadow: 0 20px 70px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.5);
+        transition: all 0.3s ease;
+        animation: slideInUp 0.8s ease-out;
+        position: relative;
+    }
+
+    .trip-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 30px 90px rgba(16, 185, 129, 0.3);
+        border-color: rgba(16, 185, 129, 0.5);
+    }
+
+    .trip-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 4px;
+        background: linear-gradient(90deg, #10b981, #34d399, #059669);
+        z-index: 1;
+    }
+
+    @@keyframes slideInUp {
+        from {
+            opacity: 0;
+            transform: translateY(50px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* Trip image */
+    .trip-image-container {
+        width: 100%;
+        height: 250px;
+        overflow: hidden;
+        background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+        position: relative;
+    }
+
+    .trip-image {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.3s ease;
+    }
+
+    .trip-card:hover .trip-image {
+        transform: scale(1.1);
+    }
+
+    .no-image-placeholder {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+    }
+
+    .no-image-placeholder i {
+        font-size: 4rem;
+        color: #059669;
+        opacity: 0.5;
+    }
+
+    /* Status badge */
+    .status-badge {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 0.75rem;
+        font-size: 0.85rem;
+        font-weight: 600;
+        box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+        z-index: 1;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    /* Trip details */
+    .trip-details {
+        padding: 1.5rem;
+    }
+
+    .trip-destination {
+        color: #1e293b;
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+    }
+
+    .trip-country {
+        color: #64748b;
+        font-size: 1rem;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .trip-country i {
+        color: #10b981;
+    }
+
+    .trip-info {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+        margin-bottom: 1rem;
+    }
+
+    .info-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: #475569;
+        font-size: 0.95rem;
+    }
+
+    .info-item i {
+        color: #10b981;
+        width: 20px;
+    }
+
+    .trip-description {
+        color: #64748b;
+        font-size: 0.9rem;
+        line-height: 1.6;
+        margin-bottom: 1rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    /* Booking info section */
+    .booking-info-section {
+        background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(52, 211, 153, 0.1) 100%);
+        padding: 1rem;
+        border-radius: 1rem;
+        margin-bottom: 1rem;
+        border: 1px solid rgba(16, 185, 129, 0.2);
+    }
+
+    .booking-ref {
+        color: #475569;
+        font-size: 0.85rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .booking-ref-code {
+        color: #10b981;
+        font-weight: 700;
+        font-family: 'Courier New', monospace;
+        font-size: 0.95rem;
+        word-break: break-all;
+    }
+
+    .booking-date {
+        color: #64748b;
+        font-size: 0.85rem;
+        margin-top: 0.5rem;
+    }
+
+    /* Price section */
+    .trip-price-section {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 1rem 0;
+        border-top: 2px solid #e2e8f0;
+        border-bottom: 2px solid #e2e8f0;
+        margin-bottom: 1rem;
+    }
+
+    .price-container {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .trip-price {
+        color: #1e293b;
+        font-size: 1.8rem;
+        font-weight: 700;
+    }
+
+    .per-trip-note {
+        color: #64748b;
+        font-size: 0.9rem;
+        font-weight: 600;
+        margin-top: 0.15rem;
+    }
+
+    /* Action buttons */
+    .trip-actions {
+        display: flex;
+        gap: 0.75rem;
+    }
+
+    .btn-view-details {
+        flex: 1;
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        color: white;
+        border: none;
+        padding: 0.75rem 1rem;
+        border-radius: 0.75rem;
+        font-size: 0.95rem;
+        font-weight: 600;
+        cursor: pointer;
+        box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        text-decoration: none;
+    }
+
+    .btn-view-details:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(16, 185, 129, 0.6);
+        color: white;
+    }
+
+    .btn-download {
+        flex: 1;
+        background: rgba(16, 185, 129, 0.1);
+        color: #10b981;
+        border: 2px solid #10b981;
+        padding: 0.75rem 1rem;
+        border-radius: 0.75rem;
+        font-size: 0.95rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+    }
+
+    .btn-download:hover {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        color: white;
+        transform: translateY(-2px);
+    }
+
+    /* Dates info */
+    .dates-info {
+        background: #f8fafc;
+        padding: 1rem;
+        border-radius: 0.75rem;
+        margin-bottom: 1rem;
+    }
+
+    .date-row {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 0.5rem;
+        font-size: 0.9rem;
+    }
+
+    .date-row:last-child {
+        margin-bottom: 0;
+    }
+
+    .date-label {
+        color: #64748b;
+        font-weight: 500;
+    }
+
+    .date-value {
+        color: #1e293b;
+        font-weight: 600;
+    }
+
+    /* Loading animation */
+    @@keyframes fadeOut {
+        to {
+            opacity: 0;
+            transform: scale(0.9);
+        }
+    }
+
+    @@keyframes fadeIn {
+        from {
+            opacity: 0;
+        }
+        to {
+            opacity: 1;
+        }
+    }
+</style>
+
+<!-- Background elements -->
+<div class="bookings-bg"></div>
+
+<script>
+    // Create floating particles
+    for (let i = 0; i < 50; i++) {
+        const particle = document.createElement('div');
+        particle.className = 'particle';
+        particle.style.width = Math.random() * 5 + 2 + 'px';
+        particle.style.height = particle.style.width;
+        particle.style.left = Math.random() * 100 + '%';
+        particle.style.background = 'white';
+        particle.style.borderRadius = '50%';
+        particle.style.animationDelay = Math.random() * 20 + 's';
+        particle.style.animationDuration = Math.random() * 10 + 15 + 's';
+        document.body.appendChild(particle);
+    }
+</script>
+
+<div class="bookings-container">
+    <div class="page-header">
+        <h1 class="page-title">
+            <i class="bi bi-check2-square"></i>
+            My Bookings
+        </h1>
+        <p class="page-subtitle">View all your confirmed trips and itineraries</p>
+        @if (Model != null && Model.Any())
+        {
+            <div class="trip-count-badge">
+                <i class="bi bi-check-circle"></i> @Model.Count @(Model.Count == 1 ? "Confirmed Trip" : "Confirmed Trips")
+            </div>
+        }
+    </div>
+
+    @if (Model == null || !Model.Any())
+    {
+        <div class="empty-state">
+            <div class="empty-state-icon">
+                <i class="bi bi-ticket-detailed"></i>
+            </div>
+            <h2 class="empty-state-title">No bookings yet</h2>
+            <p class="empty-state-text">
+                You don't have any confirmed bookings yet. 
+                Browse our amazing trips and start planning your next adventure!
+            </p>
+            <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+                <a href="/Dashboard/Index" class="btn-browse">
+                    <i class="bi bi-compass"></i>
+                    Explore Trips
+                </a>
+                <a href="/User/Cart" class="btn-browse" style="background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%); box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);">
+                    <i class="bi bi-cart"></i>
+                    View Cart
+                </a>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="trips-grid">
+            @foreach (var trip in Model)
+            {
+                var bookingRef = "BK-" + trip.TripID.ToString().PadLeft(5, '0') + "-" + DateTime.Now.Year.ToString().Substring(2);
+                <div class="trip-card">
+                    <div class="trip-image-container">
+                        @if (trip.Images.Any())
+                        {
+                            <img src="data:image/jpeg;base64,@Convert.ToBase64String(trip.Images.First())" alt="@trip.Destination" class="trip-image" />
+                        }
+                        else
+                        {
+                            <div class="no-image-placeholder">
+                                <i class="bi bi-image"></i>
+                            </div>
+                        }
+                        <span class="status-badge">
+                            <i class="bi bi-check-circle-fill"></i>
+                            Confirmed
+                        </span>
+                    </div>
+
+                    <div class="trip-details">
+                        <h3 class="trip-destination">@trip.Destination</h3>
+                        <div class="trip-country">
+                            <i class="bi bi-geo-alt-fill"></i>
+                            <span>@trip.Country</span>
+                        </div>
+
+                        <!-- Trip Dates -->
+                        <div class="dates-info">
+                            <div class="date-row">
+                                <span class="date-label"><i class="bi bi-calendar-event"></i> Start Date:</span>
+                                <span class="date-value">@trip.StartDate.ToString("MMM dd, yyyy")</span>
+                            </div>
+                            <div class="date-row">
+                                <span class="date-label"><i class="bi bi-calendar-event"></i> End Date:</span>
+                                <span class="date-value">@trip.EndDate.ToString("MMM dd, yyyy")</span>
+                            </div>
+                            <div class="date-row">
+                                <span class="date-label"><i class="bi bi-hourglass-split"></i> Duration:</span>
+                                <span class="date-value">@((trip.EndDate - trip.StartDate).Days) days</span>
+                            </div>
+                            <div class="date-row">
+                                <span class="date-label"><i class="bi bi-people-fill"></i> Travelers:</span>
+                                <span class="date-value">@trip.Quantity @(trip.Quantity == 1 ? "Person" : "People")</span>
+                            </div>
+                        </div>
+
+                        <!-- Price Information -->
+                        <div class="trip-price-section">
+                            <div class="price-container">
+                                <span class="trip-price">$@{var total = trip.FinalPrice * (decimal)trip.Quantity;}<text>@total.ToString("N2")</text></span>
+                                @if (trip.Quantity > 1)
+                                {
+                                    <span class="per-trip-note">$@trip.FinalPrice.ToString("N2") per person</span>
+                                }
+                            </div>
+                        </div>
+
+                        <!-- Package Type -->
+                        <div style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(52, 211, 153, 0.1)); padding: 0.75rem; border-radius: 0.75rem; margin-bottom: 1rem; border: 1px solid rgba(16, 185, 129, 0.2);">
+                            <div style="color: #64748b; font-size: 0.85rem; margin-bottom: 0.25rem;">Package Type</div>
+                            <div style="color: #10b981; font-weight: 600; font-size: 1rem;">@trip.PackageType</div>
+                        </div>
+
+                        <!-- Trip Description -->
+                        <p class="trip-description">@trip.Description</p>
+
+                        <!-- Action Buttons -->
+                        <div class="trip-actions">
+                            <button class="btn-view-details" onclick="alert('Itinerary details will be available soon!')">
+                                <i class="bi bi-file-earmark-pdf"></i>
+                                View Itinerary
+                            </button>
+                            <button class="btn-download" onclick="alert('Download invoice functionality coming soon!')">
+                                <i class="bi bi-download"></i>
+                                Invoice
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
