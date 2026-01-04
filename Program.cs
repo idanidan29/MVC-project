@@ -39,6 +39,7 @@ builder.Services.AddScoped<UserRepository>();
 builder.Services.AddScoped<TripRepository>();
 builder.Services.AddScoped<TripImageRepository>();
 builder.Services.AddScoped<UserTripRepository>();
+builder.Services.AddScoped<BookingRepository>();
 builder.Services.AddScoped<TripDateRepository>();
 builder.Services.AddScoped<WaitlistRepository>();
 builder.Services.AddScoped<PasswordService>();

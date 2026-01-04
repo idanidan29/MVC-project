@@ -12,6 +12,7 @@ namespace MVC_project.Controllers
     {
         private readonly UserRepository _repo;
         private readonly UserTripRepository _userTripRepo;
+        private readonly BookingRepository _bookingRepo;
         private readonly TripRepository _tripRepo;
         private readonly TripImageRepository _imageRepo;
         private readonly TripDateRepository _dateRepo;
@@ -19,10 +20,11 @@ namespace MVC_project.Controllers
         private readonly WaitlistRepository _waitlistRepo;
         private readonly EmailService _emailService;
 
-        public UserController(UserRepository repo, UserTripRepository userTripRepo, TripRepository tripRepo, TripImageRepository imageRepo, TripDateRepository dateRepo, PasswordService passwordService, WaitlistRepository waitlistRepo, EmailService emailService)
+        public UserController(UserRepository repo, UserTripRepository userTripRepo, BookingRepository bookingRepo, TripRepository tripRepo, TripImageRepository imageRepo, TripDateRepository dateRepo, PasswordService passwordService, WaitlistRepository waitlistRepo, EmailService emailService)
         {
             _repo = repo;
             _userTripRepo = userTripRepo;
+            _bookingRepo = bookingRepo;
             _tripRepo = tripRepo;
             _imageRepo = imageRepo;
             _dateRepo = dateRepo;
@@ -82,43 +84,48 @@ namespace MVC_project.Controllers
                 return RedirectToAction("Login", "Login");
             }
 
-            // Get user's trips from database (for now showing all trips)
-            var userTrips = _userTripRepo.GetByUserId(userId);
-            
-            // Group by TripID to show one card per trip
-            var groupedTrips = userTrips.GroupBy(ut => ut.TripID).Select(group =>
+            // Get user's confirmed bookings
+            var bookings = _bookingRepo.GetByUserId(userId);
+
+            // Group by TripID to show one card per trip while keeping per-booking date selections
+            var groupedTrips = bookings.GroupBy(b => b.TripID).Select(group =>
             {
-                var firstTrip = group.First();
-                var tripDates = _dateRepo.GetByTripId(firstTrip.TripID);
-                
+                var firstBooking = group.First();
+                var trip = firstBooking.Trip ?? _tripRepo.GetById(firstBooking.TripID);
+                var tripDates = _dateRepo.GetByTripId(firstBooking.TripID);
+
                 return new UserTripViewModel
                 {
-                    TripID = firstTrip.Trip.TripID,
-                    Destination = firstTrip.Trip.Destination,
-                    Country = firstTrip.Trip.Country,
-                    StartDate = firstTrip.Trip.StartDate,
-                    EndDate = firstTrip.Trip.EndDate,
-                    Price = firstTrip.Trip.Price,
-                    DiscountPrice = firstTrip.Trip.DiscountPrice,
-                    DiscountEndDate = firstTrip.Trip.DiscountEndDate,
-                    PackageType = firstTrip.Trip.PackageType,
-                    AvailableRooms = firstTrip.Trip.AvailableRooms,
-                    Description = firstTrip.Trip.Description,
-                    Quantity = group.Sum(ut => ut.Quantity),
+                    TripID = firstBooking.TripID,
+                    Destination = trip?.Destination ?? string.Empty,
+                    Country = trip?.Country ?? string.Empty,
+                    StartDate = trip?.StartDate ?? DateTime.MinValue,
+                    EndDate = trip?.EndDate ?? DateTime.MinValue,
+                    Price = firstBooking.UnitPrice,
+                    DiscountPrice = null, // bookings store final prices
+                    DiscountEndDate = null,
+                    PackageType = trip?.PackageType ?? string.Empty,
+                    AvailableRooms = trip?.AvailableRooms ?? 0,
+                    Description = trip?.Description ?? string.Empty,
+                    Quantity = group.Sum(b => b.Quantity),
                     DateVariations = tripDates.Select(td => new DateVariationInfo
                     {
                         StartDate = td.StartDate,
                         EndDate = td.EndDate,
                         AvailableRooms = td.AvailableRooms
                     }).ToList(),
-                    UserSelectedDates = group.Select(ut => new UserSelectedDateInfo
+                    UserSelectedDates = group.Select(b => new UserSelectedDateInfo
                     {
-                        UserTripID = ut.UserTripID,
-                        SelectedDateIndex = ut.SelectedDateIndex,
-                        Quantity = ut.Quantity
+                        UserTripID = b.BookingID,
+                        SelectedDateIndex = b.SelectedDateIndex,
+                        Quantity = b.Quantity,
+                        Status = b.Status,
+                        BookingDate = b.BookingDate,
+                        UnitPrice = b.UnitPrice,
+                        TotalPrice = b.TotalPrice
                     }).ToList(),
-                    Images = _tripRepo.GetById(firstTrip.TripID) != null 
-                        ? _imageRepo.GetByTripId(firstTrip.TripID).Select(img => img.ImageData).ToList()
+                    Images = trip != null
+                        ? _imageRepo.GetByTripId(trip.TripID).Select(img => img.ImageData).ToList()
                         : new List<byte[]>()
                 };
             }).ToList();

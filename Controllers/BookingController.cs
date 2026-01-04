@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MVC_project.Data;
+using MVC_project.Models;
 using MVC_project.Services;
 using System.Security.Claims;
 
@@ -11,6 +12,7 @@ namespace MVC_project.Controllers
     {
         private readonly TripRepository _tripRepo;
         private readonly UserTripRepository _userTripRepo;
+        private readonly BookingRepository _bookingRepo;
         private readonly PaymentService _paymentService;
         private readonly WaitlistRepository _waitlistRepo;
         private readonly UserRepository _userRepo;
@@ -18,7 +20,8 @@ namespace MVC_project.Controllers
 
         public BookingController(
             TripRepository tripRepo, 
-            UserTripRepository userTripRepo, 
+            UserTripRepository userTripRepo,
+            BookingRepository bookingRepo,
             PaymentService paymentService,
             WaitlistRepository waitlistRepo,
             UserRepository userRepo,
@@ -26,6 +29,7 @@ namespace MVC_project.Controllers
         {
             _tripRepo = tripRepo;
             _userTripRepo = userTripRepo;
+            _bookingRepo = bookingRepo;
             _paymentService = paymentService;
             _waitlistRepo = waitlistRepo;
             _userRepo = userRepo;
@@ -185,6 +189,9 @@ namespace MVC_project.Controllers
             if (!ok)
                 return Json(new { success = false, message = "Payment failed. Please try another method." });
 
+            // Record booking
+            AddBookingRecord(userId, trip, qty, -1);
+
             // On success: clear from cart (rooms already reserved when added to cart)
             _userTripRepo.Remove(userId, request.TripId);
 
@@ -236,6 +243,9 @@ namespace MVC_project.Controllers
             var captured = _paymentService.CapturePayPalOrder(orderId);
             if (!captured)
                 return Json(new { success = false, message = "PayPal capture failed." });
+
+            // Record booking
+            AddBookingRecord(userId, trip, qty, -1);
 
             // On success: clear from cart (rooms already reserved when added to cart)
             _userTripRepo.Remove(userId, request.TripId);
@@ -301,6 +311,15 @@ namespace MVC_project.Controllers
             if (!captured)
                 return Json(new { success = false, message = "PayPal capture failed." });
 
+            // Record bookings for each cart item
+            foreach (var item in cartItems)
+            {
+                var trip = item.Trip ?? _tripRepo.GetById(item.TripID);
+                if (trip == null) continue;
+                var qty = item.Quantity <= 0 ? 1 : item.Quantity;
+                AddBookingRecord(userId, trip, qty, item.SelectedDateIndex);
+            }
+
             // Mark all waitlist entries as booked for items in cart
             foreach (var item in cartItems)
             {
@@ -363,6 +382,9 @@ namespace MVC_project.Controllers
             var captured = _paymentService.CapturePayPalOrder(orderId);
             if (!captured)
                 return Json(new { success = false, message = "PayPal capture failed." });
+
+            // Record booking for this specific date selection
+            AddBookingRecord(userId, trip, qty, userTrip.SelectedDateIndex);
 
             // Mark waitlist entry as booked if user was from waitlist
             _waitlistRepo.MarkAsBooked(userId, userTrip.TripID);
@@ -480,6 +502,28 @@ namespace MVC_project.Controllers
                 success = true, 
                 message = $"{trip.Destination} (x{qty}) added to cart!" 
             });
+        }
+
+        private Booking AddBookingRecord(int userId, Trip trip, int quantity, int selectedDateIndex)
+        {
+            var unitPrice = trip.DiscountPrice.HasValue && trip.DiscountPrice < trip.Price
+                ? trip.DiscountPrice.Value
+                : trip.Price;
+
+            var booking = new Booking
+            {
+                UserId = userId,
+                TripID = trip.TripID,
+                Quantity = quantity,
+                UnitPrice = unitPrice,
+                TotalPrice = unitPrice * quantity,
+                BookingDate = DateTime.UtcNow,
+                SelectedDateIndex = selectedDateIndex,
+                Status = "Confirmed",
+                Trip = trip
+            };
+
+            return _bookingRepo.Add(booking);
         }
     }
 

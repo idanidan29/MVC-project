@@ -79,6 +79,10 @@ namespace MVC_project.ViewModels
         public int UserTripID { get; set; }
         public int SelectedDateIndex { get; set; }
         public int Quantity { get; set; }
+        public string Status { get; set; } = string.Empty;
+        public DateTime BookingDate { get; set; }
+        public decimal UnitPrice { get; set; }
+        public decimal TotalPrice { get; set; }
     }
     
     public class DateVariationInfo

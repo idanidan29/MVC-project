@@ -573,7 +573,7 @@
             </h3>
         </div>
         <div class="confirmation-modal-body">
-            <p>Are you sure you want to remove <strong id="tripNamePlaceholder">this trip</strong> from your cart?</p>
+            <p>Are you sure you want to remove <strong id="tripNamePlaceholder">this trip</strong> from your bookings?</p>
             <p style="font-size: 0.85rem; color: #64748b; margin-top: 0.75rem;">This action cannot be undone.</p>
         </div>
         <div class="confirmation-modal-footer">
@@ -611,16 +611,11 @@
             <i class="bi bi-cart-check"></i>
             My Bookings
         </h1>
-        <p class="page-subtitle">Manage your saved trips and complete your bookings</p>
+        <p class="page-subtitle">Review your confirmed trips</p>
         @if (Model != null && Model.Any())
         {
             <div class="trip-count-badge">
-                <i class="bi bi-bag-check"></i> @Model.Count @(Model.Count == 1 ? "Trip" : "Trips") in Cart
-            </div>
-            <div class="checkout-actions">
-                <button class="btn-book" style="min-width: 220px;" onclick="openPaymentModal(0)">
-                    <i class="bi bi-paypal"></i> Checkout All with PayPal
-                </button>
+                <i class="bi bi-bag-check"></i> @Model.Count @(Model.Count == 1 ? "Booking" : "Bookings")
             </div>
         }
     </div>
@@ -631,10 +626,10 @@
             <div class="empty-state-icon">
                 <i class="bi bi-cart-x"></i>
             </div>
-            <h2 class="empty-state-title">Your cart is empty</h2>
+            <h2 class="empty-state-title">No bookings yet</h2>
             <p class="empty-state-text">
-                You haven't added any trips to your cart yet. 
-                Start exploring amazing destinations and add your favorites!
+                You haven't completed any bookings yet. 
+                Browse destinations and reserve your next adventure!
             </p>
             <a href="/Dashboard/Index" class="btn-browse">
                 <i class="bi bi-compass"></i>
@@ -710,14 +705,16 @@
                                                 <i class="bi bi-people-fill"></i> Quantity: @selectedDate.Quantity
                                             </div>
                                         </div>
-                                        <div style="display: flex; gap: 0.5rem; align-items: center;">
-                                            <button class="btn-pay-date" onclick="event.stopPropagation(); openPaymentModalForDate(@selectedDate.UserTripID, @selectedDate.Quantity);" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none; padding: 0.5rem 1rem; border-radius: 0.5rem; cursor: pointer; font-size: 0.85rem; font-weight: 600; display: flex; align-items: center; gap: 0.3rem; box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3); transition: all 0.3s ease;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(16, 185, 129, 0.5)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(16, 185, 129, 0.3)';">
-                                                <i class="bi bi-credit-card"></i>
-                                                Pay Now
-                                            </button>
-                                            <button class="btn-remove-date" onclick="event.stopPropagation(); removeFromCart(@selectedDate.UserTripID, '@trip.Destination');" style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: white; border: none; padding: 0.5rem 0.75rem; border-radius: 0.5rem; cursor: pointer; font-size: 0.85rem;">
-                                                <i class="bi bi-trash"></i>
-                                            </button>
+                                        <div style="display: flex; flex-direction: column; gap: 0.35rem; align-items: flex-end; text-align: right;">
+                                            <span style="font-size: 0.85rem; font-weight: 700; color: #0ea5e9; display: inline-flex; align-items: center; gap: 0.35rem;">
+                                                <i class="bi bi-shield-check"></i> @selectedDate.Status
+                                            </span>
+                                            <span style="font-size: 0.82rem; color: #475569; display: inline-flex; align-items: center; gap: 0.35rem;">
+                                                <i class="bi bi-calendar-check"></i> Booked @selectedDate.BookingDate.ToString("MMM dd, yyyy")
+                                            </span>
+                                            <span style="font-size: 0.82rem; color: #111827; font-weight: 700;">
+                                                $@selectedDate.TotalPrice.ToString("N2")
+                                            </span>
                                         </div>
                                     </div>
                                 </div>
@@ -752,11 +749,11 @@
                             }
                         </div>
 
-                        <div class="trip-actions" onclick="event.stopPropagation();">
-                            <button class="btn-book" onclick="openPaymentModal(@trip.TripID, @trip.Quantity)">
+                        <div class="trip-actions" style="justify-content: flex-end;" onclick="event.stopPropagation();">
+                            <div class="btn-book" style="cursor: default;">
                                 <i class="bi bi-check-circle"></i>
-                                Pay for All Dates (@trip.UserSelectedDates.Count)
-                            </button>
+                                @trip.UserSelectedDates.Count @(trip.UserSelectedDates.Count == 1 ? "booking" : "bookings") recorded
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -833,7 +830,7 @@
                                 const badge = document.querySelector('.trip-count-badge');
                                 if (badge) {
                                     const count = remainingCards.length;
-                                    badge.innerHTML = `<i class="bi bi-bag-check"></i> ${count} ${count === 1 ? 'Trip' : 'Trips'} in Cart`;
+                                    badge.innerHTML = `<i class="bi bi-bag-check"></i> ${count} ${count === 1 ? 'Booking' : 'Bookings'}`;
                                 }
                             }
                         }, 400);
@@ -863,7 +860,7 @@
                     }
                 }
                 
-                showNotification('✓ Date removed from cart', 'success');
+                showNotification('✓ Date removed from bookings', 'success');
             } else {
                 showNotification(data.message, 'error');
             }
@@ -916,11 +913,11 @@
                             const badge = document.querySelector('.trip-count-badge');
                             if (badge) {
                                 const count = remainingCards.length;
-                                badge.innerHTML = `<i class="bi bi-bag-check"></i> ${count} ${count === 1 ? 'Trip' : 'Trips'} in Cart`;
+                                badge.innerHTML = `<i class="bi bi-bag-check"></i> ${count} ${count === 1 ? 'Booking' : 'Bookings'}`;
                             }
                         }
                         
-                        showNotification('✓ Trip removed from cart', 'success');
+                        showNotification('✓ Trip removed from bookings', 'success');
                     }, 400);
                 }
             } else {

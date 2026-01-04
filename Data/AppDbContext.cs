@@ -13,6 +13,7 @@ namespace MVC_project.Data
         public DbSet<Trip> Trips { get; set; }
         public DbSet<TripImage> TripImages { get; set; }
         public DbSet<UserTrip> UserTrips { get; set; }
+        public DbSet<Booking> Bookings { get; set; }
         public DbSet<TripDate> TripDates { get; set; }
         public DbSet<Waitlist> Waitlist { get; set; }
 
@@ -77,6 +78,25 @@ namespace MVC_project.Data
                 .HasOne(ut => ut.Trip)
                 .WithMany()
                 .HasForeignKey(ut => ut.TripID)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Configure Booking entity
+            modelBuilder.Entity<Booking>()
+                .ToTable("Bookings", "dbo");
+
+            modelBuilder.Entity<Booking>()
+                .HasKey(b => b.BookingID);
+
+            modelBuilder.Entity<Booking>()
+                .HasOne(b => b.User)
+                .WithMany()
+                .HasForeignKey(b => b.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<Booking>()
+                .HasOne(b => b.Trip)
+                .WithMany()
+                .HasForeignKey(b => b.TripID)
                 .OnDelete(DeleteBehavior.Cascade);
 
             // Configure TripDate entity
