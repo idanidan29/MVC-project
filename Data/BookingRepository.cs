@@ -28,6 +28,13 @@ namespace MVC_project.Data
                 .ToList();
         }
 
+        public int CountUpcoming(int userId, DateTime todayUtc)
+        {
+            return _context.Bookings
+                .Include(b => b.Trip)
+                .Count(b => b.UserId == userId && b.Trip != null && b.Trip.EndDate >= todayUtc.Date);
+        }
+
         public Booking? GetByIdForUser(int bookingId, int userId)
         {
             return _context.Bookings

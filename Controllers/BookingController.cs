@@ -176,6 +176,9 @@ namespace MVC_project.Controllers
             if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
                 return Json(new { success = false, message = "User not authenticated" });
 
+            if (GetUpcomingBookingsCount(userId) >= 3)
+                return Json(new { success = false, message = "Limit reached: you can have at most 3 upcoming bookings." });
+
             var trip = _tripRepo.GetById(request.TripId);
             if (trip == null)
                 return Json(new { success = false, message = "Trip not found" });
@@ -224,6 +227,9 @@ namespace MVC_project.Controllers
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
                 return Json(new { success = false, message = "User not authenticated" });
+
+            if (GetUpcomingBookingsCount(userId) >= 3)
+                return Json(new { success = false, message = "Limit reached: you can have at most 3 upcoming bookings." });
 
             var trip = _tripRepo.GetById(request.TripId);
             if (trip == null)
@@ -283,6 +289,10 @@ namespace MVC_project.Controllers
             var cartItems = _userTripRepo.GetByUserId(userId).ToList();
             if (!cartItems.Any())
                 return Json(new { success = false, message = "Your cart is empty." });
+
+            var existingUpcoming = GetUpcomingBookingsCount(userId);
+            if (existingUpcoming + cartItems.Count > 3)
+                return Json(new { success = false, message = $"Limit reached: you already have {existingUpcoming} upcoming booking(s). You can book {Math.Max(0, 3 - existingUpcoming)} more." });
 
             decimal grandTotal = 0m;
             var cartDetails = new List<(string destination, int quantity, decimal total, DateTime startDate, DateTime endDate, string packageType)>();
@@ -359,6 +369,9 @@ namespace MVC_project.Controllers
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
                 return Json(new { success = false, message = "User not authenticated" });
+
+            if (GetUpcomingBookingsCount(userId) >= 3)
+                return Json(new { success = false, message = "Limit reached: you can have at most 3 upcoming bookings." });
 
             var userTrip = _userTripRepo.GetByUserId(userId).FirstOrDefault(ut => ut.UserTripID == request.UserTripId);
             if (userTrip == null)
@@ -524,6 +537,12 @@ namespace MVC_project.Controllers
             };
 
             return _bookingRepo.Add(booking);
+        }
+
+        private int GetUpcomingBookingsCount(int userId)
+        {
+            var todayUtc = DateTime.UtcNow.Date;
+            return _bookingRepo.CountUpcoming(userId, todayUtc);
         }
     }
 

@@ -251,6 +251,7 @@ namespace MVC_project.Controllers
                 DiscountPrice = model.DiscountPrice,
                 DiscountEndDate = model.DiscountEndDate,
                 AvailableRooms = model.AvailableRooms,
+                TotalRooms = model.AvailableRooms,
                 PackageType = model.PackageType,
                 AgeLimit = model.AgeLimit,
                 Description = model.Description,
@@ -408,6 +409,7 @@ namespace MVC_project.Controllers
             trip.DiscountPrice = model.DiscountPrice;
             trip.DiscountEndDate = model.DiscountEndDate;
             trip.AvailableRooms = model.AvailableRooms;
+            trip.TotalRooms = model.AvailableRooms;
             trip.PackageType = model.PackageType;
             trip.AgeLimit = model.AgeLimit;
             trip.Description = model.Description;

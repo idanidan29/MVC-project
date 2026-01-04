@@ -259,11 +259,11 @@
                 }
                 const res = await fetch(endpoint,{ method:'POST', headers:{'Content-Type':'application/json','X-Currency': state.currency}, body: JSON.stringify(body) });
                 const out = await res.json();
-                if(out.success){ notify(out.message,'success'); PaymentModal.close(); setTimeout(()=>location.reload(),600); }
-                else{ notify(out.message,'error'); }
-              }catch(err){ console.error(err); notify('PayPal capture failed','error'); }
+                if(out.success){ notify(out.message,'success', true); PaymentModal.close(); }
+                else{ notify(out.message,'error', true); }
+              }catch(err){ console.error(err); notify('PayPal capture failed','error', true); }
             },
-            onError: (err) => { console.error(err); notify('PayPal error','error'); }
+            onError: (err) => { console.error(err); notify('PayPal error','error', true); }
           }).render('#paypalButtonsContainer');
         }catch(e){ console.error(e); notify('Failed to initialize PayPal','error'); }
       } else {
@@ -277,9 +277,9 @@
       try{
         const res = await fetch('/Booking/PayCard',{ method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ tripId: state.tripId, quantity: state.quantity }) });
         const data = await res.json();
-        if(data.success){ notify(data.message,'success'); }
-        else{ notify(data.message,'error'); }
-      }catch(e){ console.error(e); notify('Payment failed','error'); }
+        if(data.success){ notify(data.message,'success', true); }
+        else{ notify(data.message,'error', true); }
+      }catch(e){ console.error(e); notify('Payment failed','error', true); }
     }
     async function payPayPalSim(){
       close(); // Close modal so payment window is visible
@@ -297,15 +297,26 @@
         }
         const res = await fetch(endpoint,{ method:'POST', headers:{'Content-Type':'application/json','X-Currency': state.currency}, body: JSON.stringify(body) });
         const data = await res.json();
-        if(data.success){ notify(data.message,'success'); setTimeout(()=>location.reload(),600); }
-        else{ notify(data.message,'error'); }
-      }catch(e){ console.error(e); notify('PayPal payment failed','error'); }
+        if(data.success){ notify(data.message,'success', true); }
+        else{ notify(data.message,'error', true); }
+      }catch(e){ console.error(e); notify('PayPal payment failed','error', true); }
     }
-    function notify(message,type='info'){
+    function notify(message,type='info', redirectHome=false){
+      if(!document.getElementById('payment-toast-keyframes')){
+        const k=document.createElement('style');
+        k.id='payment-toast-keyframes';
+        k.textContent=`@@keyframes slideInRight{from{transform:translate(120%,0);}to{transform:translate(0,0);}}@@keyframes slideOutRight{from{transform:translate(0,0);opacity:1;}to{transform:translate(120%,0);opacity:0;}}@@keyframes shrink{from{transform:scaleX(1);}to{transform:scaleX(0);}}`;
+        document.head.appendChild(k);
+      }
       const n=document.createElement('div');
-      n.style.cssText=`position:fixed;top:2rem;right:2rem;background:${type==='success'?'linear-gradient(135deg,#10b981,#059669)':'linear-gradient(135deg,#ef4444,#dc2626)'};color:#fff;padding:1rem 1.5rem;border-radius:.75rem;box-shadow:0 10px 30px rgba(0,0,0,.3);z-index:3000;animation:slideInRight .3s ease;font-weight:700`;
-      n.textContent=message; document.body.appendChild(n);
-      setTimeout(()=>{ n.style.animation='slideOutRight .3s ease'; setTimeout(()=>n.remove(),300); },3000);
+      n.style.cssText=`position:fixed;top:2rem;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:0.75rem;padding:1rem 1.5rem;border-radius:1rem;background:${type==='success'?'linear-gradient(135deg,#0ea5e9,#10b981)':'linear-gradient(135deg,#f97316,#ef4444)'};color:#fff;box-shadow:0 16px 50px rgba(0,0,0,.25);z-index:3000;backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,.18);min-width:260px;max-width:90%;animation:slideInRight .35s ease;font-weight:700;letter-spacing:0.2px;position:fixed;overflow:hidden;`; 
+      n.innerHTML = `<span style="display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,0.18);box-shadow:inset 0 1px 0 rgba(255,255,255,0.2)">${type==='success'?'<i class="bi bi-check2-circle"></i>':'<i class="bi bi-exclamation-triangle-fill"></i>'}</span><span style="flex:1">${message}</span>`;
+      const bar=document.createElement('div');
+      bar.style.cssText='position:absolute;left:0;bottom:0;height:4px;border-radius:0 0 1rem 1rem;background:rgba(255,255,255,0.7);width:100%;transform-origin:left;animation:shrink 4s linear forwards';
+      n.appendChild(bar);
+      document.body.appendChild(n);
+      setTimeout(()=>{ n.style.animation='slideOutRight .35s ease'; setTimeout(()=>n.remove(),320); },4000);
+      if(redirectHome){ setTimeout(()=>{ window.location.href='/Dashboard'; },4300); }
     }
     return { open, close, select, payCard, payPayPalSim };
   })();
