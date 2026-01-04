@@ -395,3 +395,143 @@
     </div>
   </div>
 </div>
+<script>
+    // Toggle trip visibility
+    document.querySelectorAll('.toggle-visibility-btn').forEach(btn => {
+        btn.addEventListener('click', async function(e) {
+            e.preventDefault();
+            const tripId = this.getAttribute('data-trip-id');
+            const button = this;
+
+            // Show loading state
+            button.classList.add('loading');
+            const originalContent = button.innerHTML;
+
+            try {
+                const response = await fetch('@Url.Action("ToggleTripVisibility", "Admin")', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ tripId: parseInt(tripId) })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    // Update button appearance
+                    const isVisible = result.isVisible;
+                    button.classList.toggle('visible', isVisible);
+                    button.classList.toggle('hidden', !isVisible);
+                    
+                    // Update button content
+                    button.innerHTML = isVisible 
+                        ? '<i class="bi bi-eye"></i> Visible' 
+                        : '<i class="bi bi-eye-slash"></i> Hidden';
+
+                    // Show success message
+                    showNotification(result.message, 'success');
+                } else {
+                    showNotification(result.message || 'Failed to update visibility', 'error');
+                    button.innerHTML = originalContent;
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showNotification('An error occurred while updating visibility', 'error');
+                button.innerHTML = originalContent;
+            } finally {
+                button.classList.remove('loading');
+            }
+        });
+    });
+
+    // Delete trip
+    document.querySelectorAll('.delete-trip-btn').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            const tripId = this.getAttribute('data-trip-id');
+            
+            if (confirm('Are you sure you want to delete this trip? This action cannot be undone.')) {
+                deleteTripRequest(tripId);
+            }
+        });
+    });
+
+    async function deleteTripRequest(tripId) {
+        try {
+            const response = await fetch('@Url.Action("DeleteTrip", "Admin")', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ tripId: parseInt(tripId) })
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                showNotification(result.message, 'success');
+                // Reload page after 1 second
+                setTimeout(() => location.reload(), 1000);
+            } else {
+                showNotification(result.message || 'Failed to delete trip', 'error');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            showNotification('An error occurred while deleting the trip', 'error');
+        }
+    }
+
+    // Notification helper
+    function showNotification(message, type = 'info') {
+        // Create a simple alert-style notification
+        const notification = document.createElement('div');
+        notification.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 1rem 1.5rem;
+            background: ${type === 'success' ? '#d1fae5' : type === 'error' ? '#fee2e2' : '#dbeafe'};
+            color: ${type === 'success' ? '#047857' : type === 'error' ? '#991b1b' : '#0c4a6e'};
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            z-index: 9999;
+            animation: slideIn 0.3s ease;
+            border-left: 4px solid ${type === 'success' ? '#10b981' : type === 'error' ? '#ef4444' : '#3b82f6'};
+        `;
+        notification.textContent = message;
+        document.body.appendChild(notification);
+
+        // Auto remove after 4 seconds
+        setTimeout(() => {
+            notification.style.animation = 'slideOut 0.3s ease';
+            setTimeout(() => notification.remove(), 300);
+        }, 4000);
+    }
+
+    // Add animation styles
+    const style = document.createElement('style');
+    style.textContent = `
+        @@keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        @@keyframes slideOut {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+        }
+    `;
+    document.head.appendChild(style);
+</script>

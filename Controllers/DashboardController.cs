@@ -24,8 +24,10 @@ namespace MVC_project.Controllers
         [HttpGet("Index")]
         public IActionResult Index()
         {
-            // Get all active trips
-            var trips = _tripRepo.GetActiveTrips();
+            // Get trips - all for admins, only active and visible for regular users
+            var trips = User?.IsInRole("Admin") == true 
+                ? _tripRepo.GetAll().Where(t => t.IsActive)
+                : _tripRepo.GetAll().Where(t => t.IsActive && t.IsVisible);
 
             // Map to view models with image check
             var tripViewModels = trips.Select(trip => {
@@ -46,6 +48,7 @@ namespace MVC_project.Controllers
                     HasImage = images.Any(),
                     ImageCount = images.Count(),
                     AvailableRooms = trip.AvailableRooms,
+                    IsVisible = trip.IsVisible,
                     DateVariations = dates.Select(d => new TripDateVariation
                     {
                         TripDateID = d.TripDateID,

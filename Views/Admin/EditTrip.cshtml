@@ -368,6 +368,95 @@
         background: rgba(220, 38, 38, 1);
         transform: scale(1.1);
     }
+
+    /* Visibility toggle section */
+    .visibility-section {
+        background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+        border: 2px solid #bae6fd;
+        border-radius: 1rem;
+        padding: 1.5rem;
+        margin-top: 2rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .visibility-section-title {
+        color: #0c4a6e;
+        font-size: 1.1rem;
+        font-weight: 600;
+        margin-bottom: 0.75rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .visibility-section-title i {
+        font-size: 1.2rem;
+    }
+
+    .visibility-section-description {
+        color: #0369a1;
+        font-size: 0.9rem;
+        margin-bottom: 1rem;
+    }
+
+    .visibility-toggle-wrapper {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .toggle-switch {
+        position: relative;
+        display: inline-block;
+        width: 2.5rem;
+        height: 1.5rem;
+    }
+
+    .toggle-switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+    }
+
+    .toggle-slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: #cbd5e1;
+        transition: 0.4s;
+        border-radius: 1.5rem;
+    }
+
+    .toggle-slider:before {
+        position: absolute;
+        content: "";
+        height: 1.2rem;
+        width: 1.2rem;
+        left: 0.15rem;
+        bottom: 0.15rem;
+        background-color: white;
+        transition: 0.4s;
+        border-radius: 50%;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+
+    input:checked + .toggle-slider {
+        background-color: #10b981;
+    }
+
+    input:checked + .toggle-slider:before {
+        transform: translateX(1rem);
+    }
+
+    .visibility-label {
+        color: #1e293b;
+        font-weight: 500;
+        margin-left: 0.5rem;
+    }
+
 </style>
 
 <!-- Animated Background -->
@@ -610,6 +699,25 @@
                 </button>
             </div>
 
+            <!-- Visibility Control -->
+            <div class="visibility-section">
+                <div class="visibility-section-title">
+                    <i class="bi bi-eye"></i>
+                    Trip Visibility
+                </div>
+                <p class="visibility-section-description">
+                    <i class="bi bi-info-circle"></i>
+                    Control whether this trip appears in the user listings and search results
+                </p>
+                <div class="visibility-toggle-wrapper" id="visibilityToggleWrapper">
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="visibilityToggle" />
+                        <span class="toggle-slider"></span>
+                    </label>
+                    <span class="visibility-label" id="visibilityLabel">Hidden from users</span>
+                </div>
+            </div>
+
             <!-- Submit Button -->
             <button type="submit" class="btn-submit">
                 <i class="bi bi-check-circle"></i> Update Trip
@@ -748,6 +856,27 @@
                 }
             }
         });
+    })();
+
+    // Visibility Toggle Initialization
+    (function(){
+        const toggle = document.getElementById('visibilityToggle');
+        const label = document.getElementById('visibilityLabel');
+        const isVisible = @(ViewBag.IsVisible?.ToString().ToLower() ?? "false");
+
+        if (toggle && label) {
+            // Set initial state
+            toggle.checked = isVisible;
+            updateLabel();
+
+            // Update label on change
+            toggle.addEventListener('change', updateLabel);
+
+            function updateLabel() {
+                label.textContent = toggle.checked ? 'Visible to users' : 'Hidden from users';
+                label.style.color = toggle.checked ? '#047857' : '#991b1b';
+            }
+        }
     })();
 </script>
 

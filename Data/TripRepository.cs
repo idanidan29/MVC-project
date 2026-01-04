@@ -57,5 +57,17 @@ namespace MVC_project.Data
                 Update(trip);
             }
         }
+
+        public bool ToggleVisibility(int id)
+        {
+            var trip = GetById(id);
+            if (trip != null)
+            {
+                trip.IsVisible = !trip.IsVisible;
+                Update(trip);
+                return trip.IsVisible;
+            }
+            return false;
+        }
     }
 }

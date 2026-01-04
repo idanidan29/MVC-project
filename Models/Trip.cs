@@ -60,5 +60,13 @@ namespace MVC_project.Models
         [Required]
         [Column("IsActive")]
         public bool IsActive { get; set; } = true;
+
+        [Required]
+        [Column("TotalRooms")]
+        public int TotalRooms { get; set; } = 10;
+
+        [Required]
+        [Column("IsVisible")]
+        public bool IsVisible { get; set; } = true;
     }
 }

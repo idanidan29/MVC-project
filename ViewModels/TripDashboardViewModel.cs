@@ -14,6 +14,7 @@ namespace MVC_project.ViewModels
         public bool HasImage { get; set; }
         public int ImageCount { get; set; }
         public int AvailableRooms { get; set; }
+        public bool IsVisible { get; set; }
         public List<TripDateVariation> DateVariations { get; set; } = new List<TripDateVariation>();
 
         // Computed property to get the closest upcoming date

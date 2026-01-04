@@ -511,5 +511,29 @@ namespace MVC_project.Controllers
             _imageRepo.Delete(imageId);
             return Ok(new { success = true, message = "Image deleted successfully" });
         }
+
+        // POST: /Admin/ToggleTripVisibility
+        [HttpPost("ToggleTripVisibility")]
+        public IActionResult ToggleTripVisibility([FromBody] ToggleTripVisibilityRequest request)
+        {
+            if (request.TripId <= 0)
+                return BadRequest(new { success = false, message = "Invalid trip ID" });
+
+            var trip = _tripRepo.GetById(request.TripId);
+            if (trip == null)
+                return NotFound(new { success = false, message = "Trip not found" });
+
+            var newVisibility = _tripRepo.ToggleVisibility(request.TripId);
+            var message = newVisibility 
+                ? "Trip is now visible to all users" 
+                : "Trip is now hidden from users";
+
+            return Ok(new { success = true, message, isVisible = newVisibility });
+        }
+
+        public class ToggleTripVisibilityRequest
+        {
+            public int TripId { get; set; }
+        }
     }
 }

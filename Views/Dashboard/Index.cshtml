@@ -308,6 +308,53 @@
         z-index: 1;
     }
 
+    /* Visibility badge for admin */
+    .visibility-badge {
+        position: absolute;
+        top: 1rem;
+        left: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        padding: 0.5rem 0.9rem;
+        border-radius: 0.75rem;
+        font-size: 0.85rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        border: none;
+        z-index: 2;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    }
+
+    .visibility-badge.visible {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        color: white;
+    }
+
+    .visibility-badge.hidden {
+        background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        color: white;
+    }
+
+    .visibility-badge:hover {
+        transform: scale(1.05);
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    .visibility-badge:active {
+        transform: scale(0.98);
+    }
+
+    .visibility-badge.loading {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+
+    .visibility-badge i {
+        font-size: 1rem;
+    }
+
     /* Button container - fixed to bottom of card */
     .trip-actions {
         display: flex;
@@ -1010,6 +1057,20 @@
                      data-package="@trip.PackageType"
                      data-image-count="@trip.ImageCount"
                      onclick="openTripModal(event, this, @trip.TripID)">
+                    
+                    @if (User?.IsInRole("Admin") ?? false)
+                    {
+                        <!-- Visibility Badge for Admin -->
+                        <button type="button" 
+                                class="visibility-badge @(trip.IsVisible ? "visible" : "hidden") toggle-visibility-btn" 
+                                data-trip-id="@trip.TripID" 
+                                onclick="event.stopPropagation(); toggleVisibility(event, @trip.TripID, @trip.IsVisible.ToString().ToLower())"
+                                title="@(trip.IsVisible ? "Trip is visible to users - Click to hide" : "Trip is hidden from users - Click to show")">
+                            <i class="bi @(trip.IsVisible ? "bi-eye-fill" : "bi-eye-slash-fill")"></i>
+                            <span>@(trip.IsVisible ? "Visible" : "Hidden")</span>
+                        </button>
+                    }
+
                     <!-- Package Type Badge -->
                     <div class="package-badge">
                         <i class="bi bi-star-fill"></i> @trip.PackageType
@@ -1840,6 +1901,56 @@
         }
     `;
     document.head.appendChild(style);
+
+    // Toggle trip visibility function (admin only)
+    async function toggleVisibility(event, tripId, currentVisibility) {
+        event.preventDefault();
+        event.stopPropagation();
+
+        const button = event.currentTarget;
+        if (button.classList.contains('loading')) return;
+
+        // Show loading state
+        button.classList.add('loading');
+        const originalContent = button.innerHTML;
+
+        try {
+            const response = await fetch('@Url.Action("ToggleTripVisibility", "Admin")', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ tripId: tripId })
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                // Update button appearance
+                const isVisible = result.isVisible;
+                button.classList.toggle('visible', isVisible);
+                button.classList.toggle('hidden', !isVisible);
+                button.title = isVisible 
+                    ? 'Trip is visible to users - Click to hide' 
+                    : 'Trip is hidden from users - Click to show';
+                
+                // Update button content
+                button.innerHTML = `<i class="bi ${isVisible ? 'bi-eye-fill' : 'bi-eye-slash-fill'}"></i><span>${isVisible ? 'Visible' : 'Hidden'}</span>`;
+
+                // Show success notification
+                showNotification(result.message, 'success');
+            } else {
+                showNotification(result.message || 'Failed to update visibility', 'error');
+                button.innerHTML = originalContent;
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            showNotification('An error occurred while updating visibility', 'error');
+            button.innerHTML = originalContent;
+        } finally {
+            button.classList.remove('loading');
+        }
+    }
 
     // Delete trip function (admin only)
     function deleteTrip(event, tripId) {

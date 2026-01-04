@@ -189,6 +189,93 @@
         }
     }
 
+    /* Visibility Toggle Styling */
+    .visibility-section {
+        background: linear-gradient(135deg, rgba(99, 102, 241, 0.05) 0%, rgba(79, 70, 229, 0.05) 100%);
+        padding: 1.5rem;
+        border-radius: 1rem;
+        border: 1px solid rgba(99, 102, 241, 0.2);
+    }
+
+    .visibility-toggle-container {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .visibility-checkbox {
+        display: none;
+    }
+
+    .visibility-toggle-label {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        cursor: pointer;
+        user-select: none;
+    }
+
+    .toggle-inner {
+        position: relative;
+        width: 60px;
+        height: 32px;
+        background: #e0e7ff;
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        transition: all 0.3s ease;
+        border: 2px solid #c7d2fe;
+    }
+
+    .toggle-switch {
+        position: absolute;
+        left: 2px;
+        width: 24px;
+        height: 24px;
+        background: white;
+        border-radius: 12px;
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+
+    .visibility-checkbox:checked + .visibility-toggle-label .toggle-inner {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        border-color: #047857;
+    }
+
+    .visibility-checkbox:checked + .visibility-toggle-label .toggle-switch {
+        left: 32px;
+    }
+
+    .toggle-text {
+        font-weight: 600;
+        font-size: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .toggle-status {
+        padding: 0.25rem 0.75rem;
+        border-radius: 0.5rem;
+        background: #e0e7ff;
+        color: #3730a3;
+        transition: all 0.3s ease;
+    }
+
+    .visibility-checkbox:checked + .visibility-toggle-label .toggle-status {
+        background: #d1fae5;
+        color: #047857;
+    }
+
+    .visibility-checkbox:checked + .visibility-toggle-label .toggle-status::before {
+        content: "✓ ";
+    }
+
+    .visibility-checkbox:not(:checked) + .visibility-toggle-label .toggle-status::before {
+        content: "✕ ";
+    }
+
     /* Button styling */
     .btn-submit {
         background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
@@ -576,6 +663,25 @@
                 <button type="button" class="btn btn-outline-primary btn-sm" id="addDateVariation">
                     <i class="bi bi-plus-circle"></i> Add Date Variation
                 </button>
+            </div>
+
+            <!-- Trip Visibility Toggle -->
+            <div class="form-group mt-4 visibility-section">
+                <label class="form-label">
+                    <i class="bi bi-eye"></i> Trip Visibility
+                </label>
+                <p class="text-muted small mb-3">New trips are always visible to customers. You can change this after creation.</p>
+                <div class="visibility-toggle-container">
+                    <input type="checkbox" id="visibilityToggle" class="visibility-checkbox" checked disabled />
+                    <label for="visibilityToggle" class="visibility-toggle-label">
+                        <span class="toggle-inner">
+                            <span class="toggle-switch"></span>
+                        </span>
+                        <span class="toggle-text">
+                            <span class="toggle-status">Visible to customers</span>
+                        </span>
+                    </label>
+                </div>
             </div>
 
             <!-- Submit Button -->
