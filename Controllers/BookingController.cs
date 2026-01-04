@@ -13,17 +13,23 @@ namespace MVC_project.Controllers
         private readonly UserTripRepository _userTripRepo;
         private readonly PaymentService _paymentService;
         private readonly WaitlistRepository _waitlistRepo;
+        private readonly UserRepository _userRepo;
+        private readonly EmailService _emailService;
 
         public BookingController(
             TripRepository tripRepo, 
             UserTripRepository userTripRepo, 
             PaymentService paymentService,
-            WaitlistRepository waitlistRepo)
+            WaitlistRepository waitlistRepo,
+            UserRepository userRepo,
+            EmailService emailService)
         {
             _tripRepo = tripRepo;
             _userTripRepo = userTripRepo;
             _paymentService = paymentService;
             _waitlistRepo = waitlistRepo;
+            _userRepo = userRepo;
+            _emailService = emailService;
         }
 
         // GET: /Booking/CheckoutInfo?tripId=1&quantity=2
@@ -160,7 +166,7 @@ namespace MVC_project.Controllers
 
         // POST: /Booking/PayCard
         [HttpPost]
-        public IActionResult PayCard([FromBody] BuyNowRequest request)
+        public async Task<IActionResult> PayCard([FromBody] BuyNowRequest request)
         {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
@@ -185,12 +191,28 @@ namespace MVC_project.Controllers
             // Mark waitlist entry as booked if user was from waitlist
             _waitlistRepo.MarkAsBooked(userId, request.TripId);
 
+            // Send confirmation email
+            var user = _userRepo.GetById(userId);
+            if (user != null)
+            {
+                await _emailService.SendPaymentConfirmationAsync(
+                    user.email,
+                    user.first_name,
+                    trip.Destination,
+                    _paymentService.GetCheckoutInfo(request.TripId, qty)?.Total ?? (trip.Price * qty),
+                    qty,
+                    trip.StartDate,
+                    trip.EndDate,
+                    trip.PackageType
+                );
+            }
+
             return Json(new { success = true, message = $"Payment successful. {qty} room(s) for {trip.Destination} booked!" });
         }
 
         // POST: /Booking/PayPalSimulate
         [HttpPost]
-        public IActionResult PayPalSimulate([FromBody] BuyNowRequest request)
+        public async Task<IActionResult> PayPalSimulate([FromBody] BuyNowRequest request)
         {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
@@ -221,12 +243,28 @@ namespace MVC_project.Controllers
             // Mark waitlist entry as booked if user was from waitlist
             _waitlistRepo.MarkAsBooked(userId, request.TripId);
 
+            // Send confirmation email
+            var user = _userRepo.GetById(userId);
+            if (user != null)
+            {
+                await _emailService.SendPaymentConfirmationAsync(
+                    user.email,
+                    user.first_name,
+                    trip.Destination,
+                    info.Total,
+                    qty,
+                    trip.StartDate,
+                    trip.EndDate,
+                    trip.PackageType
+                );
+            }
+
             return Json(new { success = true, message = $"PayPal payment successful. {qty} room(s) for {trip.Destination} booked!" });
         }
 
         // POST: /Booking/PayPalCartSimulate
         [HttpPost]
-        public IActionResult PayPalCartSimulate()
+        public async Task<IActionResult> PayPalCartSimulate()
         {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
@@ -237,6 +275,8 @@ namespace MVC_project.Controllers
                 return Json(new { success = false, message = "Your cart is empty." });
 
             decimal grandTotal = 0m;
+            var cartDetails = new List<(string destination, int quantity, decimal total, DateTime startDate, DateTime endDate, string packageType)>();
+            
             foreach (var item in cartItems)
             {
                 var trip = item.Trip ?? _tripRepo.GetById(item.TripID);
@@ -250,7 +290,9 @@ namespace MVC_project.Controllers
                 var unit = trip.DiscountPrice.HasValue && trip.DiscountPrice < trip.Price
                     ? trip.DiscountPrice.Value
                     : trip.Price;
-                grandTotal += unit * qty;
+                var itemTotal = unit * qty;
+                grandTotal += itemTotal;
+                cartDetails.Add((trip.Destination, qty, itemTotal, trip.StartDate, trip.EndDate, trip.PackageType));
             }
 
             var currency = HttpContext.Request.Headers["X-Currency"].FirstOrDefault() ?? "USD";
@@ -267,13 +309,33 @@ namespace MVC_project.Controllers
 
             // On success: clear cart (rooms already reserved when added to cart)
             _userTripRepo.RemoveAll(userId);
+
+            // Send confirmation emails for each trip in cart
+            var user = _userRepo.GetById(userId);
+            if (user != null)
+            {
+                foreach (var (destination, quantity, total, startDate, endDate, packageType) in cartDetails)
+                {
+                    await _emailService.SendPaymentConfirmationAsync(
+                        user.email,
+                        user.first_name,
+                        destination,
+                        total,
+                        quantity,
+                        startDate,
+                        endDate,
+                        packageType
+                    );
+                }
+            }
+
             return Json(new { success = true, message = $"PayPal payment successful. {cartItems.Count} trip(s) booked!" });
         }
 
         // POST: /Booking/PayPalDateSimulate
         [HttpPost]
         [Authorize]
-        public IActionResult PayPalDateSimulate([FromBody] PayPalDateRequest request)
+        public async Task<IActionResult> PayPalDateSimulate([FromBody] PayPalDateRequest request)
         {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
@@ -307,6 +369,23 @@ namespace MVC_project.Controllers
 
             // On success: clear from cart (rooms already reserved when added to cart)
             _userTripRepo.RemoveByUserTripId(request.UserTripId);
+
+            // Send confirmation email
+            var user = _userRepo.GetById(userId);
+            if (user != null)
+            {
+                await _emailService.SendPaymentConfirmationAsync(
+                    user.email,
+                    user.first_name,
+                    trip.Destination,
+                    total,
+                    qty,
+                    trip.StartDate,
+                    trip.EndDate,
+                    trip.PackageType
+                );
+            }
+
             return Json(new { success = true, message = $"Payment successful! Booked {trip.Destination} for {qty} person(s)." });
         }
 
