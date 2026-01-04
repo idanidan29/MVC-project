@@ -26,10 +26,6 @@ namespace MVC_project.Models
         [Column("SelectedDateIndex")]
         public int SelectedDateIndex { get; set; } = -1;
 
-        // Expiration time for cart reservation
-        [Column("ExpiresAt")]
-        public DateTime? ExpiresAt { get; set; }
-
         // Navigation properties
         [ForeignKey("UserId")]
         public User? User { get; set; }

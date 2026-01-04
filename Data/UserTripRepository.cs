@@ -29,7 +29,6 @@ namespace MVC_project.Data
             {
                 // Increment quantity for the same trip with same date
                 existing.Quantity += quantity;
-                existing.ExpiresAt = DateTime.Now.AddHours(24); // Reset expiration to 24 hours
                 _context.SaveChanges();
                 return true;
             }
@@ -40,8 +39,7 @@ namespace MVC_project.Data
                 UserId = userId,
                 TripID = tripId,
                 Quantity = quantity,
-                SelectedDateIndex = selectedDateIndex,
-                ExpiresAt = DateTime.Now.AddHours(24) // User has 24 hours to pay
+                SelectedDateIndex = selectedDateIndex
             };
 
             _context.UserTrips.Add(userTrip);
@@ -77,7 +75,7 @@ namespace MVC_project.Data
                 .ToList();
         }
 
-        // Get specific cart item by user ID and trip ID (first matching entry)
+        // Get specific cart item by UserId and TripID (returns first match)
         public UserTrip? GetByUserIdAndTripId(int userId, int tripId)
         {
             return _context.UserTrips
@@ -86,7 +84,6 @@ namespace MVC_project.Data
         }
 
         // Remove a trip from user's cart by UserTripID (specific entry)
-        // Returns the removed UserTrip with Trip info (for restoring AvailableRooms)
         public UserTrip? RemoveByUserTripId(int userTripId)
         {
             var userTrip = _context.UserTrips

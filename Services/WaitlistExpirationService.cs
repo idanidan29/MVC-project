@@ -55,13 +55,9 @@ namespace MVC_project.Services
             var userTripRepo = scope.ServiceProvider.GetRequiredService<UserTripRepository>();
             var tripRepo = scope.ServiceProvider.GetRequiredService<TripRepository>();
             var emailService = scope.ServiceProvider.GetRequiredService<EmailService>();
-            var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
             // Process expired waitlist entries
             await ProcessExpiredWaitlistEntriesInternal(waitlistRepo, userTripRepo, tripRepo, emailService);
-
-            // Process expired cart items (regular cart, not waitlist)
-            await ProcessExpiredCartItems(context, tripRepo, waitlistRepo, userTripRepo, emailService);
         }
 
         private async Task ProcessExpiredWaitlistEntriesInternal(
@@ -233,86 +229,6 @@ namespace MVC_project.Services
                     trip.Destination
                 );
             }
-        }
-
-        /// <summary>
-        /// Process expired cart items that are not from waitlist
-        /// </summary>
-        private async Task ProcessExpiredCartItems(
-            AppDbContext context,
-            TripRepository tripRepo,
-            WaitlistRepository waitlistRepo,
-            UserTripRepository userTripRepo,
-            EmailService emailService)
-        {
-            var now = DateTime.Now;
-            var expiredCartItems = context.UserTrips
-                .Include(ut => ut.Trip)
-                .Include(ut => ut.User)
-                .Where(ut => ut.ExpiresAt != null && ut.ExpiresAt < now)
-                .ToList();
-
-            if (expiredCartItems.Count == 0)
-            {
-                _logger.LogDebug("No expired cart items found.");
-                return;
-            }
-
-            _logger.LogInformation("Found {Count} expired cart items to process.", expiredCartItems.Count);
-
-            foreach (var cartItem in expiredCartItems)
-            {
-                try
-                {
-                    _logger.LogInformation(
-                        "Processing expired cart item: User {UserId} ({UserName}) for trip {TripId} ({Destination}). Expired at {ExpiresAt}",
-                        cartItem.UserId,
-                        cartItem.User?.first_name ?? "Unknown",
-                        cartItem.TripID,
-                        cartItem.Trip?.Destination ?? "Unknown",
-                        cartItem.ExpiresAt
-                    );
-
-                    // Remove from cart
-                    var removedItem = userTripRepo.RemoveByUserTripId(cartItem.UserTripID);
-
-                    if (removedItem != null && removedItem.Trip != null)
-                    {
-                        // Restore available rooms
-                        removedItem.Trip.AvailableRooms += removedItem.Quantity;
-                        tripRepo.Update(removedItem.Trip);
-
-                        _logger.LogInformation(
-                            "Removed {Quantity} room(s) from user {UserId}'s cart and restored to {Destination}. Available rooms now: {AvailableRooms}",
-                            removedItem.Quantity,
-                            cartItem.UserId,
-                            removedItem.Trip.Destination,
-                            removedItem.Trip.AvailableRooms
-                        );
-
-                        // Process waitlist for the freed rooms
-                        await ProcessWaitlistForTrip(
-                            cartItem.TripID,
-                            removedItem.Quantity,
-                            waitlistRepo,
-                            userTripRepo,
-                            tripRepo,
-                            emailService
-                        );
-                    }
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(
-                        ex,
-                        "Error processing expired cart item for User {UserId}, Trip {TripId}",
-                        cartItem.UserId,
-                        cartItem.TripID
-                    );
-                }
-            }
-
-            _logger.LogInformation("Completed processing {Count} expired cart items.", expiredCartItems.Count);
         }
     }
 }

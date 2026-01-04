@@ -12,18 +12,12 @@ namespace MVC_project.Controllers
         private readonly TripRepository _tripRepo;
         private readonly UserTripRepository _userTripRepo;
         private readonly PaymentService _paymentService;
-        private readonly WaitlistRepository _waitlistRepo;
 
-        public BookingController(
-            TripRepository tripRepo, 
-            UserTripRepository userTripRepo, 
-            PaymentService paymentService,
-            WaitlistRepository waitlistRepo)
+        public BookingController(TripRepository tripRepo, UserTripRepository userTripRepo, PaymentService paymentService)
         {
             _tripRepo = tripRepo;
             _userTripRepo = userTripRepo;
             _paymentService = paymentService;
-            _waitlistRepo = waitlistRepo;
         }
 
         // GET: /Booking/CheckoutInfo?tripId=1&quantity=2
@@ -150,11 +144,8 @@ namespace MVC_project.Controllers
             }
 
             // Legacy direct purchase (kept for backward compatibility)
-            // Decrease available rooms for direct purchase
-            trip.AvailableRooms -= qty;
-            if (trip.AvailableRooms < 0) trip.AvailableRooms = 0;
-            _tripRepo.Update(trip);
-            
+            _userTripRepo.Add(userId, request.TripId, qty);
+            _userTripRepo.Remove(userId, request.TripId);
             return Json(new { success = true, message = $"Purchase completed for {trip.Destination} (x{qty})." });
         }
 
@@ -179,11 +170,10 @@ namespace MVC_project.Controllers
             if (!ok)
                 return Json(new { success = false, message = "Payment failed. Please try another method." });
 
-            // On success: clear from cart (rooms already reserved when added to cart)
+            // On success: decrement availability and clear from cart
+            trip.AvailableRooms -= qty;
+            _tripRepo.Update(trip);
             _userTripRepo.Remove(userId, request.TripId);
-
-            // Mark waitlist entry as booked if user was from waitlist
-            _waitlistRepo.MarkAsBooked(userId, request.TripId);
 
             return Json(new { success = true, message = $"Payment successful. {qty} room(s) for {trip.Destination} booked!" });
         }
@@ -215,11 +205,10 @@ namespace MVC_project.Controllers
             if (!captured)
                 return Json(new { success = false, message = "PayPal capture failed." });
 
-            // On success: clear from cart (rooms already reserved when added to cart)
+            // On success: decrement availability and clear from cart
+            trip.AvailableRooms -= qty;
+            _tripRepo.Update(trip);
             _userTripRepo.Remove(userId, request.TripId);
-
-            // Mark waitlist entry as booked if user was from waitlist
-            _waitlistRepo.MarkAsBooked(userId, request.TripId);
 
             return Json(new { success = true, message = $"PayPal payment successful. {qty} room(s) for {trip.Destination} booked!" });
         }
@@ -259,13 +248,17 @@ namespace MVC_project.Controllers
             if (!captured)
                 return Json(new { success = false, message = "PayPal capture failed." });
 
-            // Mark all waitlist entries as booked for items in cart
             foreach (var item in cartItems)
             {
-                _waitlistRepo.MarkAsBooked(userId, item.TripID);
+                var trip = item.Trip ?? _tripRepo.GetById(item.TripID);
+                if (trip == null) continue;
+
+                var qty = item.Quantity <= 0 ? 1 : item.Quantity;
+                trip.AvailableRooms -= qty;
+                if (trip.AvailableRooms < 0) trip.AvailableRooms = 0;
+                _tripRepo.Update(trip);
             }
 
-            // On success: clear cart (rooms already reserved when added to cart)
             _userTripRepo.RemoveAll(userId);
             return Json(new { success = true, message = $"PayPal payment successful. {cartItems.Count} trip(s) booked!" });
         }
@@ -302,10 +295,10 @@ namespace MVC_project.Controllers
             if (!captured)
                 return Json(new { success = false, message = "PayPal capture failed." });
 
-            // Mark waitlist entry as booked if user was from waitlist
-            _waitlistRepo.MarkAsBooked(userId, userTrip.TripID);
+            trip.AvailableRooms -= qty;
+            if (trip.AvailableRooms < 0) trip.AvailableRooms = 0;
+            _tripRepo.Update(trip);
 
-            // On success: clear from cart (rooms already reserved when added to cart)
             _userTripRepo.RemoveByUserTripId(request.UserTripId);
             return Json(new { success = true, message = $"Payment successful! Booked {trip.Destination} for {qty} person(s)." });
         }
@@ -327,80 +320,6 @@ namespace MVC_project.Controllers
             }
 
             return Json(new { success = true, message = "Checkout complete. Your bookings are confirmed!" });
-        }
-
-        // POST: /Booking/AddToCart - Add trip to cart or waitlist if no rooms
-        [HttpPost]
-        public IActionResult AddToCart([FromBody] BuyNowRequest request)
-        {
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
-            {
-                return Json(new { success = false, message = "User not authenticated" });
-            }
-
-            var trip = _tripRepo.GetById(request.TripId);
-            if (trip == null)
-            {
-                return Json(new { success = false, message = "Trip not found" });
-            }
-
-            var qty = request.Quantity <= 0 ? 1 : request.Quantity;
-
-            // Check if no rooms available
-            if (trip.AvailableRooms == 0)
-            {
-                // Check if user is already on waitlist
-                if (_waitlistRepo.IsUserOnWaitlist(userId, request.TripId))
-                {
-                    return Json(new 
-                    { 
-                        success = false, 
-                        onWaitlist = true,
-                        message = $"You are already on the waitlist for {trip.Destination}. We'll notify you when a spot opens up!" 
-                    });
-                }
-
-                // Add to waitlist
-                var added = _waitlistRepo.AddToWaitlist(userId, request.TripId);
-                if (added)
-                {
-                    return Json(new 
-                    { 
-                        success = true, 
-                        onWaitlist = true,
-                        message = $"No rooms available for {trip.Destination}. You've been added to the waitlist and will be notified when a spot opens up!" 
-                    });
-                }
-                else
-                {
-                    return Json(new { success = false, message = "Failed to add to waitlist" });
-                }
-            }
-
-            // Rooms are available - check if enough rooms for requested quantity
-            if (qty > trip.AvailableRooms)
-            {
-                return Json(new 
-                { 
-                    success = false, 
-                    message = $"Only {trip.AvailableRooms} room(s) available for {trip.Destination}." 
-                });
-            }
-
-            // Add to cart
-            _userTripRepo.Add(userId, request.TripId, qty);
-            
-            // Decrease available rooms (reserve them in cart)
-            trip.AvailableRooms -= qty;
-            if (trip.AvailableRooms < 0) trip.AvailableRooms = 0;
-            _tripRepo.Update(trip);
-            
-            return Json(new 
-            { 
-                success = true, 
-                message = $"{trip.Destination} (x{qty}) added to cart!" 
-            });
         }
     }
 

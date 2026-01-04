@@ -40,14 +40,8 @@ builder.Services.AddScoped<TripRepository>();
 builder.Services.AddScoped<TripImageRepository>();
 builder.Services.AddScoped<UserTripRepository>();
 builder.Services.AddScoped<TripDateRepository>();
-builder.Services.AddScoped<WaitlistRepository>();
 builder.Services.AddScoped<PasswordService>();
 builder.Services.AddScoped<PaymentService>();
-builder.Services.AddScoped<EmailService>();
-builder.Services.AddScoped<WaitlistService>();
-
-// Background Services
-builder.Services.AddHostedService<WaitlistExpirationService>();
 
 var app = builder.Build();
 

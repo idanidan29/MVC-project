@@ -60,11 +60,11 @@ namespace MVC_project.Data
             modelBuilder.Entity<UserTrip>()
                 .HasKey(ut => ut.UserTripID);
 
-            // Unique constraint on UserId and TripID
+            // Unique constraint on UserId, TripID, and SelectedDateIndex
             modelBuilder.Entity<UserTrip>()
-                .HasIndex(ut => new { ut.UserId, ut.TripID })
+                .HasIndex(ut => new { ut.UserId, ut.TripID, ut.SelectedDateIndex })
                 .IsUnique()
-                .HasDatabaseName("UQ_UserTrips_User_Trip");
+                .HasDatabaseName("UQ_UserTrips_User_Trip_Date");
 
             // Configure relationships
             modelBuilder.Entity<UserTrip>()

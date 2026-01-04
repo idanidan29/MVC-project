@@ -128,7 +128,7 @@ namespace MVC_project.Controllers
 
         // POST: /Admin/UpdateUser
         [HttpPost("UpdateUser")]
-        public IActionResult UpdateUser(string email, string newEmail, string firstName, string lastName, bool isAdmin)
+        public IActionResult UpdateUser(string email, string firstName, string lastName, bool isAdmin)
         {
             if (string.IsNullOrWhiteSpace(email))
             {
@@ -145,27 +145,6 @@ namespace MVC_project.Controllers
             if (user.email == User.Identity.Name && user.admin && !isAdmin)
             {
                 return BadRequest(new { success = false, message = "Cannot demote yourself from admin" });
-            }
-
-            // Check if email is being changed
-            if (!string.IsNullOrWhiteSpace(newEmail) && newEmail.Trim().ToLower() != user.email.ToLower())
-            {
-                // Validate new email
-                newEmail = newEmail.Trim();
-                
-                // Check if new email already exists
-                if (_userRepo.EmailExists(newEmail))
-                {
-                    return BadRequest(new { success = false, message = "Email already exists" });
-                }
-                
-                // Prevent changing own email
-                if (user.email == User.Identity.Name)
-                {
-                    return BadRequest(new { success = false, message = "Cannot change your own email" });
-                }
-                
-                user.email = newEmail;
             }
 
             user.first_name = firstName?.Trim() ?? user.first_name;

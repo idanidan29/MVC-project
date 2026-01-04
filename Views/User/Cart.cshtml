@@ -1,0 +1,1000 @@
+@model List<MVC_project.ViewModels.UserTripViewModel>
+@inject Microsoft.Extensions.Configuration.IConfiguration Configuration
+
+@{
+    ViewData["Title"] = "My Cart";
+    var cartTotal = Model?.Sum(trip => {
+        var unit = trip.DiscountPrice.HasValue && trip.DiscountPrice < trip.Price
+            ? trip.DiscountPrice.Value
+            : trip.Price;
+        var qty = trip.Quantity <= 0 ? 1 : trip.Quantity;
+        return unit * qty;
+    }) ?? 0m;
+}
+
+<style>
+    /* Animated Background */
+    .bookings-bg {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(-45deg, #6366f1, #3730a3, #a78bfa, #6366f1);
+        background-size: 400% 400%;
+        animation: gradient 15s ease infinite;
+        z-index: -1;
+    }
+
+    @@keyframes gradient {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+    }
+
+    /* Floating particles */
+    .particle {
+        position: fixed;
+        pointer-events: none;
+        opacity: 0.5;
+        animation: float 20s infinite linear;
+        z-index: -1;
+    }
+
+    @@keyframes float {
+        0% {
+            transform: translate(0, 0) rotate(0deg);
+            opacity: 0;
+        }
+        10% {
+            opacity: 0.5;
+        }
+        90% {
+            opacity: 0.5;
+        }
+        100% {
+            transform: translate(100px, -100vh) rotate(360deg);
+            opacity: 0;
+        }
+    }
+
+    /* Main container */
+    .bookings-container {
+        position: relative;
+        min-height: 100vh;
+        padding: 2rem 1rem;
+        overflow-y: auto;
+    }
+
+    /* Page header */
+    .page-header {
+        text-align: center;
+        margin-bottom: 3rem;
+        animation: slideInDown 0.8s ease-out;
+    }
+
+    .page-title {
+        color: white;
+        font-size: 3rem;
+        font-weight: 700;
+        text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.3);
+        margin-bottom: 0.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 1rem;
+    }
+
+    .page-subtitle {
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 1.2rem;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+    }
+
+    .trip-count-badge {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        color: white;
+        padding: 0.5rem 1.5rem;
+        border-radius: 2rem;
+        font-size: 1.1rem;
+        font-weight: 600;
+        box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+        display: inline-block;
+        margin-top: 1rem;
+    }
+
+    .checkout-actions {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: center;
+        gap: 0.75rem;
+        margin-top: 1rem;
+    }
+
+    .paypal-cart-buttons {
+        min-width: 220px;
+    }
+
+    @@keyframes slideInDown {
+        from {
+            opacity: 0;
+            transform: translateY(-50px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* Empty state */
+    .empty-state {
+        text-align: center;
+        padding: 4rem 2rem;
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        border-radius: 2rem;
+        max-width: 600px;
+        margin: 0 auto;
+        box-shadow: 0 20px 70px rgba(0, 0, 0, 0.2);
+        animation: slideInUp 0.8s ease-out;
+    }
+
+    .empty-state-icon {
+        font-size: 5rem;
+        color: #6366f1;
+        margin-bottom: 1.5rem;
+        opacity: 0.7;
+    }
+
+    .empty-state-title {
+        color: #1e293b;
+        font-size: 2rem;
+        font-weight: 700;
+        margin-bottom: 1rem;
+    }
+
+    .empty-state-text {
+        color: #64748b;
+        font-size: 1.1rem;
+        margin-bottom: 2rem;
+        line-height: 1.6;
+    }
+
+    .btn-browse {
+        background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+        color: white;
+        padding: 0.75rem 2rem;
+        border-radius: 0.75rem;
+        text-decoration: none;
+        font-weight: 600;
+        box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .btn-browse:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(99, 102, 241, 0.6);
+        color: white;
+    }
+
+    /* Trips grid */
+    .trips-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+        gap: 2rem;
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 0 1rem;
+    }
+
+    @@media (max-width: 768px) {
+        .trips-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    /* Trip card */
+    .trip-card {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        border-radius: 1.5rem;
+        overflow: hidden;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        box-shadow: 0 20px 70px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.5);
+        transition: all 0.3s ease;
+        animation: slideInUp 0.8s ease-out;
+        position: relative;
+    }
+
+    .trip-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 30px 90px rgba(99, 102, 241, 0.3);
+        border-color: rgba(99, 102, 241, 0.3);
+    }
+
+    @@keyframes slideInUp {
+        from {
+            opacity: 0;
+            transform: translateY(50px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* Trip image */
+    .trip-image-container {
+        width: 100%;
+        height: 250px;
+        overflow: hidden;
+        background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+        position: relative;
+    }
+
+    .trip-image {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.3s ease;
+    }
+
+    .trip-card:hover .trip-image {
+        transform: scale(1.1);
+    }
+
+    .no-image-placeholder {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%);
+    }
+
+    .no-image-placeholder i {
+        font-size: 4rem;
+        color: #0284c7;
+        opacity: 0.5;
+    }
+
+    /* Package badge */
+    .package-badge {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 0.75rem;
+        font-size: 0.85rem;
+        font-weight: 600;
+        box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+        z-index: 1;
+    }
+
+    /* Trip details */
+    .trip-details {
+        padding: 1.5rem;
+    }
+
+    .trip-destination {
+        color: #1e293b;
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+    }
+
+    .trip-country {
+        color: #64748b;
+        font-size: 1rem;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .trip-country i {
+        color: #6366f1;
+    }
+
+    .trip-info {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+        margin-bottom: 1rem;
+    }
+
+    .info-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: #475569;
+        font-size: 0.95rem;
+    }
+
+    .info-item i {
+        color: #6366f1;
+        width: 20px;
+    }
+
+    .trip-description {
+        color: #64748b;
+        font-size: 0.9rem;
+        line-height: 1.6;
+        margin-bottom: 1rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    /* Price section */
+    .trip-price-section {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding-top: 1rem;
+        border-top: 2px solid #e2e8f0;
+        margin-bottom: 1rem;
+    }
+
+    .price-container {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .trip-price {
+        color: #1e293b;
+        font-size: 1.8rem;
+        font-weight: 700;
+    }
+
+    .original-price {
+        color: #94a3b8;
+        font-size: 1rem;
+        text-decoration: line-through;
+    }
+
+    .discount-badge {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        color: white;
+        padding: 0.25rem 0.75rem;
+        border-radius: 0.5rem;
+        font-size: 0.85rem;
+        font-weight: 600;
+    }
+
+    .per-trip-note {
+        color: #64748b;
+        font-size: 0.9rem;
+        font-weight: 600;
+        margin-top: 0.15rem;
+    }
+
+    /* Action buttons */
+    .trip-actions {
+        display: flex;
+        gap: 0.75rem;
+    }
+
+    .btn-remove {
+        flex: 1;
+        background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        color: white;
+        border: none;
+        padding: 0.75rem 1rem;
+        border-radius: 0.75rem;
+        font-size: 0.95rem;
+        font-weight: 600;
+        cursor: pointer;
+        box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+    }
+
+    .btn-remove:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(239, 68, 68, 0.6);
+    }
+
+    .btn-book {
+        flex: 1;
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        color: white;
+        border: none;
+        padding: 0.75rem 1rem;
+        border-radius: 0.75rem;
+        font-size: 0.95rem;
+        font-weight: 600;
+        cursor: pointer;
+        box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+    }
+
+    .btn-book:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(16, 185, 129, 0.6);
+    }
+
+    /* Loading animation */
+    @@keyframes fadeOut {
+        to {
+            opacity: 0;
+            transform: scale(0.9);
+        }
+    }
+
+    /* Custom confirmation modal */
+    .confirmation-modal-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 9999;
+        backdrop-filter: blur(4px);
+        animation: fadeIn 0.3s ease;
+    }
+
+    .confirmation-modal-overlay.show {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .confirmation-modal {
+        background: white;
+        border-radius: 1rem;
+        box-shadow: 0 20px 70px rgba(0, 0, 0, 0.3);
+        max-width: 400px;
+        width: 90%;
+        overflow: hidden;
+        animation: slideUp 0.3s ease;
+    }
+
+    .confirmation-modal-header {
+        background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        color: white;
+        padding: 1.5rem;
+        text-align: center;
+    }
+
+    .confirmation-modal-header h3 {
+        margin: 0;
+        font-size: 1.3rem;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.75rem;
+    }
+
+    .confirmation-modal-header i {
+        font-size: 1.5rem;
+    }
+
+    .confirmation-modal-body {
+        padding: 1.5rem;
+        text-align: center;
+        color: #475569;
+        font-size: 1rem;
+        line-height: 1.6;
+    }
+
+    .confirmation-modal-footer {
+        display: flex;
+        gap: 1rem;
+        padding: 1rem 1.5rem;
+        border-top: 1px solid #e2e8f0;
+    }
+
+    .confirmation-modal-footer button {
+        flex: 1;
+        padding: 0.75rem 1rem;
+        border: none;
+        border-radius: 0.75rem;
+        font-weight: 600;
+        font-size: 0.95rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+    }
+
+    .btn-confirm-remove {
+        background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        color: white;
+        box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);
+    }
+
+    .btn-confirm-remove:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(239, 68, 68, 0.6);
+        color: white;
+    }
+
+    .btn-cancel-modal {
+        background: #e2e8f0;
+        color: #475569;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .btn-cancel-modal:hover {
+        background: #cbd5e1;
+        color: #1e293b;
+    }
+
+    @@keyframes fadeIn {
+        from {
+            opacity: 0;
+        }
+        to {
+            opacity: 1;
+        }
+    }
+
+    @@keyframes slideUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+</style>
+
+<!-- Background elements -->
+<div class="bookings-bg"></div>
+
+<!-- Confirmation Modal -->
+<div id="confirmationModal" class="confirmation-modal-overlay">
+    <div class="confirmation-modal">
+        <div class="confirmation-modal-header">
+            <h3>
+                <i class="bi bi-exclamation-triangle"></i>
+                Remove Trip?
+            </h3>
+        </div>
+        <div class="confirmation-modal-body">
+            <p>Are you sure you want to remove <strong id="tripNamePlaceholder">this trip</strong> from your cart?</p>
+            <p style="font-size: 0.85rem; color: #64748b; margin-top: 0.75rem;">This action cannot be undone.</p>
+        </div>
+        <div class="confirmation-modal-footer">
+            <button class="btn-cancel-modal" onclick="closeConfirmationModal()">
+                <i class="bi bi-x-circle"></i>
+                Cancel
+            </button>
+            <button class="btn-confirm-remove" onclick="confirmRemoveFromCart()">
+                <i class="bi bi-trash"></i>
+                Remove
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Create floating particles
+    for (let i = 0; i < 50; i++) {
+        const particle = document.createElement('div');
+        particle.className = 'particle';
+        particle.style.width = Math.random() * 5 + 2 + 'px';
+        particle.style.height = particle.style.width;
+        particle.style.left = Math.random() * 100 + '%';
+        particle.style.background = 'white';
+        particle.style.borderRadius = '50%';
+        particle.style.animationDelay = Math.random() * 20 + 's';
+        particle.style.animationDuration = Math.random() * 10 + 15 + 's';
+        document.body.appendChild(particle);
+    }
+</script>
+
+<div class="bookings-container">
+    <div class="page-header">
+        <h1 class="page-title">
+            <i class="bi bi-cart3"></i>
+            My Cart
+        </h1>
+        <p class="page-subtitle">Review and manage your trip selections</p>
+        @if (Model != null && Model.Any())
+        {
+            <div class="trip-count-badge">
+                <i class="bi bi-bag-check"></i> @Model.Count @(Model.Count == 1 ? "Trip" : "Trips") in Cart
+            </div>
+            <div class="checkout-actions">
+                <button class="btn-book" style="min-width: 220px;" onclick="openPaymentModal(0)">
+                    <i class="bi bi-paypal"></i> Checkout All with PayPal
+                </button>
+            </div>
+        }
+    </div>
+
+    @if (Model == null || !Model.Any())
+    {
+        <div class="empty-state">
+            <div class="empty-state-icon">
+                <i class="bi bi-cart-x"></i>
+            </div>
+            <h2 class="empty-state-title">Your cart is empty</h2>
+            <p class="empty-state-text">
+                You haven't added any trips to your cart yet. 
+                Start exploring amazing destinations and add your favorites!
+            </p>
+            <a href="/Dashboard/Index" class="btn-browse">
+                <i class="bi bi-compass"></i>
+                Browse Trips
+            </a>
+        </div>
+    }
+    else
+    {
+        <div class="trips-grid">
+            @foreach (var trip in Model)
+            {
+                <div class="trip-card clickable-card" data-trip-id="@trip.TripID" data-quantity="@trip.Quantity" onclick="toggleTripDates(@trip.TripID)" style="cursor: pointer;">
+                    <div class="trip-image-container">
+                        @if (trip.Images.Any())
+                        {
+                            <img src="data:image/jpeg;base64,@Convert.ToBase64String(trip.Images.First())" alt="@trip.Destination" class="trip-image" />
+                        }
+                        else
+                        {
+                            <div class="no-image-placeholder">
+                                <i class="bi bi-image"></i>
+                            </div>
+                        }
+                        <span class="package-badge">
+                            <i class="bi bi-tag"></i> @trip.PackageType
+                        </span>
+                    </div>
+
+                    <div class="trip-details">
+                        <h3 class="trip-destination">@trip.Destination</h3>
+                        <div class="trip-country">
+                            <i class="bi bi-geo-alt-fill"></i>
+                            <span>@trip.Country</span>
+                        </div>
+
+                        @if (trip.UserSelectedDates.Count > 1)
+                        {
+                            <div class="info-item" style="color: #6366f1; font-weight: 600; margin-bottom: 1rem; display: flex; align-items: center;">
+                                <i class="bi bi-calendar-range-fill"></i>
+                                <span style="flex: 1;">@trip.UserSelectedDates.Count different dates selected - Click to view</span>
+                                <i class="bi bi-chevron-down" id="chevron-@trip.TripID" style="transition: transform 0.3s;"></i>
+                            </div>
+                        }
+
+                        <p class="trip-description">@trip.Description</p>
+
+                        <!-- Expandable dates section -->
+                        <div class="selected-dates-container" id="dates-@trip.TripID" style="display: none; margin-top: 1rem; padding: 1rem; background: #f8fafc; border-radius: 0.75rem;">
+                            <h4 style="color: #1e293b; font-size: 1rem; font-weight: 600; margin-bottom: 0.75rem;">
+                                <i class="bi bi-calendar-check"></i> Your Selected Dates
+                            </h4>
+                            @foreach (var selectedDate in trip.UserSelectedDates)
+                            {
+                                var dateInfo = trip.GetDateByIndex(selectedDate.SelectedDateIndex);
+                                <div class="date-option-item" style="background: white; padding: 0.75rem; border-radius: 0.5rem; margin-bottom: 0.5rem; border: 2px solid #e2e8f0;">
+                                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                                        <div style="flex: 1;">
+                                            <div style="color: #475569; font-size: 0.9rem; margin-bottom: 0.25rem;">
+                                                <i class="bi bi-calendar-event"></i>
+                                                <strong>@dateInfo.StartDate.ToString("MMM dd") - @dateInfo.EndDate.ToString("MMM dd, yyyy")</strong>
+                                            </div>
+                                            <div style="color: #64748b; font-size: 0.85rem;">
+                                                <i class="bi bi-clock"></i> @dateInfo.DurationDays days
+                                                @if (!dateInfo.IsMainDate)
+                                                {
+                                                    <span style="color: #6366f1; font-weight: 600; margin-left: 0.5rem;">
+                                                        <i class="bi bi-star-fill"></i> Alternative Date
+                                                    </span>
+                                                }
+                                            </div>
+                                            <div style="color: #64748b; font-size: 0.85rem;">
+                                                <i class="bi bi-people-fill"></i> Quantity: @selectedDate.Quantity
+                                            </div>
+                                        </div>
+                                        <div style="display: flex; gap: 0.5rem; align-items: center;">
+                                            <button class="btn-pay-date" onclick="event.stopPropagation(); openPaymentModalForDate(@selectedDate.UserTripID, @selectedDate.Quantity);" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none; padding: 0.5rem 1rem; border-radius: 0.5rem; cursor: pointer; font-size: 0.85rem; font-weight: 600; display: flex; align-items: center; gap: 0.3rem; box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3); transition: all 0.3s ease;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(16, 185, 129, 0.5)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(16, 185, 129, 0.3)';">
+                                                <i class="bi bi-credit-card"></i>
+                                                Pay Now
+                                            </button>
+                                            <button class="btn-remove-date" onclick="event.stopPropagation(); removeFromCart(@selectedDate.UserTripID, '@trip.Destination');" style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: white; border: none; padding: 0.5rem 0.75rem; border-radius: 0.5rem; cursor: pointer; font-size: 0.85rem;">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+
+                        <div class="trip-price-section" style="align-items:center;gap:1rem;">
+                            <div class="price-container">
+                                @{ var total = trip.FinalPrice * (decimal)(trip.Quantity <= 0 ? 1 : trip.Quantity); }
+                                @if (trip.HasDiscount)
+                                {
+                                    <span class="original-price">$@trip.Price.ToString("N2")</span>
+                                    <span class="trip-price">$@total.ToString("N2")</span>
+                                }
+                                else
+                                {
+                                    <span class="trip-price">$@total.ToString("N2")</span>
+                                }
+                                @if (trip.Quantity > 1)
+                                {
+                                    <span class="per-trip-note">$@trip.FinalPrice.ToString("N2") per trip</span>
+                                }
+                            </div>
+                            <div class="qty-badge" style="display:flex;align-items:center;gap:0.5rem;padding:0.5rem 0.75rem;background:linear-gradient(135deg,#f8fafc,#ffffff);border-radius:0.75rem;border:1px solid #e6edf6;font-weight:700;color:#111827;">
+                                <i class="bi bi-people-fill" style="color:#6366f1"></i>
+                                <span>Total Qty: <strong>@trip.Quantity</strong></span>
+                            </div>
+                            @if (trip.HasDiscount)
+                            {
+                                var discount = Math.Round((trip.Price - trip.FinalPrice) / trip.Price * 100);
+                                <span class="discount-badge">-@discount%</span>
+                            }
+                        </div>
+
+                        <div class="trip-actions" onclick="event.stopPropagation();">
+                            <button class="btn-book" onclick="openPaymentModal(@trip.TripID, @trip.Quantity)">
+                                <i class="bi bi-check-circle"></i>
+                                Pay for All Dates (@trip.UserSelectedDates.Count)
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+<script>
+    function toggleTripDates(tripId) {
+        const datesContainer = document.getElementById(`dates-${tripId}`);
+        const chevron = document.getElementById(`chevron-${tripId}`);
+        
+        if (datesContainer) {
+            if (datesContainer.style.display === 'none') {
+                datesContainer.style.display = 'block';
+                if (chevron) chevron.style.transform = 'rotate(180deg)';
+            } else {
+                datesContainer.style.display = 'none';
+                if (chevron) chevron.style.transform = 'rotate(0deg)';
+            }
+        }
+    }
+
+    async function removeFromCart(userTripId, destination) {
+        // Don't show modal, remove immediately
+        try {
+            const response = await fetch('/User/RemoveFromCart', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ userTripID: userTripId })
+            });
+
+            const data = await response.json();
+            
+            if (data.success) {
+                // Find the date item in the expanded list
+                const dateItems = document.querySelectorAll('.date-option-item');
+                let removedDateItem = null;
+                let tripCard = null;
+                
+                // Find which date item was removed
+                dateItems.forEach(item => {
+                    const button = item.querySelector(`button[onclick*="${userTripId}"]`);
+                    if (button) {
+                        removedDateItem = item;
+                        // Find the parent trip card
+                        tripCard = item.closest('.trip-card');
+                    }
+                });
+                
+                if (removedDateItem && tripCard) {
+                    const tripId = tripCard.getAttribute('data-trip-id');
+                    const datesContainer = document.getElementById(`dates-${tripId}`);
+                    
+                    // Count remaining dates for this trip (before removal)
+                    const dateItemsInTrip = datesContainer.querySelectorAll('.date-option-item');
+                    const remainingDatesCount = dateItemsInTrip.length - 1;
+                    
+                    if (remainingDatesCount === 0) {
+                        // Last date - remove entire trip card
+                        tripCard.style.animation = 'fadeOut 0.4s ease forwards';
+                        setTimeout(() => {
+                            tripCard.remove();
+                            
+                            // Check if cart is now empty
+                            const remainingCards = document.querySelectorAll('.trip-card');
+                            if (remainingCards.length === 0) {
+                                location.reload(); // Reload to show empty state
+                            } else {
+                                // Update count badge
+                                const badge = document.querySelector('.trip-count-badge');
+                                if (badge) {
+                                    const count = remainingCards.length;
+                                    badge.innerHTML = `<i class="bi bi-bag-check"></i> ${count} ${count === 1 ? 'Trip' : 'Trips'} in Cart`;
+                                }
+                            }
+                        }, 400);
+                    } else {
+                        // Not last date - just remove this date item
+                        removedDateItem.style.animation = 'fadeOut 0.3s ease forwards';
+                        setTimeout(() => {
+                            removedDateItem.remove();
+                            
+                            // Update the "X different dates selected" message
+                            const infoItem = tripCard.querySelector('.info-item');
+                            if (infoItem && remainingDatesCount === 1) {
+                                // Only one date left, hide the multi-date message
+                                infoItem.style.display = 'none';
+                                // Close the expanded section
+                                datesContainer.style.display = 'none';
+                                const chevron = document.getElementById(`chevron-${tripId}`);
+                                if (chevron) chevron.style.transform = 'rotate(0deg)';
+                            } else if (infoItem) {
+                                // Update count
+                                const span = infoItem.querySelector('span');
+                                if (span) {
+                                    span.textContent = `${remainingDatesCount} different dates selected - Click to view`;
+                                }
+                            }
+                        }, 300);
+                    }
+                }
+                
+                showNotification('✓ Date removed from cart', 'success');
+            } else {
+                showNotification(data.message, 'error');
+            }
+        } catch (error) {
+            console.error('Error removing from cart:', error);
+            showNotification('Failed to remove date. Please try again.', 'error');
+        }
+    }
+
+    function closeConfirmationModal() {
+        document.getElementById('confirmationModal').classList.remove('show');
+        window.pendingRemovalUserTripId = null;
+        window.pendingRemovalDestination = null;
+    }
+
+    async function confirmRemoveFromCart() {
+        const userTripId = window.pendingRemovalUserTripId;
+        const destination = window.pendingRemovalDestination;
+
+        if (!userTripId) return;
+
+        try {
+            const response = await fetch('/User/RemoveFromCart', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ userTripID: userTripId })
+            });
+
+            const data = await response.json();
+            
+            if (data.success) {
+                // Close modal
+                closeConfirmationModal();
+                
+                // Remove card with animation
+                const card = document.querySelector(`[data-usertrip-id="${userTripId}"]`);
+                if (card) {
+                    card.style.animation = 'fadeOut 0.4s ease forwards';
+                    setTimeout(() => {
+                        card.remove();
+                        
+                        // Check if cart is now empty
+                        const remainingCards = document.querySelectorAll('.trip-card');
+                        if (remainingCards.length === 0) {
+                            location.reload(); // Reload to show empty state
+                        } else {
+                            // Update count badge
+                            const badge = document.querySelector('.trip-count-badge');
+                            if (badge) {
+                                const count = remainingCards.length;
+                                badge.innerHTML = `<i class="bi bi-bag-check"></i> ${count} ${count === 1 ? 'Trip' : 'Trips'} in Cart`;
+                            }
+                        }
+                        
+                        showNotification('✓ Trip removed from cart', 'success');
+                    }, 400);
+                }
+            } else {
+                closeConfirmationModal();
+                showNotification(data.message, 'error');
+            }
+        } catch (error) {
+            console.error('Error removing from cart:', error);
+            closeConfirmationModal();
+            showNotification('Failed to remove trip. Please try again.', 'error');
+        }
+    }
+
+    function bookTrip(tripId) {
+        const card = document.querySelector(`[data-trip-id="${tripId}"]`);
+        const quantity = card ? parseInt(card.dataset.quantity || '1', 10) : 1;
+        openPaymentModal(tripId, quantity);
+    }
+
+    function openPaymentModalForDate(userTripId, quantity) {
+        // Open payment modal for a specific date using userTripId
+        // Pass negative number to distinguish from tripId
+        openPaymentModal(-userTripId, quantity);
+    }
+
+    const cartTotal = parseFloat('@cartTotal.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture)');
+    const cartCurrency = '@(Configuration["Payment:Currency"] ?? "USD")';
+
+    function showNotification(message, type = 'info') {
+        const notification = document.createElement('div');
+        notification.style.cssText = `
+            position: fixed;
+            top: 2rem;
+            right: 2rem;
+            background: ${type === 'success' ? 'linear-gradient(135deg, #10b981, #059669)' : 'linear-gradient(135deg, #ef4444, #dc2626)'};
+            color: white;
+            padding: 1rem 1.5rem;
+            border-radius: 0.75rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            z-index: 10000;
+            animation: slideInRight 0.3s ease;
+            font-weight: 600;
+        `;
+        notification.textContent = message;
+        document.body.appendChild(notification);
+        
+        setTimeout(() => {
+            notification.style.animation = 'slideOutRight 0.3s ease';
+            setTimeout(() => notification.remove(), 300);
+        }, 3000);
+    }
+
+    const style = document.createElement('style');
+    style.textContent = `
+        @@keyframes slideInRight {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        @@keyframes slideOutRight {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+        }
+    `;
+    document.head.appendChild(style);
+</script>
