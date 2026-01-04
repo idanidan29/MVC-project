@@ -11,6 +11,6 @@
     "\\wwwroot\\lib\\bootstrap\\dist",
     "\\wwwroot\\lib\\bootstrap\\dist\\css"
   ],
-  "SelectedNode": "\\wwwroot\\lib\\bootstrap\\dist\\css\\bootstrap.css",
+  "SelectedNode": "\\appsettings.Development.json",
   "PreviewInSolutionExplorer": false
 }

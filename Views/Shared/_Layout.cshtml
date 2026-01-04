@@ -48,19 +48,19 @@
                     <span>TravelMate</span>
                 </a>
                 <ul class="nav ms-3">
-                    <li class="nav-item"><a class="nav-link" asp-controller="Dashboard" asp-action="Index">Trips</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/Dashboard?search=">Search</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/User/MyBookings">My Bookings</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/User/Cart">My Cart</a></li>
+                    <li class="nav-item"><a class="nav-link" asp-controller="Dashboard" asp-action="Index"><i class="bi bi-compass me-2"></i>Trips</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/Dashboard?search="><i class="bi bi-search me-2"></i>Search</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/User/MyBookings"><i class="bi bi-ticket-perforated me-2"></i>My Bookings</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/User/Cart"><i class="bi bi-cart3 me-2"></i>My Cart</a></li>
                     @if (User?.IsInRole("Admin") ?? false)
                     {
-                        <li class="nav-item"><a class="nav-link" asp-controller="Admin" asp-action="AddTrip">Add Trip</a></li>
-                        <li class="nav-item"><a class="nav-link" asp-controller="Admin" asp-action="Dashboard">Admin</a></li>
+                        <li class="nav-item"><a class="nav-link" asp-controller="Admin" asp-action="AddTrip"><i class="bi bi-plus-circle me-2"></i>Add Trip</a></li>
+                        <li class="nav-item"><a class="nav-link" asp-controller="Admin" asp-action="Dashboard"><i class="bi bi-speedometer2 me-2"></i>Admin</a></li>
                     }
                 </ul>
             </div>
             <div class="d-flex align-items-center">
-                <a class="me-3 text-decoration-none nav-link support-link" href="/Help">Support</a>
+                <a class="me-3 text-decoration-none nav-link support-link" href="/Help"><i class="bi bi-question-circle me-2"></i>Support</a>
                 <div class="user-badge d-flex align-items-center">
                     <i class="bi bi-person-circle me-2" style="font-size:1.25rem;color:white;"></i>
                     <span class="d-none d-md-inline">Welcome, @(User?.Identity?.Name?.Split('@')[0] ?? "Friend")!</span>
