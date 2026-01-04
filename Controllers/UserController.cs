@@ -16,8 +16,10 @@ namespace MVC_project.Controllers
         private readonly TripImageRepository _imageRepo;
         private readonly TripDateRepository _dateRepo;
         private readonly PasswordService _passwordService;
+        private readonly WaitlistRepository _waitlistRepo;
+        private readonly EmailService _emailService;
 
-        public UserController(UserRepository repo, UserTripRepository userTripRepo, TripRepository tripRepo, TripImageRepository imageRepo, TripDateRepository dateRepo, PasswordService passwordService)
+        public UserController(UserRepository repo, UserTripRepository userTripRepo, TripRepository tripRepo, TripImageRepository imageRepo, TripDateRepository dateRepo, PasswordService passwordService, WaitlistRepository waitlistRepo, EmailService emailService)
         {
             _repo = repo;
             _userTripRepo = userTripRepo;
@@ -25,6 +27,8 @@ namespace MVC_project.Controllers
             _imageRepo = imageRepo;
             _dateRepo = dateRepo;
             _passwordService = passwordService;
+            _waitlistRepo = waitlistRepo;
+            _emailService = emailService;
         }
 
         // GET: /User/Register
@@ -65,117 +69,67 @@ namespace MVC_project.Controllers
             return RedirectToAction("Login", "Login"); // Specify controller if Login is in another controller
         }
 
-        // GET: /User/Cart
+        // GET: /User/Bookings
         [Authorize]
-        public IActionResult Cart()
+        public IActionResult Bookings()
         {
-            try
+            // Get current user's ID from claims
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            
+            if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
             {
-                // Get current user's ID from claims
-                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                
-                if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
-                {
-                    return RedirectToAction("Login", "Login");
-                }
+                return RedirectToAction("Login", "Login");
+            }
 
-                // Get user's trips from database
-                var userTrips = _userTripRepo.GetByUserId(userId).ToList();
+            // Get user's trips from database
+            var userTrips = _userTripRepo.GetByUserId(userId);
+            
+            // Group by TripID to show one card per trip
+            var groupedTrips = userTrips.GroupBy(ut => ut.TripID).Select(group =>
+            {
+                var firstTrip = group.First();
+                var tripDates = _dateRepo.GetByTripId(firstTrip.TripID);
                 
-                if (!userTrips.Any())
+                return new UserTripViewModel
                 {
-                    return View(new List<UserTripViewModel>());
-                }
-                
-                // Group by TripID to show one card per trip
-                var groupedTrips = userTrips
-                    .Where(ut => ut.Trip != null)  // Filter out null trips
-                    .GroupBy(ut => ut.TripID)
-                    .Select(group =>
+                    TripID = firstTrip.Trip.TripID,
+                    Destination = firstTrip.Trip.Destination,
+                    Country = firstTrip.Trip.Country,
+                    StartDate = firstTrip.Trip.StartDate,
+                    EndDate = firstTrip.Trip.EndDate,
+                    Price = firstTrip.Trip.Price,
+                    DiscountPrice = firstTrip.Trip.DiscountPrice,
+                    DiscountEndDate = firstTrip.Trip.DiscountEndDate,
+                    PackageType = firstTrip.Trip.PackageType,
+                    AvailableRooms = firstTrip.Trip.AvailableRooms,
+                    Description = firstTrip.Trip.Description,
+                    Quantity = group.Sum(ut => ut.Quantity),  // Total quantity across all dates
+                    DateVariations = tripDates.Select(td => new DateVariationInfo
                     {
-                        var firstTrip = group.First();
-                        if (firstTrip.Trip == null)
-                            return null;
-                            
-                        var tripDates = _dateRepo.GetByTripId(firstTrip.TripID)?.ToList() ?? new List<TripDate>();
-                        
-                        return new UserTripViewModel
-                        {
-                            TripID = firstTrip.Trip.TripID,
-                            Destination = firstTrip.Trip.Destination ?? "Unknown",
-                            Country = firstTrip.Trip.Country ?? "Unknown",
-                            StartDate = firstTrip.Trip.StartDate,
-                            EndDate = firstTrip.Trip.EndDate,
-                            Price = firstTrip.Trip.Price,
-                            DiscountPrice = firstTrip.Trip.DiscountPrice,
-                            DiscountEndDate = firstTrip.Trip.DiscountEndDate,
-                            PackageType = firstTrip.Trip.PackageType ?? "Standard",
-                            AvailableRooms = firstTrip.Trip.AvailableRooms,
-                            Description = firstTrip.Trip.Description ?? "",
-                            Quantity = group.Sum(ut => ut.Quantity),  // Total quantity across all dates
-                            DateVariations = tripDates.Select(td => new DateVariationInfo
-                            {
-                                StartDate = td.StartDate,
-                                EndDate = td.EndDate,
-                                AvailableRooms = td.AvailableRooms
-                            }).ToList(),
-                            // List of all user's selected dates for this trip
-                            UserSelectedDates = group.Select(ut => new UserSelectedDateInfo
-                            {
-                                UserTripID = ut.UserTripID,
-                                SelectedDateIndex = ut.SelectedDateIndex,
-                                Quantity = ut.Quantity
-                            }).ToList(),
-                            Images = _imageRepo.GetByTripId(firstTrip.TripID).Select(img => img.ImageData).ToList()
-                        };
-                    })
-                    .Where(vm => vm != null)
-                    .ToList();
+                        StartDate = td.StartDate,
+                        EndDate = td.EndDate,
+                        AvailableRooms = td.AvailableRooms
+                    }).ToList(),
+                    // List of all user's selected dates for this trip
+                    UserSelectedDates = group.Select(ut => new UserSelectedDateInfo
+                    {
+                        UserTripID = ut.UserTripID,
+                        SelectedDateIndex = ut.SelectedDateIndex,
+                        Quantity = ut.Quantity
+                    }).ToList(),
+                    Images = _tripRepo.GetById(firstTrip.TripID) != null 
+                        ? _imageRepo.GetByTripId(firstTrip.TripID).Select(img => img.ImageData).ToList()
+                        : new List<byte[]>()
+                };
+            }).ToList();
 
-                return View(groupedTrips);
-            }
-            catch (Exception ex)
-            {
-                // Log the exception (you can add logging later)
-                Console.WriteLine($"Error in Cart: {ex.Message}");
-                System.Diagnostics.Debug.WriteLine(ex.StackTrace);
-                return View(new List<UserTripViewModel>());
-            }
-        }
-
-        // GET: /User/MyBookings
-        [Authorize]
-        public IActionResult MyBookings()
-        {
-            try
-            {
-                // Get current user's ID from claims
-                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                
-                if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
-                {
-                    return RedirectToAction("Login", "Login");
-                }
-
-                // TODO: Implement logic to fetch completed/confirmed bookings
-                // For now, return empty list - you'll need to add a status field to UserTrip model
-                // to distinguish between cart items and confirmed bookings
-                var confirmedBookings = new List<UserTripViewModel>();
-
-                return View(confirmedBookings);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error in MyBookings: {ex.Message}");
-                System.Diagnostics.Debug.WriteLine(ex.StackTrace);
-                return View(new List<UserTripViewModel>());
-            }
+            return View(groupedTrips);
         }
 
         // POST: /User/RemoveFromCart
         [HttpPost]
         [Authorize]
-        public IActionResult RemoveFromCart([FromBody] RemoveFromCartRequest request)
+        public async Task<IActionResult> RemoveFromCart([FromBody] RemoveFromCartRequest request)
         {
             try
             {
@@ -188,14 +142,24 @@ namespace MVC_project.Controllers
                 }
 
                 // Remove specific cart entry by UserTripID
-                var removed = _userTripRepo.RemoveByUserTripId(request.UserTripID);
+                var removedItem = _userTripRepo.RemoveByUserTripId(request.UserTripID);
                 
-                if (removed == null)
+                if (removedItem == null)
                 {
                     return Json(new { success = false, message = "Trip not found in cart" });
                 }
 
-                return Json(new { success = true, message = "Trip removed from cart" });
+                // Restore available rooms
+                if (removedItem.Trip != null)
+                {
+                    removedItem.Trip.AvailableRooms += removedItem.Quantity;
+                    _tripRepo.Update(removedItem.Trip);
+                    
+                    // Process waitlist - notify next users
+                    await ProcessWaitlistForTrip(removedItem.TripID, removedItem.Quantity);
+                }
+
+                return Json(new { success = true, message = "Trip removed from cart", tripId = removedItem.TripID, availableRooms = removedItem.Trip?.AvailableRooms ?? 0 });
             }
             catch (Exception ex)
             {
@@ -228,14 +192,32 @@ namespace MVC_project.Controllers
                 // Validate quantity
                 var qty = request.Quantity <= 0 ? 1 : request.Quantity;
                 
-                // Check if trip is already in cart and calculate total quantity
-                var existingInCart = _userTripRepo.GetByUserId(userId)
-                    .FirstOrDefault(ut => ut.TripID == request.TripId);
-                var totalQty = existingInCart != null ? existingInCart.Quantity + qty : qty;
-                
-                if (totalQty > trip.AvailableRooms)
+                // Check if no rooms available - add to waitlist
+                if (trip.AvailableRooms == 0)
                 {
-                    return Json(new { success = false, message = $"Only {trip.AvailableRooms} rooms available for {trip.Destination}. You already have {existingInCart?.Quantity ?? 0} in your cart." });
+                    // Check if user is already on waitlist
+                    if (_waitlistRepo.IsUserOnWaitlist(userId, request.TripId))
+                    {
+                        return Json(new { success = false, onWaitlist = true, message = $"You are already on the waitlist for {trip.Destination}. We'll notify you when a room becomes available!" });
+                    }
+
+                    // Add to waitlist
+                    var addedToWaitlist = _waitlistRepo.AddToWaitlist(userId, request.TripId);
+                    if (addedToWaitlist)
+                    {
+                        return Json(new { success = true, onWaitlist = true, message = $"No rooms available for {trip.Destination}. You've been added to the waitlist and will be notified via email when a room opens up!" });
+                    }
+                    else
+                    {
+                        return Json(new { success = false, message = "Failed to add to waitlist." });
+                    }
+                }
+                
+                // Check if enough rooms available for the NEW quantity being added
+                // (existing quantity already deducted from AvailableRooms)
+                if (qty > trip.AvailableRooms)
+                {
+                    return Json(new { success = false, message = $"Only {trip.AvailableRooms} room(s) available for {trip.Destination}." });
                 }
 
                 // Add to cart with quantity and selected date (increments if existing)
@@ -246,7 +228,12 @@ namespace MVC_project.Controllers
                     return Json(new { success = false, message = $"{trip.Destination} is already in your cart!" });
                 }
 
-                return Json(new { success = true, message = $"✓ {trip.Destination} added to cart (x{qty})!" });
+                // Decrease available rooms (reserve them in cart)
+                trip.AvailableRooms -= qty;
+                if (trip.AvailableRooms < 0) trip.AvailableRooms = 0;
+                _tripRepo.Update(trip);
+
+                return Json(new { success = true, message = $"✓ {trip.Destination} added to cart (x{qty})!", tripId = request.TripId, availableRooms = trip.AvailableRooms });
             }
             catch (Exception ex)
             {
@@ -256,6 +243,47 @@ namespace MVC_project.Controllers
                 Console.WriteLine($"Inner Exception: {innerMessage}");
                 Console.WriteLine($"Stack Trace: {ex.StackTrace}");
                 return Json(new { success = false, message = $"Database error: {innerMessage}" });
+            }
+        }
+
+        // Process waitlist when rooms become available
+        private async Task ProcessWaitlistForTrip(int tripId, int roomsFreed)
+        {
+            try
+            {
+                var trip = _tripRepo.GetById(tripId);
+                if (trip == null) return;
+
+                // Process waitlist users one by one until no more rooms or no more waiting users
+                while (roomsFreed > 0 && trip.AvailableRooms > 0)
+                {
+                    var nextWaitlistUser = _waitlistRepo.GetNextWaitingUser(tripId);
+                    if (nextWaitlistUser == null) break; // No more users waiting
+
+                    // Add trip to their cart (1 room per waitlist user)
+                    _userTripRepo.Add(nextWaitlistUser.UserId, tripId, 1);
+
+                    // Decrease available rooms
+                    trip.AvailableRooms -= 1;
+                    _tripRepo.Update(trip);
+
+                    // Mark as notified and set email sent time
+                    _waitlistRepo.MarkEmailSent(nextWaitlistUser.WaitlistID);
+                    nextWaitlistUser.Status = "Notified";
+                    
+                    // Send email notification
+                    await _emailService.SendWaitlistNotificationAsync(
+                        nextWaitlistUser.User!.email,
+                        nextWaitlistUser.User.first_name,
+                        trip.Destination
+                    );
+
+                    roomsFreed--;
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error processing waitlist: {ex.Message}");
             }
         }
     }

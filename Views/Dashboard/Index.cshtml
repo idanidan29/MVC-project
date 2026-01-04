@@ -143,8 +143,6 @@
         position: relative;
         cursor: pointer;
         border: 2px solid transparent;
-        display: flex;
-        flex-direction: column;
     }
 
     .trip-card:hover {
@@ -202,9 +200,6 @@
     /* Trip details */
     .trip-details {
         padding: 1.5rem;
-        display: flex;
-        flex-direction: column;
-        flex-grow: 1;
     }
 
     .trip-destination {
@@ -307,12 +302,12 @@
         z-index: 1;
     }
 
-    /* Button container - fixed to bottom */
+    /* Button container - in normal flow */
     .trip-actions {
         display: flex;
-        gap: 0;
-        padding: 0;
-        margin-top: auto;
+        gap: 0.75rem;
+        padding: 0 1.5rem 1.5rem 1.5rem;
+        margin-top: 1rem;
     }
 
     /* User action buttons */
@@ -386,7 +381,11 @@
     .delete-btn:hover {
         transform: translateY(-2px);
         box-shadow: 0 6px 20px rgba(239, 68, 68, 0.6);
-        color: white;
+        background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+    }
+
+    .delete-btn:active {
+        transform: translateY(0);
     }
 
     /* Edit button (admin only) */
@@ -412,7 +411,12 @@
     .edit-btn:hover {
         transform: translateY(-2px);
         box-shadow: 0 6px 20px rgba(245, 158, 11, 0.6);
+        background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
         color: white;
+    }
+
+    .edit-btn:active {
+        transform: translateY(0);
     }
 
     /* Trip Modal Overlay */
@@ -1288,13 +1292,24 @@
             const roomsHint = tripModal.querySelector('#modal-rooms-hint');
             if (qtyControl && qtyDisplay) {
                 qtyControl.dataset.max = roomsCount;
-                qtyDisplay.value = '1';
-                roomsHint.textContent = `${roomsCount} available`;
-                // initialize buttons disabled state
-                const btnInc = qtyControl.querySelector('.qty-increase');
-                const btnDec = qtyControl.querySelector('.qty-decrease');
-                if (btnInc) btnInc.disabled = false;
-                if (btnDec) btnDec.disabled = true;
+                
+                // If no rooms available, disable quantity controls
+                if (roomsCount === 0) {
+                    qtyDisplay.value = '0';
+                    roomsHint.textContent = '0 available';
+                    const btnInc = qtyControl.querySelector('.qty-increase');
+                    const btnDec = qtyControl.querySelector('.qty-decrease');
+                    if (btnInc) btnInc.disabled = true;
+                    if (btnDec) btnDec.disabled = true;
+                } else {
+                    qtyDisplay.value = '1';
+                    roomsHint.textContent = `${roomsCount} available`;
+                    // initialize buttons disabled state
+                    const btnInc = qtyControl.querySelector('.qty-increase');
+                    const btnDec = qtyControl.querySelector('.qty-decrease');
+                    if (btnInc) btnInc.disabled = false;
+                    if (btnDec) btnDec.disabled = true;
+                }
             }
         } catch (e) { console.error(e); }
         
@@ -1648,9 +1663,39 @@
             body: JSON.stringify({ tripId, quantity, selectedDateIndex })
         }).then(r => r.json()).then(data => {
             if (data.success) {
-                showNotification(data.message, 'success');
+                if (data.onWaitlist) {
+                    showNotification(data.message, 'info');
+                } else {
+                    showNotification(data.message, 'success');
+                    
+                    // Update available rooms count on the card and in modal
+                    if (data.tripId && data.availableRooms !== undefined) {
+                        const card = document.querySelector(`[data-trip-id="${data.tripId}"]`);
+                        if (card) {
+                            card.setAttribute('data-rooms', data.availableRooms);
+                        }
+                        
+                        // Update modal if still open
+                        if (tripModal && parseInt(tripModal.dataset.tripId) === data.tripId) {
+                            const roomsDisplay = tripModal.querySelector('.rooms-available-text');
+                            if (roomsDisplay) {
+                                roomsDisplay.textContent = `${data.availableRooms} rooms available`;
+                            }
+                            
+                            // Update quantity control max
+                            const qtyControl = tripModal.querySelector('#modal-qty-control');
+                            if (qtyControl) {
+                                qtyControl.dataset.max = data.availableRooms;
+                            }
+                        }
+                    }
+                }
             } else {
-                showNotification(data.message, 'error');
+                if (data.onWaitlist) {
+                    showNotification(data.message, 'info');
+                } else {
+                    showNotification(data.message, 'error');
+                }
             }
         }).catch(err => {
             console.error('Error adding to cart:', err);
@@ -1704,9 +1749,27 @@
             const data = await response.json();
             
             if (data.success) {
-                showNotification(data.message, 'success');
+                if (data.onWaitlist) {
+                    // User was added to waitlist
+                    showNotification(data.message, 'info');
+                } else {
+                    // Normal add to cart
+                    showNotification(data.message, 'success');
+                    
+                    // Update available rooms count on the card
+                    if (data.tripId && data.availableRooms !== undefined) {
+                        const card = document.querySelector(`[data-trip-id="${data.tripId}"]`);
+                        if (card) {
+                            card.setAttribute('data-rooms', data.availableRooms);
+                        }
+                    }
+                }
             } else {
-                showNotification(data.message, 'error');
+                if (data.onWaitlist) {
+                    showNotification(data.message, 'info');
+                } else {
+                    showNotification(data.message, 'error');
+                }
             }
         } catch (error) {
             console.error('Error adding to cart:', error);

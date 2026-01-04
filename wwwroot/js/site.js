@@ -109,6 +109,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const btn = e.target.closest('#btnSaveUser');
         if (!btn) return;
         const email = document.getElementById('userEmail')?.value;
+        const newEmail = document.getElementById('userEmailInput')?.value;
         const firstName = document.getElementById('firstName')?.value;
         const lastName = document.getElementById('lastName')?.value;
         const isAdmin = document.getElementById('isAdmin')?.checked ?? false;
@@ -117,7 +118,7 @@ document.addEventListener('DOMContentLoaded', function () {
             const res = await fetch('/Admin/UpdateUser', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                body: `email=${encodeURIComponent(email)}&firstName=${encodeURIComponent(firstName)}&lastName=${encodeURIComponent(lastName)}&isAdmin=${isAdmin}`
+                body: `email=${encodeURIComponent(email)}&newEmail=${encodeURIComponent(newEmail)}&firstName=${encodeURIComponent(firstName)}&lastName=${encodeURIComponent(lastName)}&isAdmin=${isAdmin}`
             });
             const data = await res.json();
             if (data.success) {

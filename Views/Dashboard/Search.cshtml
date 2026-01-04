@@ -1997,9 +1997,25 @@
             const data = await response.json();
             
             if (data.success) {
-                showNotification(data.message, 'success');
+                if (data.onWaitlist) {
+                    showNotification(data.message, 'info');
+                } else {
+                    showNotification(data.message, 'success');
+                    
+                    // Update available rooms count on the card
+                    if (data.tripId && data.availableRooms !== undefined) {
+                        const card = document.querySelector(`[data-trip-id="${data.tripId}"]`);
+                        if (card) {
+                            card.setAttribute('data-rooms', data.availableRooms);
+                        }
+                    }
+                }
             } else {
-                showNotification(data.message, 'error');
+                if (data.onWaitlist) {
+                    showNotification(data.message, 'info');
+                } else {
+                    showNotification(data.message, 'error');
+                }
             }
         } catch (error) {
             console.error('Error adding to cart:', error);
