@@ -486,6 +486,61 @@
     }
 </style>
 
+<style>
+    .itinerary-modal {
+        position: fixed;
+        inset: 0;
+        background: rgba(15, 23, 42, 0.55);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 1100;
+        backdrop-filter: blur(6px);
+    }
+
+    .itinerary-modal.show {
+        display: flex;
+    }
+
+    .itinerary-card {
+        background: white;
+        border-radius: 1rem;
+        max-width: 720px;
+        width: 90%;
+        padding: 1.5rem;
+        box-shadow: 0 25px 70px rgba(0, 0, 0, 0.25);
+        animation: fadeIn 0.25s ease-out;
+    }
+
+    .itinerary-row {
+        display: flex;
+        justify-content: space-between;
+        gap: 1rem;
+        padding: 0.5rem 0;
+        border-bottom: 1px solid #e2e8f0;
+        color: #334155;
+    }
+
+    .itinerary-row:last-child {
+        border-bottom: none;
+    }
+
+    .itinerary-label {
+        font-weight: 600;
+        color: #475569;
+    }
+
+    .itinerary-value {
+        text-align: right;
+    }
+
+    .itinerary-description {
+        margin-top: 0.75rem;
+        color: #475569;
+        line-height: 1.5;
+    }
+</style>
+
 <!-- Background elements -->
 <div class="bookings-bg"></div>
 
@@ -575,6 +630,12 @@
                         </div>
 
                         <!-- Trip Dates -->
+                        @{
+                            var remaining = trip.StartDate - DateTime.Now;
+                            var remainingText = remaining.TotalSeconds <= 0
+                                ? "Trip started"
+                                : $"{remaining.Days}d {remaining.Hours}h left";
+                        }
                         <div class="dates-info">
                             <div class="date-row">
                                 <span class="date-label"><i class="bi bi-calendar-event"></i> Start Date:</span>
@@ -583,6 +644,10 @@
                             <div class="date-row">
                                 <span class="date-label"><i class="bi bi-calendar-event"></i> End Date:</span>
                                 <span class="date-value">@trip.EndDate.ToString("MMM dd, yyyy")</span>
+                            </div>
+                            <div class="date-row">
+                                <span class="date-label"><i class="bi bi-clock"></i> Time Remaining:</span>
+                                <span class="date-value">@remainingText</span>
                             </div>
                             <div class="date-row">
                                 <span class="date-label"><i class="bi bi-hourglass-split"></i> Duration:</span>
@@ -615,13 +680,16 @@
                         <p class="trip-description">@trip.Description</p>
 
                         <!-- Action Buttons -->
+                        @{
+                            var bookingId = trip.UserSelectedDates.FirstOrDefault()?.UserTripID ?? 0;
+                        }
                         <div class="trip-actions">
-                            <button class="btn-view-details" onclick="alert('Itinerary details will be available soon!')">
-                                <i class="bi bi-file-earmark-pdf"></i>
+                            <button class="btn-view-details" data-booking-id="@bookingId" onclick="openItinerary(this)">
+                                <i class="bi bi-file-earmark-text"></i>
                                 View Itinerary
                             </button>
-                            <button class="btn-download" onclick="alert('Download invoice functionality coming soon!')">
-                                <i class="bi bi-download"></i>
+                            <button class="btn-download" data-booking-id="@bookingId" onclick="downloadItineraryPdf(this)">
+                                <i class="bi bi-filetype-pdf"></i>
                                 Invoice
                             </button>
                         </div>
@@ -631,3 +699,94 @@
         </div>
     }
 </div>
+
+<div id="itineraryModal" class="itinerary-modal" onclick="closeItinerary(event)">
+    <div class="itinerary-card" onclick="event.stopPropagation();">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <div>
+                <div class="text-muted" style="font-size: 0.85rem;">Booking itinerary</div>
+                <h4 id="itineraryTitle" class="mb-0">Itinerary</h4>
+            </div>
+            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="closeItinerary(event)"><i class="bi bi-x"></i></button>
+        </div>
+        <div class="itinerary-row">
+            <span class="itinerary-label">Destination</span>
+            <span id="itineraryDestination" class="itinerary-value"></span>
+        </div>
+        <div class="itinerary-row">
+            <span class="itinerary-label">Dates</span>
+            <span id="itineraryDates" class="itinerary-value"></span>
+        </div>
+        <div class="itinerary-row">
+            <span class="itinerary-label">Duration</span>
+            <span id="itineraryDuration" class="itinerary-value"></span>
+        </div>
+        <div class="itinerary-row">
+            <span class="itinerary-label">Travelers</span>
+            <span id="itineraryTravelers" class="itinerary-value"></span>
+        </div>
+        <div class="itinerary-row">
+            <span class="itinerary-label">Package</span>
+            <span id="itineraryPackage" class="itinerary-value"></span>
+        </div>
+        <div class="itinerary-row">
+            <span class="itinerary-label">Status</span>
+            <span id="itineraryStatus" class="itinerary-value"></span>
+        </div>
+        <div class="itinerary-row">
+            <span class="itinerary-label">Booked On</span>
+            <span id="itineraryBookedOn" class="itinerary-value"></span>
+        </div>
+        <div class="itinerary-row">
+            <span class="itinerary-label">Amount</span>
+            <span id="itineraryAmount" class="itinerary-value"></span>
+        </div>
+        <div class="itinerary-description" id="itineraryDescription"></div>
+    </div>
+</div>
+
+<script>
+    async function openItinerary(button) {
+        const bookingId = button.getAttribute('data-booking-id');
+        if (!bookingId || bookingId === '0') {
+            alert('No itinerary data available for this booking yet.');
+            return;
+        }
+
+        try {
+            const response = await fetch(`/User/Itinerary?bookingId=${bookingId}`);
+            if (!response.ok) throw new Error('Unable to load itinerary');
+            const data = await response.json();
+
+            document.getElementById('itineraryTitle').textContent = `${data.destination} (${data.packageType})`;
+            document.getElementById('itineraryDestination').textContent = `${data.destination}, ${data.country}`;
+            document.getElementById('itineraryDates').textContent = `${data.startDate} - ${data.endDate}`;
+            document.getElementById('itineraryDuration').textContent = `${data.durationDays} days`;
+            document.getElementById('itineraryTravelers').textContent = `${data.travelers}`;
+            document.getElementById('itineraryPackage').textContent = data.packageType;
+            document.getElementById('itineraryStatus').textContent = data.status;
+            document.getElementById('itineraryBookedOn').textContent = data.bookedOn;
+            document.getElementById('itineraryAmount').textContent = `$${data.totalPrice.toFixed(2)} (unit $${data.unitPrice.toFixed(2)})`;
+            document.getElementById('itineraryDescription').textContent = data.description;
+
+            document.getElementById('itineraryModal').classList.add('show');
+        } catch (err) {
+            console.error(err);
+            alert('Sorry, we could not load the itinerary right now.');
+        }
+    }
+
+    function downloadItineraryPdf(button) {
+        const bookingId = button.getAttribute('data-booking-id');
+        if (!bookingId || bookingId === '0') {
+            alert('No invoice available for this booking yet.');
+            return;
+        }
+        window.location.href = `/User/ItineraryPdf?bookingId=${bookingId}`;
+    }
+
+    function closeItinerary(event) {
+        event?.preventDefault();
+        document.getElementById('itineraryModal').classList.remove('show');
+    }
+</script>

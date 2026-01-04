@@ -27,5 +27,13 @@ namespace MVC_project.Data
                 .OrderByDescending(b => b.BookingDate)
                 .ToList();
         }
+
+        public Booking? GetByIdForUser(int bookingId, int userId)
+        {
+            return _context.Bookings
+                .Include(b => b.Trip)
+                .Include(b => b.User)
+                .FirstOrDefault(b => b.BookingID == bookingId && b.UserId == userId);
+        }
     }
 }

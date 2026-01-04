@@ -5,6 +5,8 @@ using MVC_project.ViewModels;
 using MVC_project.Data;
 using MVC_project.Services;
 using System.Security.Claims;
+using System.Text;
+using System.Collections.Generic;
 
 namespace MVC_project.Controllers
 {
@@ -227,6 +229,7 @@ namespace MVC_project.Controllers
             }
             catch (Exception ex)
             {
+                Console.WriteLine($"RemoveFromCart error: {ex.Message}");
                 return Json(new { success = false, message = "An error occurred while removing from cart" });
             }
         }
@@ -310,6 +313,103 @@ namespace MVC_project.Controllers
             }
         }
 
+        [Authorize]
+        [HttpGet]
+        public IActionResult Itinerary(int bookingId)
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
+            {
+                return Unauthorized();
+            }
+
+            var booking = _bookingRepo.GetByIdForUser(bookingId, userId);
+            if (booking == null)
+            {
+                return NotFound();
+            }
+
+            var trip = booking.Trip ?? _tripRepo.GetById(booking.TripID);
+            var dates = ResolveBookingDates(booking);
+
+            return Json(new
+            {
+                destination = trip?.Destination ?? "",
+                country = trip?.Country ?? "",
+                startDate = dates.Start.ToString("MMM dd, yyyy"),
+                endDate = dates.End.ToString("MMM dd, yyyy"),
+                durationDays = (dates.End - dates.Start).Days,
+                travelers = booking.Quantity,
+                packageType = trip?.PackageType ?? "",
+                status = booking.Status,
+                bookedOn = booking.BookingDate.ToString("MMM dd, yyyy"),
+                unitPrice = booking.UnitPrice,
+                totalPrice = booking.TotalPrice,
+                description = trip?.Description ?? "No description available"
+            });
+        }
+
+        [Authorize]
+        [HttpGet]
+        public IActionResult ItineraryPdf(int bookingId)
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
+            {
+                return Unauthorized();
+            }
+
+            var booking = _bookingRepo.GetByIdForUser(bookingId, userId);
+            if (booking == null)
+            {
+                return NotFound();
+            }
+
+            var trip = booking.Trip ?? _tripRepo.GetById(booking.TripID);
+            if (trip == null)
+            {
+                return NotFound();
+            }
+
+            var dates = ResolveBookingDates(booking);
+            var userName = booking.User != null
+                ? $"{booking.User.first_name} {booking.User.last_name}"
+                : (User.Identity?.Name ?? "Traveler");
+            var userEmail = booking.User?.email ?? User.Identity?.Name ?? "";
+            var bookingRef = $"BK-{booking.BookingID:00000}";
+
+            var lines = new List<string>
+            {
+                "--- TRAVELER ---",
+                $"Name: {userName}",
+                $"Email: {userEmail}",
+                $"Booking Ref: {bookingRef}",
+                " ",
+                "--- TRIP DETAILS ---",
+                $"Destination: {trip.Destination}",
+                $"Country: {trip.Country}",
+                $"Package: {trip.PackageType}",
+                $"Dates: {dates.Start:MMM dd, yyyy} - {dates.End:MMM dd, yyyy}",
+                $"Duration: {(dates.End - dates.Start).Days} days",
+                $"Status: {booking.Status}",
+                " ",
+                "--- TRAVEL PARTY ---",
+                $"Travelers: {booking.Quantity}",
+                " ",
+                "--- PRICING ---",
+                $"Unit Price: ${booking.UnitPrice:N2}",
+                $"Total Paid: ${booking.TotalPrice:N2}",
+                $"Booked On: {booking.BookingDate:MMM dd, yyyy}",
+                " ",
+                "--- NOTES ---",
+                $"{trip.Description}"
+            };
+
+            var pdfBytes = BuildSimplePdf($"Itinerary - {trip.Destination}", lines);
+            var safeName = trip.Destination.Replace(' ', '_');
+            return File(pdfBytes, "application/pdf", $"Itinerary_{safeName}_{booking.BookingID}.pdf");
+        }
+
         // Process waitlist when rooms become available
         private async Task ProcessWaitlistForTrip(int tripId, int roomsFreed)
         {
@@ -349,6 +449,112 @@ namespace MVC_project.Controllers
             {
                 Console.WriteLine($"Error processing waitlist: {ex.Message}");
             }
+        }
+
+        private (DateTime Start, DateTime End) ResolveBookingDates(Booking booking)
+        {
+            if (booking.Trip == null)
+            {
+                return (DateTime.MinValue, DateTime.MinValue);
+            }
+
+            if (booking.SelectedDateIndex < 0)
+            {
+                return (booking.Trip.StartDate, booking.Trip.EndDate);
+            }
+
+            var variations = _dateRepo.GetByTripId(booking.TripID).ToList();
+            if (booking.SelectedDateIndex >= 0 && booking.SelectedDateIndex < variations.Count)
+            {
+                var v = variations[booking.SelectedDateIndex];
+                return (v.StartDate, v.EndDate);
+            }
+
+            return (booking.Trip.StartDate, booking.Trip.EndDate);
+        }
+
+        private static byte[] BuildSimplePdf(string title, IEnumerable<string> lines)
+        {
+            var contentBuilder = new StringBuilder();
+            contentBuilder.AppendLine("BT");
+
+            // Header block with simple logo and company name
+            contentBuilder.AppendLine("/F1 20 Tf");
+            contentBuilder.AppendLine("50 780 Td");
+            contentBuilder.AppendLine($"({EscapePdfText("[TM] TravelMate")}) Tj");
+            contentBuilder.AppendLine("0 -18 Td");
+            contentBuilder.AppendLine("/F1 12 Tf");
+            contentBuilder.AppendLine($"({EscapePdfText("Itinerary & Invoice")}) Tj");
+            contentBuilder.AppendLine("0 -12 Td");
+            contentBuilder.AppendLine($"({EscapePdfText("___________________________________________")}) Tj");
+
+            // Title block
+            contentBuilder.AppendLine("0 -26 Td");
+            contentBuilder.AppendLine("/F1 16 Tf");
+            contentBuilder.AppendLine($"({EscapePdfText(title)}) Tj");
+            contentBuilder.AppendLine("0 -22 Td");
+            contentBuilder.AppendLine("/F1 12 Tf");
+
+            foreach (var line in lines)
+            {
+                // Section headers
+                if (line.StartsWith("---"))
+                {
+                    contentBuilder.AppendLine("0 -6 Td");
+                    contentBuilder.AppendLine($"({EscapePdfText(line)}) Tj");
+                    contentBuilder.AppendLine("0 -14 Td");
+                }
+                else
+                {
+                    // Indent body lines for structure (ASCII dash to avoid unsupported glyphs)
+                    contentBuilder.AppendLine($"({EscapePdfText("  - " + line)}) Tj");
+                    contentBuilder.AppendLine("0 -14 Td");
+                }
+            }
+
+            contentBuilder.AppendLine("ET");
+            var contentString = contentBuilder.ToString();
+            var contentBytes = Encoding.ASCII.GetBytes(contentString);
+
+            var objects = new List<string>
+            {
+                "1 0 obj << /Type /Catalog /Pages 2 0 R >> endobj",
+                "2 0 obj << /Type /Pages /Count 1 /Kids [3 0 R] >> endobj",
+                "3 0 obj << /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >> endobj",
+                $"4 0 obj << /Length {contentBytes.Length} >> stream\n{contentString}\nendstream endobj",
+                "5 0 obj << /Type /Font /Subtype /Type1 /BaseFont /Helvetica >> endobj"
+            };
+
+            var pdfBuilder = new StringBuilder();
+            pdfBuilder.AppendLine("%PDF-1.4");
+
+            var offsets = new List<int>();
+            foreach (var obj in objects)
+            {
+                offsets.Add(Encoding.ASCII.GetByteCount(pdfBuilder.ToString()));
+                pdfBuilder.AppendLine(obj);
+            }
+
+            var xrefStart = Encoding.ASCII.GetByteCount(pdfBuilder.ToString());
+            pdfBuilder.AppendLine("xref");
+            pdfBuilder.AppendLine($"0 {objects.Count + 1}");
+            pdfBuilder.AppendLine("0000000000 65535 f ");
+            foreach (var offset in offsets)
+            {
+                pdfBuilder.AppendLine($"{offset:0000000000} 00000 n ");
+            }
+
+            pdfBuilder.AppendLine("trailer << /Size " + (objects.Count + 1) + " /Root 1 0 R >>");
+            pdfBuilder.AppendLine("startxref");
+            pdfBuilder.AppendLine(xrefStart.ToString());
+            pdfBuilder.AppendLine("%%EOF");
+
+            return Encoding.ASCII.GetBytes(pdfBuilder.ToString());
+        }
+
+        private static string EscapePdfText(string text)
+        {
+            return text.Replace("\\", "\\\\").Replace("(", "\\(").Replace(")", "\\)");
         }
     }
 
