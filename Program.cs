@@ -67,9 +67,9 @@ app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
 
-// Default route
+// Default route - Info page is now the main landing page
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=User}/{action=Register}/{id?}");
+    pattern: "{controller=Info}/{action=Index}/{id?}");
 
 app.Run();

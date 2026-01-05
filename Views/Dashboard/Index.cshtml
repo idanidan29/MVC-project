@@ -988,6 +988,69 @@
         color: #64748b;
         font-size: 1.1rem;
     }
+
+    /* Auth prompt modal */
+    .auth-modal-backdrop {
+        position: fixed;
+        inset: 0;
+        background: rgba(15, 23, 42, 0.65);
+        backdrop-filter: blur(6px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 11000;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.2s ease;
+    }
+    .auth-modal-backdrop.active {
+        opacity: 1;
+        pointer-events: auto;
+    }
+    .auth-modal {
+        background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+        border-radius: 1.25rem;
+        padding: 1.75rem;
+        max-width: 420px;
+        width: calc(100% - 2rem);
+        box-shadow: 0 30px 90px rgba(0, 0, 0, 0.25);
+        border: 1px solid #e2e8f0;
+        transform: translateY(16px);
+        transition: transform 0.2s ease;
+    }
+    .auth-modal-backdrop.active .auth-modal { transform: translateY(0); }
+    .auth-modal h4 { margin: 0 0 0.35rem; color: #1e293b; font-weight: 800; }
+    .auth-modal p { margin: 0 0 1rem; color: #475569; }
+    .auth-modal .actions { display: flex; gap: 0.75rem; flex-wrap: wrap; }
+    .auth-modal .btn-primary {
+        background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+        border: none;
+        color: white;
+        padding: 0.75rem 1rem;
+        border-radius: 0.75rem;
+        font-weight: 700;
+        flex: 1;
+        text-align: center;
+        box-shadow: var(--shadow-button);
+    }
+    .auth-modal .btn-outline {
+        border: 1px solid #cbd5e1;
+        color: #1e293b;
+        padding: 0.75rem 1rem;
+        border-radius: 0.75rem;
+        font-weight: 700;
+        flex: 1;
+        text-align: center;
+        background: white;
+    }
+    .auth-modal .btn-link {
+        border: none;
+        background: none;
+        color: #64748b;
+        font-weight: 600;
+        text-decoration: underline;
+        padding: 0;
+    }
 </style>
 
 <!-- Animated Background -->
@@ -1986,7 +2049,8 @@
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ tripId, quantity, selectedDateIndex })
-        }).then(r => r.json()).then(data => {
+        }).then(requireJsonOrAuth).then(data => {
+            if (!data) return;
             if (data.success) {
                 if (data.onWaitlist) {
                     showNotification(data.message, 'info');
@@ -2032,9 +2096,20 @@
         const tripId = parseInt(tripModal.dataset.tripId);
         const qtyDisplay = tripModal.querySelector('#modal-qty-display');
         const quantity = qtyDisplay ? parseInt(qtyDisplay.value || '1', 10) : 1;
-        // Close trip modal so checkout modal is fully visible
-        closeTripModal();
-        openPaymentModal(tripId, quantity);
+        
+        // Check authentication before booking
+        fetch('/Booking/CheckoutInfo?tripId=' + tripId + '&quantity=' + quantity)
+            .then(requireJsonOrAuth)
+            .then(data => {
+                if (data && data.success) {
+                    // Close trip modal so checkout modal is fully visible
+                    closeTripModal();
+                    openPaymentModal(tripId, quantity);
+                }
+            })
+            .catch(error => {
+                console.error('Error checking booking:', error);
+            });
     }
 
     function changeModalQty(delta) {
@@ -2071,8 +2146,8 @@
                 body: JSON.stringify({ tripId: tripId, quantity, selectedDateIndex })
             });
 
-            const data = await response.json();
-            
+            const data = await requireJsonOrAuth(response);
+            if (!data) return;
             if (data.success) {
                 if (data.onWaitlist) {
                     // User was added to waitlist
@@ -2103,10 +2178,22 @@
     }
 
     function bookNow(tripId) {
+        // Check if user is authenticated by making a simple request
         const card = document.querySelector(`[data-trip-id="${tripId}"]`);
         const qtyInput = card ? card.querySelector('.qty-input') : null;
         const quantity = qtyInput ? parseInt(qtyInput.value || '1', 10) : 1;
-        openPaymentModal(tripId, quantity);
+        
+        // Try to open payment modal which requires auth
+        fetch('/Booking/CheckoutInfo?tripId=' + tripId + '&quantity=' + quantity)
+            .then(requireJsonOrAuth)
+            .then(data => {
+                if (data && data.success) {
+                    openPaymentModal(tripId, quantity);
+                }
+            })
+            .catch(error => {
+                console.error('Error checking booking:', error);
+            });
     }
 
     function showNotification(message, type = 'info') {
@@ -2131,6 +2218,54 @@
             notification.style.animation = 'slideOutRight 0.3s ease';
             setTimeout(() => notification.remove(), 300);
         }, 3000);
+    }
+
+    // Auth modal for guests trying to book/add to cart
+    let authModal;
+    function showAuthModal() {
+        if (!authModal) {
+            authModal = document.createElement('div');
+            authModal.className = 'auth-modal-backdrop';
+            authModal.innerHTML = `
+                <div class="auth-modal">
+                    <h4>Unlock fast booking</h4>
+                    <p>Create an account or sign in to add trips to your cart and complete bookings.</p>
+                    <div class="actions">
+                        <button class="btn-primary" onclick="window.location.href='/Login/Register'">Create account</button>
+                        <button class="btn-outline" onclick="window.location.href='/Login'">Log in</button>
+                    </div>
+                    <div style="text-align:center; margin-top: 0.85rem;">
+                        <button class="btn-link" data-close-modal>Maybe later</button>
+                    </div>
+                </div>
+            `;
+            authModal.addEventListener('click', (e) => {
+                if (e.target === authModal || e.target.dataset.closeModal !== undefined) {
+                    closeAuthModal();
+                }
+            });
+            document.body.appendChild(authModal);
+        }
+        requestAnimationFrame(() => authModal.classList.add('active'));
+    }
+
+    function closeAuthModal() {
+        if (authModal) authModal.classList.remove('active');
+    }
+
+    // Guard against login redirects/HTML responses on fetch
+    function requireJsonOrAuth(response) {
+        if (!response) return null;
+        if (response.status === 401 || response.redirected || !response.ok) {
+            showAuthModal();
+            return null;
+        }
+        const ct = response.headers.get('content-type') || '';
+        if (!ct.includes('application/json')) {
+            showAuthModal();
+            return null;
+        }
+        return response.json();
     }
 
     // Add animation keyframes

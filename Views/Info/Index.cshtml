@@ -1,0 +1,245 @@
+@{
+    ViewData["Title"] = "Info";
+}
+<style>
+    body {
+        background: linear-gradient(-45deg, #6366f1, #3730a3, #a78bfa, #6366f1);
+        background-size: 400% 400%;
+        animation: infoGradient 22s ease infinite;
+        color: #e2e8f0;
+    }
+    .info-page {
+        position: relative;
+        min-height: 100vh;
+        overflow: hidden;
+        isolation: isolate;
+        --foreground: #e2e8f0;
+        --muted: #cbd5e1;
+        --surface: rgba(255,255,255,0.12);
+        --surface-strong: rgba(255,255,255,0.18);
+        --card: rgba(255,255,255,0.12);
+    }
+    .info-page::before,
+    .info-page::after {
+        content: "";
+        position: absolute;
+        inset: -12%;
+        background: radial-gradient(circle at 20% 30%, rgba(167,139,250,0.28), transparent 38%),
+                    radial-gradient(circle at 80% 20%, rgba(99,102,241,0.24), transparent 36%),
+                    radial-gradient(circle at 60% 80%, rgba(79,70,229,0.18), transparent 34%);
+        filter: blur(48px);
+        opacity: 0.42;
+        animation: floatGlow 26s ease-in-out infinite alternate;
+        z-index: 0;
+    }
+    .info-page::after {
+        animation-duration: 32s;
+        animation-delay: -6s;
+        opacity: 0.38;
+    }
+    .info-shell {
+        position: relative;
+        z-index: 1;
+        padding: 2rem 0 3rem;
+    }
+    .info-hero {
+        background: rgba(255,255,255,0.95);
+        border: 1px solid rgba(255,255,255,0.3);
+        border-radius: 1.5rem;
+        box-shadow: 0 20px 70px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.5);
+        padding: 2.5rem;
+        position: relative;
+        overflow: hidden;
+        color: #1e1b4b;
+    }
+    .info-hero::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(circle at 20% 20%, rgba(255,255,255,0.55), transparent 30%),
+                    radial-gradient(circle at 80% 10%, rgba(99,102,241,0.28), transparent 40%),
+                    radial-gradient(circle at 60% 90%, rgba(79,70,229,0.15), transparent 35%);
+        pointer-events: none;
+        opacity: 0.9;
+    }
+    .info-hero-content { position: relative; z-index: 1; color: #1e1b4b; }
+    .info-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        padding: 0.5rem 0.85rem;
+        border-radius: 999px;
+        background: #fef9c3;
+        color: #854d0e;
+        border: 1px solid #fef08a;
+        font-weight: 700;
+        letter-spacing: 0.01em;
+        animation: badgePop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) 0.1s both;
+    }
+    @@keyframes badgePop {
+        0% { opacity: 0; transform: scale(0.8) translateY(8px); }
+        100% { opacity: 1; transform: scale(1) translateY(0); }
+    }
+    .info-title {
+        font-size: clamp(2rem, 3vw, 2.6rem);
+        font-weight: 800;
+        color: #1e1b4b;
+        animation: titleSlideUp 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) 0.2s both;
+        line-height: 1.2;
+    }
+    @@keyframes titleSlideUp {
+        0% { opacity: 0; transform: translateY(24px); }
+        100% { opacity: 1; transform: translateY(0); }
+    }
+    .info-subtitle {
+        color: #64748b;
+        max-width: 720px;
+        animation: subtitleFadeIn 0.8s ease-out 0.4s both;
+    }
+    @@keyframes subtitleFadeIn {
+        0% { opacity: 0; transform: translateY(12px); }
+        100% { opacity: 1; transform: translateY(0); }
+    }
+    .info-actions .btn {
+        height: 3rem;
+        border-radius: 0.9rem;
+        font-weight: 700;
+        padding: 0.65rem 1.2rem;
+        animation: buttonFadeIn 0.5s ease-out 0.65s both;
+        transition: all 0.2s ease;
+    }
+    .info-actions .btn:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 12px 40px rgba(99, 102, 241, 0.35);
+        color: white !important;
+    }
+    .info-actions .btn:active {
+        transform: translateY(-1px);
+    }
+    @@keyframes buttonFadeIn {
+        0% { opacity: 0; transform: translateY(16px); }
+        100% { opacity: 1; transform: translateY(0); }
+    }
+    .btn-ghost-primary { background: rgba(99,102,241,0.12); color: #3730a3; border: 1px solid rgba(99,102,241,0.28); }
+    .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px,1fr)); gap: 1rem; margin-top: 1.25rem; }
+    .info-card {
+        background: rgba(255,255,255,0.92);
+        border: 1px solid rgba(226,232,240,0.8);
+        border-radius: 1rem;
+        padding: 1.25rem;
+        box-shadow: 0 12px 30px rgba(15,23,42,0.08);
+        height: 100%;
+        color: #1e293b;
+        animation: cardSlideIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+        transition: all 0.3s ease;
+    }
+    .info-card:nth-child(1) { animation-delay: 0.5s; }
+    .info-card:nth-child(2) { animation-delay: 0.6s; }
+    .info-card:nth-child(3) { animation-delay: 0.7s; }
+    .info-card:hover {
+        transform: translateY(-8px) scale(1.02);
+        box-shadow: 0 20px 50px rgba(99, 102, 241, 0.15);
+        border-color: rgba(99, 102, 241, 0.3);
+    }
+    @@keyframes cardSlideIn {
+        0% { opacity: 0; transform: translateY(24px) scale(0.95); }
+        100% { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    .info-card h5 { font-weight: 700; color: #1e293b; }
+    .info-card p { color: #64748b; margin: 0; }
+    .reviews-block { margin-top: 2.25rem; background: rgba(255,255,255,0.92); border: 1px solid rgba(226,232,240,0.8); border-radius: 1.25rem; box-shadow: 0 10px 26px rgba(15,23,42,0.08); padding: 1.5rem; color: #1e293b; }
+    .review-placeholder {
+        border: 1px dashed rgba(99,102,241,0.35);
+        border-radius: 1rem;
+        padding: 1.5rem;
+        background: linear-gradient(135deg, rgba(99,102,241,0.06), rgba(55,48,163,0.04));
+        color: #64748b;
+    }
+    .review-chip { display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.45rem 0.8rem; border-radius: 999px; background: rgba(99,102,241,0.12); color: #3730a3; font-weight: 700; }
+    .reviews-block .badge { background: #f1f5f9 !important; color: #1e293b !important; border: 1px solid #e2e8f0 !important; }
+    .reviews-block .text-muted { color: #64748b !important; }
+    .reviews-block h4 { color: #1e293b; }
+    .reviews-block .btn-outline-primary {
+        color: #3730a3;
+        border-color: #3730a3;
+    }
+    .reviews-block .btn-outline-primary:hover {
+        background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+        color: white;
+        border-color: transparent;
+        box-shadow: 0 6px 20px rgba(99,102,241,0.5);
+    }
+    @@media (max-width: 768px) { .info-hero { padding: 1.75rem; } }
+    @@keyframes floatGlow {
+        0% { transform: translate3d(0, 0, 0) scale(1); }
+        40% { transform: translate3d(10px, -20px, 0) scale(1.02); }
+        70% { transform: translate3d(-12px, 16px, 0) scale(1.03); }
+        100% { transform: translate3d(8px, -10px, 0) scale(1.01); }
+    }
+    @@keyframes infoGradient {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+    }
+</style>
+
+<div class="info-page">
+<div class="info-shell">
+    <section class="info-hero mb-4">
+        <div class="info-hero-content">
+            <div class="info-badge mb-3">
+                <i class="bi bi-stars"></i>
+                Welcome explorers
+            </div>
+            <h1 class="info-title mb-3">Plan smarter trips with TravelMate</h1>
+            <p class="info-subtitle mb-4">Discover curated adventures, secure your spot with flexible booking, and keep everything organized in one place. No sign-in needed to browse, but creating an account unlocks faster checkout and saved trips.</p>
+            <div class="info-actions d-flex flex-wrap gap-2">
+                <a class="btn btn-gradient d-inline-flex align-items-center" href="/Dashboard?search=">
+                    <i class="bi bi-compass me-2"></i> Explore trips
+                </a>
+                <a class="btn btn-gradient d-inline-flex align-items-center" href="/Login" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);">
+                    <i class="bi bi-box-arrow-in-right me-2"></i> Sign In
+                </a>
+                <a class="btn btn-ghost-primary d-inline-flex align-items-center" href="/Login/Register">
+                    <i class="bi bi-person-plus me-2"></i> Create account
+                </a>
+            </div>
+            <div class="info-grid mt-4">
+                <div class="info-card">
+                    <h5 class="mb-2"><i class="bi bi-shield-check me-2 text-primary"></i>Flexible booking</h5>
+                    <p>Reserve seats securely with trusted payments and transparent hold windows.</p>
+                </div>
+                <div class="info-card">
+                    <h5 class="mb-2"><i class="bi bi-clock-history me-2 text-primary"></i>Real-time availability</h5>
+                    <p>See live dates, remaining spots, and instant confirmations as you browse.</p>
+                </div>
+                <div class="info-card">
+                    <h5 class="mb-2"><i class="bi bi-chat-left-quote me-2 text-primary"></i>Traveler support</h5>
+                    <p>Questions before you book? Our team is ready to help with routes and timing.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="reviews-block">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <div>
+                <div class="review-chip mb-2"><i class="bi bi-heart-fill"></i> Traveler stories</div>
+                <h4 class="mb-1">What guests are saying</h4>
+                <p class="text-muted mb-0">A dedicated review space will appear here soon. Until then, peek at trips and see why travelers return.</p>
+            </div>
+            <a class="btn btn-outline-primary d-none d-md-inline-flex align-items-center" href="/Dashboard">
+                Browse trips
+                <i class="bi bi-arrow-right ms-2"></i>
+            </a>
+        </div>
+        <div class="review-placeholder mb-3">
+            <div class="d-flex flex-column gap-2">
+                <span><strong>Coming soon:</strong> verified traveler reviews, ratings, and photos.</span>
+                <span>Planning ahead? Save your favorite dates after you sign up—no purchase required.</span>
+            </div>
+        </div>
+    </section>
+</div>
+</div>
+
