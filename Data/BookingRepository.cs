@@ -28,6 +28,24 @@ namespace MVC_project.Data
                 .ToList();
         }
 
+        public IEnumerable<Booking> GetActiveByUserId(int userId)
+        {
+            return _context.Bookings
+                .Include(b => b.Trip)
+                .Where(b => b.UserId == userId && b.Status != "Cancelled")
+                .OrderByDescending(b => b.BookingDate)
+                .ToList();
+        }
+
+        public int CountActiveByUserId(int userId)
+        {
+            return _context.Bookings
+                .Where(b => b.UserId == userId && (b.Status ?? string.Empty) != "Cancelled")
+                .Select(b => b.TripID)
+                .Distinct()
+                .Count();
+        }
+
         public int CountUpcoming(int userId, DateTime todayUtc)
         {
             return _context.Bookings

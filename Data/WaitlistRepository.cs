@@ -99,6 +99,16 @@ namespace MVC_project.Data
             }
         }
 
+        public List<Waitlist> GetActiveByUserId(int userId)
+        {
+            return _context.Waitlist
+                .Include(w => w.User)
+                .Include(w => w.Trip)
+                .Where(w => w.UserId == userId && (w.Status == "Waiting" || w.Status == "Notified"))
+                .OrderByDescending(w => w.CreatedAt)
+                .ToList();
+        }
+
         // Get all expired notified entries (24 hours passed since notification)
         public List<Waitlist> GetExpiredEntries()
         {

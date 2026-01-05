@@ -17,17 +17,19 @@ namespace MVC_project.Controllers
         private readonly TripImageRepository _imageRepo;
         private readonly TripDateRepository _tripDateRepo;
         private readonly UserRepository _userRepo;
-        private readonly UserTripRepository _userTripRepo;
+        private readonly BookingRepository _bookingRepo;
+        private readonly WaitlistRepository _waitlistRepo;
         private readonly PasswordService _passwordService;
         private readonly IWebHostEnvironment _webHostEnvironment;
 
-        public AdminController(TripRepository tripRepo, TripImageRepository imageRepo, TripDateRepository tripDateRepo, UserRepository userRepo, UserTripRepository userTripRepo, PasswordService passwordService, IWebHostEnvironment webHostEnvironment)
+        public AdminController(TripRepository tripRepo, TripImageRepository imageRepo, TripDateRepository tripDateRepo, UserRepository userRepo, BookingRepository bookingRepo, WaitlistRepository waitlistRepo, PasswordService passwordService, IWebHostEnvironment webHostEnvironment)
         {
             _tripRepo = tripRepo;
             _imageRepo = imageRepo;
             _tripDateRepo = tripDateRepo;
             _userRepo = userRepo;
-            _userTripRepo = userTripRepo;
+            _bookingRepo = bookingRepo;
+            _waitlistRepo = waitlistRepo;
             _passwordService = passwordService;
             _webHostEnvironment = webHostEnvironment;
         }
@@ -51,7 +53,7 @@ namespace MVC_project.Controllers
                 vm.Users.Add(new AdminUserItem
                 {
                     User = u,
-                    BookingsCount = _userTripRepo.GetCount(u.Id)
+                    BookingsCount = _bookingRepo.CountActiveByUserId(u.Id)
                 });
             }
 
@@ -73,11 +75,20 @@ namespace MVC_project.Controllers
                 return NotFound();
             }
 
-            var bookings = _userTripRepo.GetByUserId(user.Id).ToList();
+            var bookings = _bookingRepo.GetActiveByUserId(user.Id).ToList();
+            var allBookings = _bookingRepo.GetByUserId(user.Id).ToList();
+            var waitlists = _waitlistRepo.GetActiveByUserId(user.Id);
+            var activeTripCount = bookings
+                .Select(b => b.TripID)
+                .Distinct()
+                .Count();
             var vm = new UserDetailsViewModel
             {
                 User = user,
-                Bookings = bookings
+                ActiveBookings = bookings,
+                ActiveWaitlists = waitlists,
+                AllBookings = allBookings,
+                ActiveBookingTripCount = activeTripCount
             };
 
             return PartialView("_UserDetailsPartial", vm);

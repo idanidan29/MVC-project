@@ -1,202 +1,192 @@
 @model MVC_project.ViewModels.UserDetailsViewModel
 
 <style>
-    .modal.show .modal-dialog {
-        max-width: 720px;
-        margin: 1.25rem auto;
-    }
+    .modal.show .modal-dialog { max-width: 880px; margin: 1.25rem auto; }
+    .modal.show .modal-dialog .modal-content { border-radius: 1.5rem; border: none; padding: 0; overflow: hidden; }
 
-    .modal.show .modal-dialog .modal-content {
-        border-radius: 1.5rem;
-        border: none;
-        padding: 0;
-    }
+    .user-modal-header { background: linear-gradient(135deg, #6366f1 0%, #4338ca 50%, #7c3aed 100%); color: #f8fafc; padding: 1.5rem; position: relative; }
+    .user-modal-header .modal-title { font-weight: 800; font-size: 1.35rem; letter-spacing: 0.2px; }
+    .user-modal-header .btn-close { filter: brightness(0) invert(1); opacity: 0.85; }
+    .user-modal-header .btn-close:hover { opacity: 1; }
+    .user-meta { color: #e0e7ff; font-size: 0.95rem; margin-bottom: 0; }
 
-    .user-modal-header {
-        background: linear-gradient(135deg, #6366f1 0%, #3730a3 100%);
-        color: white;
-        border: none;
-        padding: 1.5rem;
-        border-radius: 1.5rem 1.5rem 0 0;
-    }
+    .user-modal-body { background: #f8fafc; color: #0f172a; padding: 1.5rem; }
+    .section-title { font-weight: 700; letter-spacing: 0.2px; color: #1e293b; margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.5rem; }
 
-    .user-modal-header .modal-title {
-        font-weight: 700;
-        font-size: 1.25rem;
-    }
+    .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0.75rem; margin-bottom: 1rem; }
+    .summary-card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 0.9rem; padding: 1rem; box-shadow: 0 12px 30px rgba(79,70,229,0.08); }
+    .summary-label { color: #475569; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.8px; }
+    .summary-value { color: #0f172a; font-weight: 800; font-size: 1.2rem; display: flex; align-items: center; gap: 0.4rem; }
+    .pill { display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.3rem 0.75rem; border-radius: 999px; font-size: 0.8rem; font-weight: 700; }
+    .pill-success { background: rgba(16,185,129,0.14); color: #0f766e; border: 1px solid rgba(16,185,129,0.35); }
+    .pill-warning { background: rgba(234,179,8,0.18); color: #92400e; border: 1px solid rgba(234,179,8,0.35); }
+    .pill-danger { background: rgba(239,68,68,0.16); color: #991b1b; border: 1px solid rgba(239,68,68,0.35); }
+    .pill-info { background: rgba(99,102,241,0.15); color: #3730a3; border: 1px solid rgba(99,102,241,0.35); }
+    .pill-muted { background: rgba(148,163,184,0.2); color: #475569; border: 1px solid rgba(148,163,184,0.35); }
 
-    .user-modal-header .btn-close {
-        filter: brightness(0) invert(1);
-    }
+    .card-block { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 1rem; padding: 1rem; margin-bottom: 1rem; box-shadow: 0 14px 32px rgba(15,23,42,0.08); }
+    .table-modern { width: 100%; border-collapse: collapse; }
+    .table-modern thead th { color: #475569; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.8px; padding: 0.65rem; border-bottom: 2px solid #e2e8f0; background: #f8fafc; }
+    .table-modern tbody td { padding: 0.7rem; color: #0f172a; border-bottom: 1px solid #e2e8f0; }
+    .table-modern tbody tr:hover { background: #f1f5f9; }
+    .text-faint { color: #64748b; }
 
-    .user-modal-body {
-        background: #ffffff;
-        padding: 1.5rem;
-    }
+    .user-modal-footer { background: #ffffff; border-top: 1px solid #e2e8f0; padding: 1rem 1.5rem; display: flex; gap: 0.75rem; justify-content: flex-end; }
+    .btn-action { padding: 0.55rem 1rem; border-radius: 0.7rem; font-weight: 700; border: none; cursor: pointer; transition: transform 0.15s ease, box-shadow 0.2s; }
+    .btn-delete { background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: white; box-shadow: 0 8px 28px rgba(239,68,68,0.35); }
+    .btn-edit { background: linear-gradient(135deg, #6366f1 0%, #4338ca 100%); color: white; box-shadow: 0 8px 28px rgba(99,102,241,0.35); }
+    .btn-close-modal { background: #e2e8f0; color: #0f172a; border: 1px solid #cbd5e1; }
+    .btn-action:hover { transform: translateY(-1px); }
 
-    .user-info-card {
-        background: linear-gradient(135deg, #f0f9ff 0%, #e0e7ff 100%);
-        border: 1px solid #bae6fd;
-        border-radius: 0.75rem;
-        padding: 1rem;
-        margin-bottom: 1rem;
-    }
-
-    .user-info-card .label {
-        color: #0c4a6e;
-        font-size: 0.875rem;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-    }
-
-    .user-info-card .value {
-        color: #1e293b;
-        font-weight: 700;
-        font-size: 1.1rem;
-        margin-top: 0.25rem;
-    }
-
-    .bookings-table {
-        border-collapse: collapse;
-        width: 100%;
-    }
-
-    .bookings-table thead th {
-        background: linear-gradient(135deg, #eef2ff, #e0e7ff);
-        color: #1e293b;
-        font-weight: 600;
-        padding: 0.75rem;
-        text-align: left;
-        border-bottom: 2px solid #bae6fd;
-    }
-
-    .bookings-table tbody td {
-        padding: 0.75rem;
-        border-bottom: 1px solid #e2e8f0;
-        color: #475569;
-    }
-
-    .bookings-table tbody tr:hover {
-        background: #f8fafc;
-    }
-
-    .user-modal-footer {
-        background: #f8fafc;
-        border-top: 1px solid #e2e8f0;
-        padding: 1rem 1.5rem;
-        border-radius: 0 0 1.5rem 1.5rem;
-        display: flex;
-        gap: 0.75rem;
-        justify-content: flex-end;
-    }
-
-    .btn-action {
-        padding: 0.5rem 1rem;
-        border-radius: 0.6rem;
-        font-weight: 600;
-        border: none;
-        cursor: pointer;
-        transition: all 0.2s;
-    }
-
-    .btn-delete {
-        background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-        color: white;
-        box-shadow: 0 6px 20px rgba(239, 68, 68, 0.35);
-    }
-
-    .btn-delete:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 10px 30px rgba(239, 68, 68, 0.5);
-        color: white !important;
-    }
-
-    .btn-edit {
-        background: linear-gradient(135deg, #6366f1 0%, #3730a3 100%);
-        color: white;
-        box-shadow: 0 6px 20px rgba(99, 102, 241, 0.35);
-    }
-
-    .btn-edit:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 10px 30px rgba(99, 102, 241, 0.5);
-        color: white !important;
-    }
-
-    .btn-close-modal {
-        background: #e2e8f0;
-        color: #1e293b;
-        border: none;
-    }
-
-    .btn-close-modal:hover {
-        background: #cbd5e1;
-        color: #1e293b !important;
+    @@media (max-width: 576px) {
+        .user-modal-header { padding-right: 3rem; }
+        .summary-grid { grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); }
     }
 </style>
 
 <div class="user-modal-header">
-    <h5 class="modal-title">
+    <h5 class="modal-title mb-1">
         <i class="bi bi-person-circle me-2"></i>
         @(string.IsNullOrWhiteSpace(Model.User.first_name) && string.IsNullOrWhiteSpace(Model.User.last_name)
             ? Model.User.email
             : $"{Model.User.first_name} {Model.User.last_name}")
     </h5>
-    <p class="text-white-50 mt-2 mb-0" style="font-size: 0.9rem;">@Model.User.email</p>
+    <p class="user-meta">@Model.User.email</p>
     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
 </div>
 
 <div class="user-modal-body">
-    <div class="row g-2 mb-3">
-        <div class="col-md-6">
-            <div class="user-info-card">
-                <div class="label"><i class="bi bi-shield-check me-1"></i> Role</div>
-                <div class="value">@(Model.User.admin ? "👑 Admin" : "👤 User")</div>
+    <div class="summary-grid">
+        <div class="summary-card">
+            <div class="summary-label">Role</div>
+            <div class="summary-value">
+                <span class="pill @(Model.User.admin ? "pill-info" : "pill-muted")">
+                    <i class="bi @(Model.User.admin ? "bi-shield-check" : "bi-person")"></i>
+                    @(Model.User.admin ? "Admin" : "User")
+                </span>
             </div>
         </div>
-        <div class="col-md-6">
-            <div class="user-info-card">
-                <div class="label"><i class="bi bi-bookmark-fill me-1"></i> Bookings</div>
-                <div class="value">@Model.Bookings.Count</div>
-            </div>
+        <div class="summary-card">
+            <div class="summary-label">Active Bookings</div>
+            <div class="summary-value">@Model.ActiveBookingTripCount</div>
+        </div>
+        <div class="summary-card">
+            <div class="summary-label">Waitlists</div>
+            <div class="summary-value">@Model.ActiveWaitlists.Count</div>
         </div>
     </div>
 
-    <h6 style="color: #1e293b; font-weight: 700; margin-top: 1.5rem; margin-bottom: 1rem;">
-        <i class="bi bi-list-check me-2"></i>Booking History
-    </h6>
-
-    <div class="table-responsive">
-        <table class="bookings-table">
-            <thead>
-                <tr>
-                    <th>Destination</th>
-                    <th>Country</th>
-                    <th>Dates</th>
-                    <th>Price</th>
-                </tr>
-            </thead>
-            <tbody>
-                @if (Model.Bookings.Any())
-                {
-                    foreach (var b in Model.Bookings)
-                    {
-                        var t = b.Trip;
-                        <tr>
-                            <td>@t?.Destination</td>
-                            <td>@t?.Country</td>
-                            <td>@(t != null ? $"{t.StartDate:MMM dd} - {t.EndDate:MMM dd}" : "—")</td>
-                            <td style="font-weight: 600; color: #6366f1;">$@(t?.DiscountPrice ?? t?.Price)</td>
-                        </tr>
+    <div class="card-block">
+        <div class="section-title"><i class="bi bi-ticket-detailed"></i> Bookings</div>
+        <div class="table-responsive">
+            <table class="table-modern">
+                <thead>
+                    <tr>
+                        <th>Trip</th>
+                        <th>Dates</th>
+                        <th>Qty</th>
+                        <th>Total</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @{
+                        var grouped = Model.AllBookings
+                            .GroupBy(b => b.Trip?.TripID ?? b.TripID)
+                            .Select(g => new
+                            {
+                                Trip = g.First().Trip,
+                                TripId = g.Key,
+                                Quantity = g.Sum(x => x.Quantity),
+                                Total = g.Sum(x => x.TotalPrice),
+                                LatestDate = g.Max(x => x.BookingDate),
+                                IsActive = g.Any(x => (x.Status ?? "").ToLower() != "cancelled"),
+                                StatusLabel = g.Any(x => (x.Status ?? "").ToLower() != "cancelled") ? "Active" : (g.First().Status ?? "Cancelled")
+                            })
+                            .OrderByDescending(x => x.IsActive)
+                            .ThenByDescending(x => x.LatestDate)
+                            .ToList();
                     }
-                }
-                else
-                {
-                    <tr><td colspan="4" class="text-center text-muted py-3">No bookings for this user.</td></tr>
-                }
-            </tbody>
-        </table>
+                    @if (grouped.Any())
+                    {
+                        foreach (var booking in grouped)
+                        {
+                            var trip = booking.Trip;
+                            var statusLower = (booking.StatusLabel ?? string.Empty).ToLower();
+                            var statusClass = statusLower switch
+                            {
+                                "active" => "pill-success",
+                                "pending" => "pill-warning",
+                                "cancelled" => "pill-danger",
+                                _ => "pill-muted"
+                            };
+                            <tr>
+                                <td>
+                                    <div style="font-weight:700;">@trip?.Destination</div>
+                                    <div class="text-faint">@trip?.Country</div>
+                                </td>
+                                <td>@(trip != null ? $"{trip.StartDate:MMM dd} - {trip.EndDate:MMM dd}" : "—")</td>
+                                <td>@booking.Quantity</td>
+                                <td style="font-weight:700; color:@(booking.IsActive ? "#0f766e" : "#0f172a");">$@booking.Total</td>
+                                <td>
+                                    <span class="pill @statusClass">@booking.StatusLabel</span>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr><td colspan="5" class="text-center text-faint py-3">No bookings for this user.</td></tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="card-block">
+        <div class="section-title"><i class="bi bi-hourglass-split"></i> Waitlist Spots</div>
+        <div class="table-responsive">
+            <table class="table-modern">
+                <thead>
+                    <tr>
+                        <th>Trip</th>
+                        <th>Added</th>
+                        <th>Expires</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.ActiveWaitlists.Any())
+                    {
+                        foreach (var wait in Model.ActiveWaitlists)
+                        {
+                            var trip = wait.Trip;
+                            var waitStatusClass = (wait.Status ?? string.Empty).ToLower() switch
+                            {
+                                "waiting" => "pill-info",
+                                "notified" => "pill-warning",
+                                "booked" => "pill-success",
+                                "expired" => "pill-danger",
+                                _ => "pill-muted"
+                            };
+                            <tr>
+                                <td>
+                                    <div style="font-weight:700;">@trip?.Destination</div>
+                                    <div class="text-faint">@trip?.Country</div>
+                                </td>
+                                <td>@wait.CreatedAt.ToString("MMM dd, yyyy")</td>
+                                <td>@(wait.ExpiresAt.HasValue ? wait.ExpiresAt.Value.ToString("MMM dd, yyyy HH:mm") : "—")</td>
+                                <td><span class="pill @waitStatusClass">@wait.Status</span></td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr><td colspan="4" class="text-center text-faint py-3">User is not on any waitlists.</td></tr>
+                    }
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
 
@@ -211,4 +201,21 @@
         <i class="bi bi-x-lg me-2"></i> Close
     </button>
 </div>
+
+<script>
+    (function () {
+        const toggle = document.getElementById('bookingToggle');
+        if (!toggle) return;
+        toggle.querySelectorAll('.toggle-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                toggle.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                const target = btn.getAttribute('data-target');
+                document.querySelectorAll('[data-block]').forEach(block => {
+                    block.style.display = (block.id === target.substring(1)) ? 'block' : 'none';
+                });
+            });
+        });
+    })();
+</script>
 
