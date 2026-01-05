@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MVC_project.Data;
 using MVC_project.ViewModels;
+using System.Security.Claims;
 
 namespace MVC_project.Controllers
 {
@@ -11,12 +12,16 @@ namespace MVC_project.Controllers
         private readonly TripRepository _tripRepo;
         private readonly TripImageRepository _imageRepo;
         private readonly TripDateRepository _tripDateRepo;
+        private readonly TripRatingRepository _ratingRepo;
+        private readonly BookingRepository _bookingRepo;
 
-        public DashboardController(TripRepository tripRepo, TripImageRepository imageRepo, TripDateRepository tripDateRepo)
+        public DashboardController(TripRepository tripRepo, TripImageRepository imageRepo, TripDateRepository tripDateRepo, TripRatingRepository ratingRepo, BookingRepository bookingRepo)
         {
             _tripRepo = tripRepo;
             _imageRepo = imageRepo;
             _tripDateRepo = tripDateRepo;
+            _ratingRepo = ratingRepo;
+            _bookingRepo = bookingRepo;
         }
 
         // GET: /Dashboard or /Dashboard/Index
@@ -49,6 +54,8 @@ namespace MVC_project.Controllers
                     ImageCount = images.Count(),
                     AvailableRooms = trip.AvailableRooms,
                     IsVisible = trip.IsVisible,
+                                        RatingSum = trip.RatingSum,
+                                        RatingCount = trip.RatingCount,
                     DateVariations = dates.Select(d => new TripDateVariation
                     {
                         TripDateID = d.TripDateID,
@@ -112,6 +119,81 @@ namespace MVC_project.Controllers
                 return NotFound();
 
             return File(image.ImageData, image.ContentType ?? "image/jpeg");
+        }
+
+        // POST: /Dashboard/SubmitRating
+        [HttpPost("SubmitRating")]
+        public IActionResult SubmitRating([FromBody] RatingSubmission submission)
+        {
+            if (!User.Identity?.IsAuthenticated ?? true)
+                return Unauthorized(new { success = false, message = "You must be logged in to rate." });
+
+            if (submission.rating < 1 || submission.rating > 5)
+                return BadRequest(new { success = false, message = "Rating must be between 1 and 5." });
+
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (!int.TryParse(userIdClaim, out var userId))
+                return Unauthorized(new { success = false, message = "User not found." });
+
+            // Check if user has booked this trip
+            var hasBooked = _bookingRepo.GetByUserId(userId)
+                .Any(b => b.TripID == submission.tripId && (b.Status ?? string.Empty) != "Cancelled");
+
+            if (!hasBooked)
+                return BadRequest(new { success = false, message = "You can only rate trips you have booked." });
+
+            try
+            {
+                _ratingRepo.AddOrUpdateRating(submission.tripId, userId, submission.rating, submission.comment);
+                return Ok(new { success = true, message = "Rating submitted successfully!" });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
+        }
+
+        // GET: /Dashboard/GetTripRatings?tripId=1
+        [HttpGet("GetTripRatings")]
+        public IActionResult GetTripRatings(int tripId)
+        {
+            var ratings = _ratingRepo.GetByTripId(tripId);
+            var trip = _tripRepo.GetById(tripId);
+
+            if (trip == null)
+                return NotFound();
+
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            int.TryParse(userIdClaim, out var userId);
+
+            var userRating = userId > 0 ? _ratingRepo.GetUserRating(tripId, userId) : null;
+            var hasBooked = userId > 0 ? _bookingRepo.GetByUserId(userId)
+                .Any(b => b.TripID == tripId && (b.Status ?? string.Empty) != "Cancelled") : false;
+
+            return Ok(new
+            {
+                trip = new
+                {
+                    ratingSum = trip.RatingSum,
+                    ratingCount = trip.RatingCount,
+                    averageRating = trip.RatingCount > 0 ? trip.RatingSum / trip.RatingCount : 0
+                },
+                userRating = userRating == null ? null : new
+                {
+                    rating = userRating.Rating,
+                    comment = userRating.Comment,
+                    createdAt = userRating.CreatedAt
+                },
+                hasBooked = hasBooked,
+                isAuthenticated = User.Identity?.IsAuthenticated ?? false,
+                ratings = ratings.Select(r => new
+                {
+                    userName = $"{r.User?.first_name ?? "User"} {r.User?.last_name ?? ""}".Trim(),
+                    rating = r.Rating,
+                    comment = r.Comment,
+                    createdAt = r.CreatedAt.ToString("MMM dd, yyyy")
+                }).ToList()
+            });
         }
     }
 }

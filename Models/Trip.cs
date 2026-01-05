@@ -68,5 +68,14 @@ namespace MVC_project.Models
         [Required]
         [Column("IsVisible")]
         public bool IsVisible { get; set; } = true;
+
+        [Column("RatingSum", TypeName = "decimal(18,2)")]
+        public decimal RatingSum { get; set; } = 0;
+
+        [Column("RatingCount")]
+        public int RatingCount { get; set; } = 0;
+
+        [Column("LastRatedAt")]
+        public DateTime? LastRatedAt { get; set; }
     }
 }

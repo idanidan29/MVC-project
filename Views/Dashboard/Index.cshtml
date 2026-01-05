@@ -1116,6 +1116,32 @@
 
                         <p class="trip-description">@trip.Description</p>
 
+                        @{
+                            var avgRating = trip.RatingCount > 0 ? trip.RatingSum / (decimal)trip.RatingCount : 0m;
+                            var fullStars = (int)avgRating;
+                        }
+                        <div class="trip-rating" data-trip-id="@trip.TripID" style="display: flex; align-items: center; gap: 0.5rem; padding: 0.75rem 0;">
+                            <div class="trip-rating-stars" data-trip-id="@trip.TripID" style="display: flex; gap: 0.1rem;">
+                                @for (int i = 1; i <= 5; i++)
+                                {
+                                    if (i <= fullStars)
+                                    {
+                                        <span style="color: #fbbf24; font-size: 0.95rem; text-shadow: 0 1px 2px rgba(0,0,0,0.1);">★</span>
+                                    }
+                                    else if (i == fullStars + 1 && (avgRating % 1m) >= 0.5m)
+                                    {
+                                        <span style="color: #fbbf24; font-size: 0.95rem; text-shadow: 0 1px 2px rgba(0,0,0,0.1);">★</span>
+                                    }
+                                    else
+                                    {
+                                        <span style="color: #cbd5e1; font-size: 0.95rem;">★</span>
+                                    }
+                                }
+                            </div>
+                            <span class="trip-rating-avg" data-trip-id="@trip.TripID" style="color: #6366f1; font-weight: 700; font-size: 0.9rem;">@avgRating.ToString("F1")</span>
+                            <span class="trip-rating-count" data-trip-id="@trip.TripID" style="color: #64748b; font-size: 0.85rem;">(@trip.RatingCount)</span>
+                        </div>
+
                         <!-- Price Section -->
                         <div class="trip-price-section">
                             <div class="price-container">
@@ -1477,6 +1503,31 @@
                         Book Now
                     </button>
                 </div>
+
+                <div id="modal-rating-section" style="background: linear-gradient(135deg, #f8fafc 0%, #eef2ff 100%); border: 1px solid #e2e8f0; border-radius: 1rem; padding: 1.25rem; margin-top: 1.5rem;">
+                    <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem;">
+                        <i class="bi bi-star-fill" style="color: #fbbf24; font-size: 1.3rem;"></i>
+                        <h4 style="color: #1e293b; font-weight: 700; margin: 0; font-size: 1.1rem;">Trip Ratings</h4>
+                    </div>
+                    <div id="modal-rating-display" style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
+                        <div style="font-size: 1.4rem; font-weight: 800; color: #6366f1;" id="rating-avg">0</div>
+                        <div id="rating-stars" style="display: flex; gap: 0.15rem;"></div>
+                        <div style="color: #64748b; font-size: 0.9rem; font-weight: 600;" id="rating-count">(0 ratings)</div>
+                    </div>
+                    <div id="rating-form-section" style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #cbd5e1; display: none;">
+                        <div style="color: #0f172a; font-weight: 700; font-size: 0.95rem; margin-bottom: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px;">Leave Your Rating</div>
+                        <div class="star-picker" id="star-picker" style="display: flex; gap: 0.5rem; margin-bottom: 0.75rem;"></div>
+                        <textarea id="rating-comment" placeholder="Share your experience (optional)" style="width: 100%; padding: 0.65rem; border: 1px solid #cbd5e1; border-radius: 0.6rem; font-family: inherit; font-size: 0.9rem; color: #1e293b; background: #ffffff; resize: vertical; min-height: 60px; transition: border-color 0.2s;"></textarea>
+                        <button id="submit-rating-btn" style="background: linear-gradient(135deg, #6366f1 0%, #4338ca 100%); color: white; border: none; padding: 0.6rem 1.2rem; border-radius: 0.6rem; font-weight: 700; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 12px rgba(99,102,241,0.3); width: 100%; margin-top: 0.75rem;" onclick="submitRating()">Submit Rating</button>
+                    </div>
+                    <div id="login-prompt" style="background: rgba(59,130,246,0.08); border: 1px solid rgba(59,130,246,0.3); border-radius: 0.75rem; padding: 0.85rem; color: #1e40af; font-size: 0.9rem; text-align: center; margin-top: 0.75rem; display: none;">
+                        Please <a href="/Login" style="font-weight: 700; color: #1e40af; text-decoration: underline;">log in</a> to rate this trip.
+                    </div>
+                    <div id="reviews-list" style="margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid #cbd5e1; display: none;">
+                        <div style="color: #0f172a; font-weight: 700; font-size: 0.95rem; margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 0.5px;">User Reviews</div>
+                        <div id="reviews-container"></div>
+                    </div>
+                </div>
             </div>
         `;
         document.body.appendChild(tripModal);
@@ -1686,6 +1737,212 @@
         }
         
         list.innerHTML = optionsHtml;
+        
+        // Load and display ratings
+        loadAndDisplayRatings(tripId);
+    }
+
+    // Load and display ratings
+    async function loadAndDisplayRatings(tripId) {
+        try {
+            const response = await fetch(`/Dashboard/GetTripRatings?tripId=${tripId}`);
+            const data = await response.json();
+            
+            // Update rating display
+            const avgDisplay = document.getElementById('rating-avg');
+            const starsContainer = document.getElementById('rating-stars');
+            const countDisplay = document.getElementById('rating-count');
+            
+            if (avgDisplay && starsContainer && countDisplay) {
+                const avg = data.trip.averageRating || 0;
+                const count = data.trip.ratingCount || 0;
+                
+                avgDisplay.textContent = avg.toFixed(1);
+                countDisplay.textContent = `(${count} ${count === 1 ? 'rating' : 'ratings'})`;
+                
+                // Display stars
+                let starsHtml = '';
+                for (let i = 1; i <= 5; i++) {
+                    if (i <= Math.floor(avg)) {
+                        starsHtml += '<span style="font-size: 1.1rem; color: #fbbf24; text-shadow: 0 1px 2px rgba(0,0,0,0.1);">★</span>';
+                    } else if (i === Math.floor(avg) + 1 && avg % 1 >= 0.5) {
+                        starsHtml += '<span style="font-size: 1.1rem; color: #fbbf24; text-shadow: 0 1px 2px rgba(0,0,0,0.1);">★</span>';
+                    } else {
+                        starsHtml += '<span style="font-size: 1.1rem; color: #cbd5e1;">★</span>';
+                    }
+                }
+                starsContainer.innerHTML = starsHtml;
+            }
+
+            // Update trip card rating display
+            const card = document.querySelector(`.trip-card[data-trip-id="${tripId}"]`);
+            if (card) {
+                const cardAvgEl = card.querySelector('.trip-rating-avg');
+                const cardCountEl = card.querySelector('.trip-rating-count');
+                const cardStarsEl = card.querySelector('.trip-rating-stars');
+                const avg = data.trip.averageRating || 0;
+                const count = data.trip.ratingCount || 0;
+
+                if (cardAvgEl) cardAvgEl.textContent = avg.toFixed(1);
+                if (cardCountEl) cardCountEl.textContent = `(${count})`;
+                if (cardStarsEl) {
+                    let starsHtml = '';
+                    for (let i = 1; i <= 5; i++) {
+                        if (i <= Math.floor(avg)) {
+                            starsHtml += '<span style="color: #fbbf24; font-size: 0.95rem; text-shadow: 0 1px 2px rgba(0,0,0,0.1);">★</span>';
+                        } else if (i === Math.floor(avg) + 1 && avg % 1 >= 0.5) {
+                            starsHtml += '<span style="color: #fbbf24; font-size: 0.95rem; text-shadow: 0 1px 2px rgba(0,0,0,0.1);">★</span>';
+                        } else {
+                            starsHtml += '<span style="color: #cbd5e1; font-size: 0.95rem;">★</span>';
+                        }
+                    }
+                    cardStarsEl.innerHTML = starsHtml;
+                }
+            }
+            
+            // Handle rating form visibility
+            const formSection = document.getElementById('rating-form-section');
+            const loginPrompt = document.getElementById('login-prompt');
+            const starPicker = document.getElementById('star-picker');
+            
+            if (!data.isAuthenticated) {
+                formSection.style.display = 'none';
+                loginPrompt.style.display = 'block';
+            } else if (data.hasBooked) {
+                formSection.style.display = 'block';
+                loginPrompt.style.display = 'none';
+                
+                // Populate star picker
+                if (starPicker) {
+                    let starsPickerHtml = '';
+                    for (let i = 1; i <= 5; i++) {
+                        const isSelected = data.userRating && data.userRating.rating === i;
+                        starsPickerHtml += `<button type="button" class="star-btn ${isSelected ? 'active' : ''}" data-rating="${i}" onclick="selectRating(${i})" style="font-size: 2.2rem; background: none; border: none; cursor: pointer; color: ${isSelected ? '#fbbf24' : '#cbd5e1'}; transition: all 0.15s ease; padding: 0; line-height: 1;">★</button>`;
+                    }
+                    starPicker.innerHTML = starsPickerHtml;
+                }
+                
+                // Pre-fill comment if user rated before
+                const commentBox = document.getElementById('rating-comment');
+                if (commentBox && data.userRating && data.userRating.comment) {
+                    commentBox.value = data.userRating.comment;
+                }
+                
+                // Set initial selected rating and update button text
+                if (data.userRating) {
+                    selectedRatingValue = data.userRating.rating;
+                    const submitBtn = document.getElementById('submit-rating-btn');
+                    if (submitBtn) {
+                        submitBtn.textContent = 'Update Rating';
+                    }
+                } else {
+                    selectedRatingValue = 0;
+                    const submitBtn = document.getElementById('submit-rating-btn');
+                    if (submitBtn) {
+                        submitBtn.textContent = 'Submit Rating';
+                    }
+                }
+            } else {
+                formSection.style.display = 'none';
+                loginPrompt.style.display = 'block';
+                loginPrompt.textContent = 'You can only rate trips you have booked.';
+            }
+            
+            // Store trip ID for rating submission
+            window.currentRatingTripId = tripId;
+            
+            // Display reviews list
+            const reviewsList = document.getElementById('reviews-list');
+            const reviewsContainer = document.getElementById('reviews-container');
+            
+            if (reviewsList && reviewsContainer && data.ratings && data.ratings.length > 0) {
+                reviewsList.style.display = 'block';
+                let reviewsHtml = '';
+                
+                data.ratings.forEach(review => {
+                    const stars = '★'.repeat(review.rating) + '☆'.repeat(5 - review.rating);
+                    reviewsHtml += `
+                        <div style="background: white; border: 1px solid #e2e8f0; border-radius: 0.75rem; padding: 1rem; margin-bottom: 0.75rem;">
+                            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.5rem;">
+                                <div>
+                                    <div style="font-weight: 700; color: #1e293b; font-size: 0.95rem;">${review.userName}</div>
+                                    <div style="color: #fbbf24; font-size: 1rem; letter-spacing: 0.05rem; margin-top: 0.25rem;">${stars}</div>
+                                </div>
+                                <div style="color: #64748b; font-size: 0.85rem;">${review.createdAt}</div>
+                            </div>
+                            ${review.comment ? `<div style="color: #475569; font-size: 0.9rem; line-height: 1.5; margin-top: 0.5rem;">${review.comment}</div>` : ''}
+                        </div>
+                    `;
+                });
+                
+                reviewsContainer.innerHTML = reviewsHtml;
+            } else if (reviewsList) {
+                reviewsList.style.display = 'none';
+            }
+        } catch (error) {
+            console.error('Error loading ratings:', error);
+        }
+    }
+
+    let selectedRatingValue = 0;
+    
+    function selectRating(value) {
+        selectedRatingValue = value;
+        const buttons = document.querySelectorAll('.star-btn');
+        buttons.forEach(btn => {
+            const btnRating = parseInt(btn.getAttribute('data-rating'));
+            if (btnRating <= value) {
+                btn.classList.add('active');
+                btn.style.color = '#fbbf24';
+            } else {
+                btn.classList.remove('active');
+                btn.style.color = '#cbd5e1';
+            }
+        });
+    }
+
+    async function submitRating() {
+        if (!selectedRatingValue) {
+            showNotification('Please select a rating', 'error');
+            return;
+        }
+        
+        const comment = document.getElementById('rating-comment').value;
+        const tripId = window.currentRatingTripId;
+        const btn = document.getElementById('submit-rating-btn');
+        
+        if (!tripId) {
+            showNotification('Error: Trip ID not found', 'error');
+            return;
+        }
+        
+        btn.disabled = true;
+        btn.textContent = 'Submitting...';
+        
+        try {
+            const response = await fetch('/Dashboard/SubmitRating', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ tripId, rating: selectedRatingValue, comment: comment || null })
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                showNotification('Rating submitted successfully!', 'success');
+                // Reload ratings to update display with new/updated rating
+                await new Promise(resolve => setTimeout(resolve, 500));
+                loadAndDisplayRatings(tripId);
+            } else {
+                showNotification(data.message || 'Failed to submit rating', 'error');
+            }
+        } catch (error) {
+            console.error('Error submitting rating:', error);
+            showNotification('Error submitting rating', 'error');
+        } finally {
+            btn.disabled = false;
+            btn.textContent = 'Submit Rating';
+        }
     }
 
     function selectDateVariation(index, rooms, startDate, endDate, days) {

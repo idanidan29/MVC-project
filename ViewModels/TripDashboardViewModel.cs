@@ -16,6 +16,8 @@ namespace MVC_project.ViewModels
         public int AvailableRooms { get; set; }
         public bool IsVisible { get; set; }
         public List<TripDateVariation> DateVariations { get; set; } = new List<TripDateVariation>();
+    public decimal RatingSum { get; set; } = 0;
+    public int RatingCount { get; set; } = 0;
 
         // Computed property to get the closest upcoming date
         public DateTime ClosestStartDate

@@ -1,0 +1,253 @@
+@model MVC_project.Models.Trip
+
+<style>
+    .rating-section {
+        background: linear-gradient(135deg, #f8fafc 0%, #eef2ff 100%);
+        border: 1px solid #e2e8f0;
+        border-radius: 1rem;
+        padding: 1.25rem;
+        margin-top: 1.5rem;
+    }
+
+    .rating-header {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin-bottom: 1rem;
+    }
+
+    .rating-header h4 {
+        color: #1e293b;
+        font-weight: 700;
+        margin: 0;
+        font-size: 1.1rem;
+    }
+
+    .rating-stats {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-top: 0.5rem;
+    }
+
+    .rating-average {
+        font-size: 1.4rem;
+        font-weight: 800;
+        color: #6366f1;
+    }
+
+    .rating-stars {
+        display: flex;
+        gap: 0.15rem;
+        align-items: center;
+    }
+
+    .star {
+        font-size: 1.1rem;
+        color: #fbbf24;
+        text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    }
+
+    .star.empty {
+        color: #cbd5e1;
+    }
+
+    .rating-count {
+        color: #64748b;
+        font-size: 0.9rem;
+        font-weight: 600;
+    }
+
+    .rating-form-section {
+        margin-top: 1rem;
+        padding-top: 1rem;
+        border-top: 1px solid #cbd5e1;
+    }
+
+    .rating-form-title {
+        color: #0f172a;
+        font-weight: 700;
+        font-size: 0.95rem;
+        margin-bottom: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .star-picker {
+        display: flex;
+        gap: 0.5rem;
+        margin-bottom: 0.75rem;
+    }
+
+    .star-btn {
+        font-size: 2.2rem;
+        background: none;
+        border: none;
+        cursor: pointer;
+        color: #cbd5e1;
+        transition: all 0.15s ease;
+        padding: 0;
+        line-height: 1;
+    }
+
+    .star-btn:hover,
+    .star-btn.active {
+        color: #fbbf24;
+        transform: scale(1.15);
+        text-shadow: 0 2px 6px rgba(251,191,36,0.4);
+    }
+
+    .comment-box {
+        width: 100%;
+        padding: 0.65rem;
+        border: 1px solid #cbd5e1;
+        border-radius: 0.6rem;
+        font-family: inherit;
+        font-size: 0.9rem;
+        color: #1e293b;
+        background: #ffffff;
+        resize: vertical;
+        min-height: 60px;
+        transition: border-color 0.2s;
+    }
+
+    .comment-box:focus {
+        outline: none;
+        border-color: #6366f1;
+        box-shadow: 0 0 0 3px rgba(99,102,241,0.1);
+    }
+
+    .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.75rem;
+        align-items: flex-end;
+        margin-top: 0.75rem;
+    }
+
+    @@media (max-width: 576px) {
+        .form-row {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .submit-btn {
+        background: linear-gradient(135deg, #6366f1 0%, #4338ca 100%);
+        color: white;
+        border: none;
+        padding: 0.6rem 1.2rem;
+        border-radius: 0.6rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.2s;
+        box-shadow: 0 4px 12px rgba(99,102,241,0.3);
+        width: 100%;
+    }
+
+    .submit-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(99,102,241,0.4);
+    }
+
+    .submit-btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+    .login-prompt {
+        background: rgba(59,130,246,0.08);
+        border: 1px solid rgba(59,130,246,0.3);
+        border-radius: 0.75rem;
+        padding: 0.85rem;
+        color: #1e40af;
+        font-size: 0.9rem;
+        text-align: center;
+        margin-top: 0.75rem;
+    }
+
+    .rating-list {
+        margin-top: 1rem;
+        max-height: 300px;
+        overflow-y: auto;
+    }
+
+    .rating-item {
+        background: white;
+        border: 1px solid #e2e8f0;
+        border-radius: 0.75rem;
+        padding: 0.9rem;
+        margin-bottom: 0.75rem;
+    }
+
+    .rating-item-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.5rem;
+    }
+
+    .rating-user {
+        font-weight: 700;
+        color: #1e293b;
+        font-size: 0.95rem;
+    }
+
+    .rating-date {
+        color: #94a3b8;
+        font-size: 0.8rem;
+    }
+
+    .rating-item-stars {
+        margin-bottom: 0.4rem;
+    }
+
+    .rating-comment {
+        color: #475569;
+        font-size: 0.85rem;
+        line-height: 1.5;
+    }
+
+    .no-ratings {
+        text-align: center;
+        color: #94a3b8;
+        padding: 1rem;
+        font-style: italic;
+        font-size: 0.9rem;
+    }
+</style>
+
+<div class="rating-section">
+    <div class="rating-header">
+        <i class="bi bi-star-fill" style="color: #fbbf24; font-size: 1.3rem;"></i>
+        <h4>Trip Ratings</h4>
+    </div>
+
+    @{
+        var avgRating = Model.RatingCount > 0 ? Model.RatingSum / (decimal)Model.RatingCount : 0m;
+        var fullStars = (int)avgRating;
+        var hasHalfStar = (avgRating % 1m) >= 0.5m;
+    }
+
+    <div class="rating-stats">
+        <div class="rating-average">@avgRating.ToString("F1")</div>
+        <div class="rating-stars">
+            @for (int i = 1; i <= 5; i++)
+            {
+                if (i <= fullStars)
+                {
+                    <span class="star">★</span>
+                }
+                else if (i == fullStars + 1 && hasHalfStar)
+                {
+                    <span class="star" style="color: #fbbf24;">★</span>
+                }
+                else
+                {
+                    <span class="star empty">★</span>
+                }
+            }
+        </div>
+        <div class="rating-count">(@Model.RatingCount @(Model.RatingCount == 1 ? "rating" : "ratings"))</div>
+    </div>
+</div>

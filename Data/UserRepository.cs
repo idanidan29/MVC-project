@@ -1,5 +1,6 @@
 ﻿using MVC_project.Models;
 using System;
+using System.Linq;
 
 namespace MVC_project.Data
 {
@@ -88,6 +89,31 @@ namespace MVC_project.Data
                 _context.Users.Remove(user);
                 _context.SaveChanges();
             }
+        }
+
+        // Delete user along with related data to avoid FK conflicts (bookings, waitlist, ratings, user trips)
+        public bool DeleteWithDependencies(int id)
+        {
+            var user = _context.Users.FirstOrDefault(u => u.Id == id);
+            if (user == null)
+            {
+                return false;
+            }
+
+            // Remove dependent rows first to satisfy FK constraints
+            var bookings = _context.Bookings.Where(b => b.UserId == id);
+            var waitlists = _context.Waitlist.Where(w => w.UserId == id);
+            var ratings = _context.TripRatings.Where(r => r.UserId == id);
+            var userTrips = _context.UserTrips.Where(ut => ut.UserId == id);
+
+            _context.Bookings.RemoveRange(bookings);
+            _context.Waitlist.RemoveRange(waitlists);
+            _context.TripRatings.RemoveRange(ratings);
+            _context.UserTrips.RemoveRange(userTrips);
+            _context.Users.Remove(user);
+
+            _context.SaveChanges();
+            return true;
         }
     }
 }

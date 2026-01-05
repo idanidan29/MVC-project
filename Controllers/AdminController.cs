@@ -115,7 +115,11 @@ namespace MVC_project.Controllers
                 return BadRequest(new { success = false, message = "Cannot delete your own account" });
             }
 
-            _userRepo.Delete(user.Id);
+            var deleted = _userRepo.DeleteWithDependencies(user.Id);
+            if (!deleted)
+            {
+                return StatusCode(500, new { success = false, message = "Could not delete user." });
+            }
             return Ok(new { success = true, message = "User deleted successfully" });
         }
 

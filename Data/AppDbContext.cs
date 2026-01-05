@@ -16,6 +16,7 @@ namespace MVC_project.Data
         public DbSet<Booking> Bookings { get; set; }
         public DbSet<TripDate> TripDates { get; set; }
         public DbSet<Waitlist> Waitlist { get; set; }
+        public DbSet<TripRating> TripRatings { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
