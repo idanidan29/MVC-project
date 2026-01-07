@@ -48,6 +48,8 @@ namespace MVC_project.Controllers
                     EndDate = trip.EndDate,
                     Price = trip.Price,
                     DiscountPrice = trip.DiscountPrice,
+                    PreviousPrice = trip.PreviousPrice,
+                    PriceChangedAt = trip.PriceChangedAt,
                     PackageType = trip.PackageType,
                     Description = trip.Description,
                     AgeLimit = trip.AgeLimit,

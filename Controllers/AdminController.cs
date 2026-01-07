@@ -416,6 +416,7 @@ namespace MVC_project.Controllers
             }
 
             // Update trip properties
+            var oldPrice = trip.Price;
             trip.Destination = model.Destination;
             trip.Country = model.Country;
             trip.StartDate = model.StartDate;
@@ -428,6 +429,19 @@ namespace MVC_project.Controllers
             trip.PackageType = model.PackageType;
             trip.AgeLimit = model.AgeLimit;
             trip.Description = model.Description;
+
+            // Track price drop from previous value
+            if (model.Price < oldPrice)
+            {
+                trip.PreviousPrice = oldPrice;
+                trip.PriceChangedAt = DateTime.Now;
+            }
+            else
+            {
+                // Clear previous price info if price did not decrease
+                trip.PreviousPrice = null;
+                trip.PriceChangedAt = null;
+            }
 
             _tripRepo.Update(trip);
 

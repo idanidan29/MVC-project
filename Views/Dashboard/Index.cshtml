@@ -1110,7 +1110,9 @@
                      data-category="@trip.PackageType"
                      data-price="@(trip.DiscountPrice.HasValue && trip.DiscountPrice < trip.Price ? trip.DiscountPrice.Value : trip.Price)"
                      data-start-date="@trip.StartDate.ToString("yyyy-MM-dd")"
-                     data-is-discount="@(trip.DiscountPrice.HasValue && trip.DiscountPrice < trip.Price ? "true" : "false")"
+                     data-is-discount="@((trip.DiscountPrice.HasValue && trip.DiscountPrice < trip.Price) || (trip.PreviousPrice.HasValue && trip.PreviousPrice.Value > trip.Price) ? "true" : "false")"
+                     data-previous-price="@(trip.PreviousPrice.HasValue ? trip.PreviousPrice.Value.ToString("N2") : "")"
+                     data-price-changed-at="@(trip.PriceChangedAt.HasValue ? trip.PriceChangedAt.Value.ToString("o") : "")"
                      data-trip-id="@trip.TripID"
                      data-description="@trip.Description"
                      data-end-date='@trip.EndDate.ToString("MMM dd, yyyy")'
@@ -1218,6 +1220,11 @@
                                     <span class="original-price">$@trip.Price.ToString("N2")</span>
                                     <span class="trip-price">$@trip.DiscountPrice.Value.ToString("N2")</span>
                                 }
+                                else if (trip.PreviousPrice.HasValue && trip.PreviousPrice.Value > trip.Price)
+                                {
+                                    <span class="original-price">$@trip.PreviousPrice.Value.ToString("N2")</span>
+                                    <span class="trip-price">$@trip.Price.ToString("N2")</span>
+                                }
                                 else
                                 {
                                     <span class="trip-price">$@trip.Price.ToString("N2")</span>
@@ -1229,6 +1236,13 @@
                                 var discount = (int)(((trip.Price - trip.DiscountPrice.Value) / trip.Price) * 100);
                                 <div class="discount-badge">
                                     @discount% OFF
+                                </div>
+                            }
+                            else if (trip.PreviousPrice.HasValue && trip.PreviousPrice.Value > trip.Price)
+                            {
+                                var drop = (int)(((trip.PreviousPrice.Value - trip.Price) / trip.PreviousPrice.Value) * 100);
+                                <div class="discount-badge">
+                                    New price -@drop%
                                 </div>
                             }
                         </div>
@@ -1437,7 +1451,23 @@
         document.getElementById('modal-duration').textContent = `${data.duration} days`;
         document.getElementById('modal-rooms').textContent = `${data.rooms} rooms`;
         document.getElementById('modal-package').textContent = data.package;
-        document.getElementById('modal-price').textContent = `$${data.price}`;
+        // Price + optional previous price/badge
+        const modalPriceEl = document.getElementById('modal-price');
+        const modalOrigEl = document.getElementById('modal-original-price');
+        const modalBadgeEl = document.getElementById('modal-price-badge');
+        modalPriceEl.textContent = `$${data.price}`;
+        const prev = data.previousPrice ? parseFloat((data.previousPrice || '').replace(/,/g, '')) : NaN;
+        const cur = data.price ? parseFloat(data.price) : NaN;
+        if (!Number.isNaN(prev) && !Number.isNaN(cur) && prev > cur) {
+            modalOrigEl.style.display = '';
+            modalOrigEl.textContent = `$${prev.toFixed(2)}`;
+            const pct = Math.max(0, Math.round(((prev - cur) / prev) * 100));
+            modalBadgeEl.style.display = '';
+            modalBadgeEl.textContent = `New price -${pct}%`;
+        } else {
+            modalOrigEl.style.display = 'none';
+            modalBadgeEl.style.display = 'none';
+        }
         const ageLimitValue = data.ageLimit ? parseInt(data.ageLimit, 10) : null;
         document.getElementById('modal-age').textContent = Number.isInteger(ageLimitValue) ? `${ageLimitValue}+` : 'All ages';
         
@@ -1546,7 +1576,11 @@
                     </div>
                     <div class="detail-item">
                         <strong><i class="bi bi-currency-dollar"></i> Price</strong>
-                        <span id="modal-price"></span>
+                        <div>
+                            <span id="modal-original-price" class="original-price" style="margin-right:0.5rem; display:none;"></span>
+                            <span id="modal-price"></span>
+                            <span id="modal-price-badge" class="discount-badge" style="margin-left:0.5rem; display:none;"></span>
+                        </div>
                     </div>
                 </div>
                 

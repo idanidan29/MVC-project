@@ -38,6 +38,12 @@ namespace MVC_project.Models
         [Column("DiscountEndDate")]
         public DateTime? DiscountEndDate { get; set; }
 
+        [Column("PreviousPrice", TypeName = "decimal(10,2)")]
+        public decimal? PreviousPrice { get; set; }
+
+        [Column("PriceChangedAt")]
+        public DateTime? PriceChangedAt { get; set; }
+
         [Required]
         [Column("AvailableRooms")]
         public int AvailableRooms { get; set; }
