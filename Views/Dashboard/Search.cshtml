@@ -1380,6 +1380,10 @@
                                 <i class="bi bi-calendar-check"></i>
                                 <span>@trip.ClosestStartDate.ToString("MMM dd, yyyy") - @trip.ClosestEndDate.ToString("MMM dd, yyyy")</span>
                             </div>
+                            <div class="info-item">
+                                <i class="bi bi-person-badge"></i>
+                                <span>@(trip.AgeLimit.HasValue ? $"{trip.AgeLimit}+" : "All ages")</span>
+                            </div>
                             @if (trip.DateVariations.Any())
                             {
                                 <div class="info-item" style="color: #6366f1; font-weight: 600;">
@@ -1420,6 +1424,7 @@
                             data-destination="@trip.Destination"
                             data-country="@trip.Country"
                             data-description="@trip.Description"
+                            data-age-limit="@trip.AgeLimit"
                             data-start-date='@trip.ClosestStartDate.ToString("MMM dd, yyyy")'
                             data-end-date='@trip.ClosestEndDate.ToString("MMM dd, yyyy")'
                             data-duration="@((trip.ClosestEndDate - trip.ClosestStartDate).Days)"

@@ -1117,6 +1117,7 @@
                      data-start-date-display='@trip.StartDate.ToString("MMM dd, yyyy")'
                      data-duration="@((trip.EndDate - trip.StartDate).Days)"
                      data-rooms="@trip.AvailableRooms"
+                     data-age-limit="@trip.AgeLimit"
                      data-package="@trip.PackageType"
                      data-image-count="@trip.ImageCount"
                      onclick="openTripModal(event, this, @trip.TripID)">
@@ -1167,6 +1168,10 @@
                             <div class="info-item">
                                 <i class="bi bi-calendar-check"></i>
                                 <span>@trip.ClosestStartDate.ToString("MMM dd, yyyy") - @trip.ClosestEndDate.ToString("MMM dd, yyyy")</span>
+                            </div>
+                            <div class="info-item">
+                                <i class="bi bi-person-badge"></i>
+                                <span>@(trip.AgeLimit.HasValue ? $"{trip.AgeLimit}+" : "All ages")</span>
                             </div>
                             @if (trip.DateVariations.Any())
                             {
@@ -1433,6 +1438,8 @@
         document.getElementById('modal-rooms').textContent = `${data.rooms} rooms`;
         document.getElementById('modal-package').textContent = data.package;
         document.getElementById('modal-price').textContent = `$${data.price}`;
+        const ageLimitValue = data.ageLimit ? parseInt(data.ageLimit, 10) : null;
+        document.getElementById('modal-age').textContent = Number.isInteger(ageLimitValue) ? `${ageLimitValue}+` : 'All ages';
         
         // Store trip ID for actions
         tripModal.dataset.tripId = tripId;
@@ -1528,6 +1535,10 @@
                     <div class="detail-item">
                         <strong><i class="bi bi-door-open"></i> Available Rooms</strong>
                         <span id="modal-rooms"></span>
+                    </div>
+                    <div class="detail-item">
+                        <strong><i class="bi bi-person-badge"></i> Minimum Age</strong>
+                        <span id="modal-age"></span>
                     </div>
                     <div class="detail-item">
                         <strong><i class="bi bi-tag"></i> Package Type</strong>

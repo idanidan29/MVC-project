@@ -50,6 +50,7 @@ namespace MVC_project.Controllers
                     DiscountPrice = trip.DiscountPrice,
                     PackageType = trip.PackageType,
                     Description = trip.Description,
+                    AgeLimit = trip.AgeLimit,
                     HasImage = images.Any(),
                     ImageCount = images.Count(),
                     AvailableRooms = trip.AvailableRooms,

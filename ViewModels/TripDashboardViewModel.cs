@@ -11,6 +11,7 @@ namespace MVC_project.ViewModels
         public decimal? DiscountPrice { get; set; }
         public string PackageType { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
+        public int? AgeLimit { get; set; }
         public bool HasImage { get; set; }
         public int ImageCount { get; set; }
         public int AvailableRooms { get; set; }
