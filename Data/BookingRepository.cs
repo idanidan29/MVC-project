@@ -1,3 +1,4 @@
+using System;
 using Microsoft.EntityFrameworkCore;
 using MVC_project.Models;
 
@@ -51,6 +52,38 @@ namespace MVC_project.Data
             return _context.Bookings
                 .Include(b => b.Trip)
                 .Count(b => b.UserId == userId && b.Trip != null && b.Trip.EndDate >= todayUtc.Date);
+        }
+
+        public Dictionary<int, int> GetCompletedBookingCounts(IEnumerable<int> tripIds)
+        {
+            var ids = tripIds?.Distinct().ToList();
+            if (ids == null || ids.Count == 0)
+                return new Dictionary<int, int>();
+
+            var completedStatuses = new[] { "Confirmed", "Booked" };
+
+            return _context.Bookings
+                .Where(b => ids.Contains(b.TripID)
+                    && completedStatuses.Contains((b.Status ?? string.Empty)))
+                .GroupBy(b => b.TripID)
+                .Select(g => new { TripId = g.Key, Count = g.Count() })
+                .ToDictionary(x => x.TripId, x => x.Count);
+        }
+
+        public Dictionary<int, int> GetCompletedDistinctUserCounts(IEnumerable<int> tripIds)
+        {
+            var ids = tripIds?.Distinct().ToList();
+            if (ids == null || ids.Count == 0)
+                return new Dictionary<int, int>();
+
+            var completedStatuses = new[] { "Confirmed", "Booked" };
+
+            return _context.Bookings
+                .Where(b => ids.Contains(b.TripID)
+                    && completedStatuses.Contains((b.Status ?? string.Empty)))
+                .GroupBy(b => b.TripID)
+                .Select(g => new { TripId = g.Key, Count = g.Select(b => b.UserId).Distinct().Count() })
+                .ToDictionary(x => x.TripId, x => x.Count);
         }
 
         public Booking? GetByIdForUser(int bookingId, int userId)

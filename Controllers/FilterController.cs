@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using MVC_project.Data;
 using MVC_project.ViewModels;
+using System.Collections.Generic;
 
 namespace MVC_project.Controllers
 {
@@ -10,12 +11,14 @@ namespace MVC_project.Controllers
         private readonly TripRepository _tripRepo;
         private readonly TripImageRepository _imageRepo;
         private readonly TripDateRepository _tripDateRepo;
+        private readonly BookingRepository _bookingRepo;
 
-        public FilterController(TripRepository tripRepo, TripImageRepository imageRepo, TripDateRepository tripDateRepo)
+        public FilterController(TripRepository tripRepo, TripImageRepository imageRepo, TripDateRepository tripDateRepo, BookingRepository bookingRepo)
         {
             _tripRepo = tripRepo;
             _imageRepo = imageRepo;
             _tripDateRepo = tripDateRepo;
+            _bookingRepo = bookingRepo;
         }
 
         /// <summary>
@@ -28,7 +31,7 @@ namespace MVC_project.Controllers
         /// <param name="maxPrice">Maximum price filter (considers discount prices)</param>
         /// <param name="travelDate">Filter trips starting on or after this date</param>
         /// <param name="discountOnly">Show only discounted trips</param>
-        /// <param name="sortBy">Sort option: price-asc, price-desc, date, popular</param>
+        /// <param name="sortBy">Sort option: price-asc, price-desc, date, popular (by completed bookings)</param>
         [HttpGet("Search")]
         public IActionResult Search(
             string destination = "",
@@ -99,11 +102,16 @@ namespace MVC_project.Controllers
                     trips = trips.Where(t => t.DiscountPrice.HasValue && t.DiscountPrice < t.Price);
                 }
 
+                var filteredTrips = trips.ToList();
+
+                // Compute popularity counts (distinct users with completed bookings) once per request
+                var popularityCounts = _bookingRepo.GetCompletedDistinctUserCounts(filteredTrips.Select(t => t.TripID));
+
                 // Apply sorting
-                trips = ApplySorting(trips, sortBy);
+                var sortedTrips = ApplySorting(filteredTrips, sortBy, popularityCounts);
 
                 // Map to view models with image check
-                var tripViewModels = trips.Select(trip => {
+                var tripViewModels = sortedTrips.Select(trip => {
                     var images = _imageRepo.GetByTripId(trip.TripID);
                     var dates = _tripDateRepo.GetByTripId(trip.TripID);
                     
@@ -214,8 +222,17 @@ namespace MVC_project.Controllers
         /// <summary>
         /// Apply sorting to the trips collection
         /// </summary>
-        private IEnumerable<MVC_project.Models.Trip> ApplySorting(IEnumerable<MVC_project.Models.Trip> trips, string sortBy)
+        private IEnumerable<MVC_project.Models.Trip> ApplySorting(
+            IEnumerable<MVC_project.Models.Trip> trips,
+            string sortBy,
+            IDictionary<int, int>? popularityCounts = null)
         {
+            int PopularityFor(MVC_project.Models.Trip trip)
+            {
+                if (popularityCounts == null) return 0;
+                return popularityCounts.TryGetValue(trip.TripID, out var count) ? count : 0;
+            }
+
             return sortBy switch
             {
                 "price-asc" => trips.OrderBy(t => 
@@ -230,7 +247,9 @@ namespace MVC_project.Controllers
                 
                 "date" => trips.OrderBy(t => t.StartDate),
                 
-                "popular" => trips.OrderBy(t => Guid.NewGuid()), // Placeholder for future popularity metric
+                "popular" => trips
+                    .OrderByDescending(PopularityFor)
+                    .ThenBy(t => t.TripID),
                 
                 _ => trips.OrderBy(t => t.TripID) // Default sorting by ID
             };
