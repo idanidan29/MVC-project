@@ -43,6 +43,7 @@ builder.Services.AddScoped<BookingRepository>();
 builder.Services.AddScoped<TripDateRepository>();
 builder.Services.AddScoped<WaitlistRepository>();
 builder.Services.AddScoped<TripRatingRepository>();
+builder.Services.AddScoped<FeedbackRepository>();
 builder.Services.AddScoped<PasswordService>();
 builder.Services.AddScoped<PaymentService>();
 builder.Services.AddScoped<EmailService>();

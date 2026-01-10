@@ -181,6 +181,229 @@
         50% { background-position: 100% 50%; }
         100% { background-position: 0% 50%; }
     }
+
+    /* Feedback Carousel Styles */
+    .feedback-carousel-container {
+        position: relative;
+        margin: 1.5rem 0;
+        padding: 1rem 60px;
+        overflow: hidden;
+    }
+    .feedback-carousel {
+        display: flex;
+        gap: 1.5rem;
+        overflow: visible;
+        padding: 0.5rem;
+        transition: transform 0.5s ease-in-out;
+    }
+    .feedback-card {
+        min-width: 350px;
+        max-width: 350px;
+        min-height: 280px;
+        background: linear-gradient(135deg, rgba(255,255,255,0.98), rgba(248,250,252,0.98));
+        border: 1px solid rgba(226,232,240,0.8);
+        border-radius: 1.25rem;
+        padding: 1.75rem;
+        box-shadow: 0 10px 30px rgba(99,102,241,0.12);
+        transition: all 0.3s ease;
+        flex-shrink: 0;
+        display: flex;
+        flex-direction: column;
+    }
+    .feedback-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 40px rgba(99,102,241,0.2);
+        border-color: rgba(99,102,241,0.4);
+    }
+    .feedback-header {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+    .feedback-avatar {
+        width: 56px;
+        height: 56px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #6366f1, #a78bfa);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 2rem;
+        flex-shrink: 0;
+    }
+    .feedback-user-info {
+        flex: 1;
+    }
+    .feedback-name {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #1e293b;
+        margin: 0;
+    }
+    .feedback-rating {
+        display: flex;
+        gap: 0.25rem;
+        margin-top: 0.25rem;
+    }
+    .feedback-rating .star-active {
+        color: #fbbf24;
+        font-size: 1rem;
+    }
+    .feedback-rating .star-inactive {
+        color: #cbd5e1;
+        font-size: 1rem;
+    }
+    .feedback-text {
+        color: #475569;
+        line-height: 1.6;
+        margin: 0 0 1rem 0;
+        font-size: 0.95rem;
+        flex: 1;
+        overflow-y: auto;
+        max-height: 120px;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+    }
+    .feedback-text::-webkit-scrollbar {
+        width: 4px;
+    }
+    .feedback-text::-webkit-scrollbar-track {
+        background: rgba(226,232,240,0.3);
+        border-radius: 2px;
+    }
+    .feedback-text::-webkit-scrollbar-thumb {
+        background: rgba(99,102,241,0.4);
+        border-radius: 2px;
+    }
+    .feedback-text::-webkit-scrollbar-thumb:hover {
+        background: rgba(99,102,241,0.6);
+    }
+    .feedback-date {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: #94a3b8;
+        font-size: 0.85rem;
+    }
+
+    /* Carousel Navigation */
+    .carousel-nav {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        border: none;
+        background: linear-gradient(135deg, #6366f1, #4f46e5);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        z-index: 10;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(99,102,241,0.4);
+    }
+    .carousel-nav:hover {
+        transform: translateY(-50%) scale(1.1);
+        box-shadow: 0 6px 20px rgba(99,102,241,0.6);
+    }
+    .carousel-nav-prev {
+        left: 8px;
+    }
+    .carousel-nav-next {
+        right: 8px;
+    }
+
+    /* Feedback Form Styles */
+    .feedback-form-container,
+    .feedback-edit-container {
+        background: rgba(255,255,255,0.95);
+        border: 1px solid rgba(99,102,241,0.2);
+        border-radius: 1.25rem;
+        padding: 2rem;
+        box-shadow: 0 8px 25px rgba(99,102,241,0.08);
+    }
+    .feedback-display-text {
+        background: rgba(241,245,249,0.8);
+        border: 1px solid #e2e8f0;
+        border-radius: 0.75rem;
+        padding: 1rem;
+        color: #475569;
+        line-height: 1.6;
+    }
+    .rating-input {
+        display: flex;
+        gap: 0.5rem;
+        font-size: 2rem;
+    }
+    .rating-star {
+        color: #cbd5e1;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+    .rating-star:hover,
+    .rating-star.active {
+        color: #fbbf24;
+        transform: scale(1.2);
+    }
+    .feedback-cta {
+        margin-top: 2rem;
+    }
+    .feedback-success-message {
+        background: linear-gradient(135deg, rgba(16,185,129,0.12), rgba(5,150,105,0.08));
+        border: 2px solid rgba(16,185,129,0.3);
+        border-radius: 1.25rem;
+        padding: 2.5rem;
+        text-align: center;
+        box-shadow: 0 10px 30px rgba(16,185,129,0.15);
+    }
+    .feedback-success-message .success-icon {
+        width: 80px;
+        height: 80px;
+        margin: 0 auto 1.5rem;
+        background: linear-gradient(135deg, #10b981, #059669);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 3rem;
+        color: white;
+        animation: successPop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    .feedback-success-message h5 {
+        color: #047857;
+        font-weight: 700;
+        font-size: 1.5rem;
+        margin-bottom: 0.75rem;
+    }
+    .feedback-success-message p {
+        color: #065f46;
+        margin: 0;
+        font-size: 1rem;
+    }
+    @@keyframes successPop {
+        0% { transform: scale(0); opacity: 0; }
+        50% { transform: scale(1.1); }
+        100% { transform: scale(1); opacity: 1; }
+    }
+
+    @@media (max-width: 768px) {
+        .info-hero { padding: 1.75rem; }
+        .feedback-card { 
+            min-width: 280px;
+            max-width: 280px;
+        }
+        .feedback-carousel-container {
+            padding: 1rem 50px;
+        }
+        .carousel-nav { width: 40px; height: 40px; }
+        .carousel-nav-prev { left: 5px; }
+        .carousel-nav-next { right: 5px; }
+    }
 </style>
 
 <div class="info-page">
@@ -225,21 +448,503 @@
         <div class="d-flex justify-content-between align-items-center mb-3">
             <div>
                 <div class="review-chip mb-2"><i class="bi bi-heart-fill"></i> Traveler stories</div>
-                <h4 class="mb-1">What guests are saying</h4>
-                <p class="text-muted mb-0">A dedicated review space will appear here soon. Until then, peek at trips and see why travelers return.</p>
+                <h4 class="mb-1">What our community is saying</h4>
+                <p class="text-muted mb-0">Hear from travelers who've experienced amazing journeys with us.</p>
             </div>
             <a class="btn btn-outline-primary d-none d-md-inline-flex align-items-center" href="/Dashboard">
                 Browse trips
                 <i class="bi bi-arrow-right ms-2"></i>
             </a>
         </div>
-        <div class="review-placeholder mb-3">
-            <div class="d-flex flex-column gap-2">
-                <span><strong>Coming soon:</strong> verified traveler reviews, ratings, and photos.</span>
-                <span>Planning ahead? Save your favorite dates after you sign up—no purchase required.</span>
+
+        @if (ViewBag.FeaturedFeedback != null && ((IEnumerable<MVC_project.Models.UserFeedback>)ViewBag.FeaturedFeedback).Any())
+        {
+            <!-- Feedback Carousel -->
+            <div class="feedback-carousel-container">
+                <button class="carousel-nav carousel-nav-prev" onclick="moveCarousel(-1)">
+                    <i class="bi bi-chevron-left"></i>
+                </button>
+                <div class="feedback-carousel">
+                    @foreach (var feedback in (IEnumerable<MVC_project.Models.UserFeedback>)ViewBag.FeaturedFeedback)
+                    {
+                        <div class="feedback-card">
+                            <div class="feedback-header">
+                                <div class="feedback-avatar">
+                                    <i class="bi bi-person-circle"></i>
+                                </div>
+                                <div class="feedback-user-info">
+                                    <h5 class="feedback-name">@feedback.User?.first_name @feedback.User?.last_name</h5>
+                                    <div class="feedback-rating">
+                                        @for (int i = 1; i <= 5; i++)
+                                        {
+                                            <i class="bi bi-star-fill @(i <= feedback.Rating ? "star-active" : "star-inactive")"></i>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                            <p class="feedback-text">@feedback.FeedbackText</p>
+                            <div class="feedback-date">
+                                <i class="bi bi-clock"></i> @feedback.CreatedAt.ToString("MMM dd, yyyy")
+                            </div>
+                        </div>
+                    }
+                </div>
+                <button class="carousel-nav carousel-nav-next" onclick="moveCarousel(1)">
+                    <i class="bi bi-chevron-right"></i>
+                </button>
             </div>
-        </div>
+        }
+        else
+        {
+            <div class="review-placeholder mb-3">
+                <div class="d-flex flex-column gap-2">
+                    <span><strong>Coming soon:</strong> verified traveler reviews will appear here.</span>
+                    <span>Be one of the first to share your experience after signing in!</span>
+                </div>
+            </div>
+        }
+
+        <!-- Feedback Submission Form (Authenticated users only) -->
+        @if (ViewBag.IsAuthenticated)
+        {
+            if (!ViewBag.HasSubmittedFeedback)
+            {
+                <div class="feedback-form-container mt-4">
+                    <h5 class="mb-3">
+                        <i class="bi bi-pencil-square me-2"></i>Share Your Experience
+                    </h5>
+                    <form id="feedbackForm">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Your Rating</label>
+                            <div class="rating-input" id="ratingInput">
+                                <i class="bi bi-star rating-star" data-rating="1"></i>
+                                <i class="bi bi-star rating-star" data-rating="2"></i>
+                                <i class="bi bi-star rating-star" data-rating="3"></i>
+                                <i class="bi bi-star rating-star" data-rating="4"></i>
+                                <i class="bi bi-star rating-star" data-rating="5"></i>
+                            </div>
+                            <input type="hidden" id="selectedRating" value="0">
+                        </div>
+                        <div class="mb-3">
+                            <label for="feedbackText" class="form-label fw-bold">Your Feedback</label>
+                            <textarea class="form-control" id="feedbackText" rows="4" maxlength="1000" placeholder="Tell us about your experience with TravelMate..."></textarea>
+                            <div class="form-text text-end" id="charCount">0 / 1000 characters</div>
+                        </div>
+                        <button type="submit" class="btn btn-gradient">
+                            <i class="bi bi-send me-2"></i>Submit Feedback
+                        </button>
+                    </form>
+                </div>
+            }
+            else if (ViewBag.UserFeedback != null)
+            {
+                var userFeedback = (MVC_project.Models.UserFeedback)ViewBag.UserFeedback;
+                <div class="feedback-edit-container mt-4">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="mb-0">
+                            <i class="bi bi-pencil-square me-2"></i>Your Feedback
+                        </h5>
+                        <button type="button" class="btn btn-sm btn-outline-primary" id="toggleEditMode">
+                            <i class="bi bi-pencil me-1"></i>Edit
+                        </button>
+                    </div>
+                    
+                    <!-- Display Mode -->
+                    <div id="feedbackDisplay">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Your Rating</label>
+                            <div class="feedback-rating">
+                                @for (int i = 1; i <= 5; i++)
+                                {
+                                    <i class="bi bi-star-fill @(i <= userFeedback.Rating ? "star-active" : "star-inactive")"></i>
+                                }
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Your Feedback</label>
+                            <div class="feedback-display-text">@userFeedback.FeedbackText</div>
+                        </div>
+                        <div class="text-muted small">
+                            <i class="bi bi-clock"></i> Submitted on @userFeedback.CreatedAt.ToString("MMM dd, yyyy")
+                        </div>
+                    </div>
+
+                    <!-- Edit Mode -->
+                    <form id="feedbackEditForm" style="display: none;">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Your Rating</label>
+                            <div class="rating-input" id="editRatingInput">
+                                @for (int i = 1; i <= 5; i++)
+                                {
+                                    <i class="bi bi-star @(i <= userFeedback.Rating ? "bi-star-fill active" : "") rating-star" data-rating="@i"></i>
+                                }
+                            </div>
+                            <input type="hidden" id="editSelectedRating" value="@userFeedback.Rating">
+                        </div>
+                        <div class="mb-3">
+                            <label for="editFeedbackText" class="form-label fw-bold">Your Feedback</label>
+                            <textarea class="form-control" id="editFeedbackText" rows="4" maxlength="1000">@userFeedback.FeedbackText</textarea>
+                            <div class="form-text text-end" id="editCharCount">@userFeedback.FeedbackText.Length / 1000 characters</div>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-gradient">
+                                <i class="bi bi-save me-2"></i>Save Changes
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary" id="cancelEdit">
+                                <i class="bi bi-x me-2"></i>Cancel
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            }
+        }
+        else
+        {
+            <div class="feedback-cta mt-4">
+                <div class="text-center p-4" style="background: rgba(99,102,241,0.08); border-radius: 1rem; border: 1px dashed rgba(99,102,241,0.3);">
+                    <i class="bi bi-chat-heart" style="font-size: 2.5rem; color: #6366f1;"></i>
+                    <h5 class="mt-3 mb-2">Have something to share?</h5>
+                    <p class="text-muted mb-3">Sign in to leave your feedback and help other travelers!</p>
+                    <a href="/Login" class="btn btn-gradient">
+                        <i class="bi bi-box-arrow-in-right me-2"></i>Sign In to Leave Feedback
+                    </a>
+                </div>
+            </div>
+        }
     </section>
 </div>
 </div>
 
+<script>
+    // Feedback Carousel Logic
+    let currentIndex = 0;
+    let autoPlayInterval = null;
+    const carousel = document.querySelector('.feedback-carousel');
+    const carouselContainer = document.querySelector('.feedback-carousel-container');
+    const originalCards = document.querySelectorAll('.feedback-card');
+
+    if (carousel && originalCards.length > 0) {
+        // Clone cards for infinite loop effect
+        const cardsToClone = originalCards.length < 3 ? 3 : 1; // Clone more if we have few cards
+        for (let i = 0; i < cardsToClone; i++) {
+            originalCards.forEach(card => {
+                const clone = card.cloneNode(true);
+                carousel.appendChild(clone);
+            });
+        }
+        
+        const allCards = document.querySelectorAll('.feedback-card');
+        const totalOriginal = originalCards.length;
+
+        function updateCarousel(animate = true) {
+            const cardWidth = allCards[0].offsetWidth;
+            const gap = 24;
+            const offset = currentIndex * (cardWidth + gap);
+            
+            if (animate) {
+                carousel.style.transition = 'transform 0.5s ease-in-out';
+            } else {
+                carousel.style.transition = 'none';
+            }
+            
+            carousel.style.transform = `translateX(-${offset}px)`;
+        }
+
+        function moveCarousel(direction) {
+            currentIndex += direction;
+            updateCarousel(true);
+            
+            // Seamlessly loop back when reaching cloned cards
+            if (currentIndex >= totalOriginal) {
+                setTimeout(() => {
+                    currentIndex = 0;
+                    updateCarousel(false);
+                }, 500);
+            } else if (currentIndex < 0) {
+                currentIndex = totalOriginal - 1;
+                updateCarousel(false);
+                setTimeout(() => {
+                    currentIndex = totalOriginal - 1;
+                    updateCarousel(true);
+                }, 20);
+            }
+        }
+
+        function startAutoPlay() {
+            autoPlayInterval = setInterval(() => {
+                moveCarousel(1);
+            }, 5000);
+        }
+
+        function stopAutoPlay() {
+            if (autoPlayInterval) {
+                clearInterval(autoPlayInterval);
+                autoPlayInterval = null;
+            }
+        }
+
+        carouselContainer?.addEventListener('mouseenter', stopAutoPlay);
+        carouselContainer?.addEventListener('mouseleave', startAutoPlay);
+
+        startAutoPlay();
+        window.moveCarousel = moveCarousel;
+    }
+
+    // Rating Input Logic
+    const ratingStars = document.querySelectorAll('.rating-star');
+    const selectedRatingInput = document.getElementById('selectedRating');
+
+    ratingStars.forEach(star => {
+        star.addEventListener('click', function() {
+            const rating = parseInt(this.dataset.rating);
+            selectedRatingInput.value = rating;
+            
+            ratingStars.forEach((s, index) => {
+                if (index < rating) {
+                    s.classList.add('active');
+                    s.classList.remove('bi-star');
+                    s.classList.add('bi-star-fill');
+                } else {
+                    s.classList.remove('active');
+                    s.classList.remove('bi-star-fill');
+                    s.classList.add('bi-star');
+                }
+            });
+        });
+
+        star.addEventListener('mouseenter', function() {
+            const rating = parseInt(this.dataset.rating);
+            ratingStars.forEach((s, index) => {
+                if (index < rating) {
+                    s.classList.add('bi-star-fill');
+                    s.classList.remove('bi-star');
+                } else {
+                    s.classList.add('bi-star');
+                    s.classList.remove('bi-star-fill');
+                }
+            });
+        });
+    });
+
+    const ratingInput = document.getElementById('ratingInput');
+    ratingInput?.addEventListener('mouseleave', function() {
+        const currentRating = parseInt(selectedRatingInput.value);
+        ratingStars.forEach((s, index) => {
+            if (index < currentRating) {
+                s.classList.add('active', 'bi-star-fill');
+                s.classList.remove('bi-star');
+            } else {
+                s.classList.remove('active', 'bi-star-fill');
+                s.classList.add('bi-star');
+            }
+        });
+    });
+
+    // Character Counter
+    const feedbackTextarea = document.getElementById('feedbackText');
+    const charCount = document.getElementById('charCount');
+
+    feedbackTextarea?.addEventListener('input', function() {
+        const length = this.value.length;
+        charCount.textContent = `${length} / 1000 characters`;
+    });
+
+    // Edit Mode Toggle
+    const toggleEditBtn = document.getElementById('toggleEditMode');
+    const feedbackDisplay = document.getElementById('feedbackDisplay');
+    const feedbackEditForm = document.getElementById('feedbackEditForm');
+    const cancelEditBtn = document.getElementById('cancelEdit');
+
+    toggleEditBtn?.addEventListener('click', function() {
+        feedbackDisplay.style.display = 'none';
+        feedbackEditForm.style.display = 'block';
+        toggleEditBtn.style.display = 'none';
+    });
+
+    cancelEditBtn?.addEventListener('click', function() {
+        feedbackDisplay.style.display = 'block';
+        feedbackEditForm.style.display = 'none';
+        toggleEditBtn.style.display = 'inline-flex';
+    });
+
+    // Edit Rating Input Logic
+    const editRatingStars = document.querySelectorAll('#editRatingInput .rating-star');
+    const editSelectedRatingInput = document.getElementById('editSelectedRating');
+
+    editRatingStars.forEach(star => {
+        star.addEventListener('click', function() {
+            const rating = parseInt(this.dataset.rating);
+            editSelectedRatingInput.value = rating;
+            
+            editRatingStars.forEach((s, index) => {
+                if (index < rating) {
+                    s.classList.add('active');
+                    s.classList.remove('bi-star');
+                    s.classList.add('bi-star-fill');
+                } else {
+                    s.classList.remove('active');
+                    s.classList.remove('bi-star-fill');
+                    s.classList.add('bi-star');
+                }
+            });
+        });
+
+        star.addEventListener('mouseenter', function() {
+            const rating = parseInt(this.dataset.rating);
+            editRatingStars.forEach((s, index) => {
+                if (index < rating) {
+                    s.classList.add('bi-star-fill');
+                    s.classList.remove('bi-star');
+                } else {
+                    s.classList.add('bi-star');
+                    s.classList.remove('bi-star-fill');
+                }
+            });
+        });
+    });
+
+    const editRatingInput = document.getElementById('editRatingInput');
+    editRatingInput?.addEventListener('mouseleave', function() {
+        const currentRating = parseInt(editSelectedRatingInput.value);
+        editRatingStars.forEach((s, index) => {
+            if (index < currentRating) {
+                s.classList.add('active', 'bi-star-fill');
+                s.classList.remove('bi-star');
+            } else {
+                s.classList.remove('active', 'bi-star-fill');
+                s.classList.add('bi-star');
+            }
+        });
+    });
+
+    // Edit Character Counter
+    const editFeedbackTextarea = document.getElementById('editFeedbackText');
+    const editCharCount = document.getElementById('editCharCount');
+
+    editFeedbackTextarea?.addEventListener('input', function() {
+        const length = this.value.length;
+        editCharCount.textContent = `${length} / 1000 characters`;
+    });
+
+    // Edit Form Submission
+    feedbackEditForm?.addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        const rating = parseInt(editSelectedRatingInput.value);
+        const feedbackText = editFeedbackTextarea.value.trim();
+
+        if (rating === 0) {
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'alert alert-danger';
+            errorDiv.innerHTML = '<i class="bi bi-exclamation-circle me-2"></i>Please select a rating';
+            feedbackEditForm.insertAdjacentElement('beforebegin', errorDiv);
+            setTimeout(() => errorDiv.remove(), 5000);
+            return;
+        }
+
+        if (!feedbackText) {
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'alert alert-danger';
+            errorDiv.innerHTML = '<i class="bi bi-exclamation-circle me-2"></i>Please enter your feedback';
+            feedbackEditForm.insertAdjacentElement('beforebegin', errorDiv);
+            setTimeout(() => errorDiv.remove(), 5000);
+            return;
+        }
+
+        if (feedbackText.length > 1000) {
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'alert alert-danger';
+            errorDiv.innerHTML = '<i class="bi bi-exclamation-circle me-2"></i>Feedback must be 1000 characters or less';
+            feedbackEditForm.insertAdjacentElement('beforebegin', errorDiv);
+            setTimeout(() => errorDiv.remove(), 5000);
+            return;
+        }
+
+        try {
+            const response = await fetch('/Info/UpdateFeedback', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    rating: rating,
+                    feedbackText: feedbackText
+                })
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                location.reload();
+            } else {
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'alert alert-danger';
+                errorDiv.innerHTML = `<i class="bi bi-exclamation-circle me-2"></i>${result.message}`;
+                feedbackEditForm.insertAdjacentElement('beforebegin', errorDiv);
+                setTimeout(() => errorDiv.remove(), 5000);
+            }
+        } catch (error) {
+            console.error('Error updating feedback:', error);
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'alert alert-danger';
+            errorDiv.innerHTML = '<i class="bi bi-exclamation-circle me-2"></i>An error occurred while updating your feedback. Please try again.';
+            feedbackEditForm.insertAdjacentElement('beforebegin', errorDiv);
+            setTimeout(() => errorDiv.remove(), 5000);
+        }
+    });
+
+    // Form Submission
+    const feedbackForm = document.getElementById('feedbackForm');
+    
+    feedbackForm?.addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        const rating = parseInt(selectedRatingInput.value);
+        const feedbackText = feedbackTextarea.value.trim();
+
+        if (rating === 0) {
+            alert('Please select a rating');
+            return;
+        }
+
+        if (!feedbackText) {
+            alert('Please enter your feedback');
+            return;
+        }
+
+        if (feedbackText.length > 1000) {
+            alert('Feedback must be 1000 characters or less');
+            return;
+        }
+
+        try {
+            const response = await fetch('/Info/SubmitFeedback', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    rating: rating,
+                    feedbackText: feedbackText
+                })
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                // Show beautiful success message by reloading the page
+                location.reload();
+            } else {
+                // Create and show error message
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'alert alert-danger';
+                errorDiv.innerHTML = `<i class="bi bi-exclamation-circle me-2"></i>${result.message}`;
+                feedbackForm.insertAdjacentElement('beforebegin', errorDiv);
+                setTimeout(() => errorDiv.remove(), 5000);
+            }
+        } catch (error) {
+            console.error('Error submitting feedback:', error);
+            alert('An error occurred while submitting your feedback. Please try again.');
+        }
+    });
+</script>

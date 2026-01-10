@@ -17,6 +17,7 @@ namespace MVC_project.Data
         public DbSet<TripDate> TripDates { get; set; }
         public DbSet<Waitlist> Waitlist { get; set; }
         public DbSet<TripRating> TripRatings { get; set; }
+        public DbSet<UserFeedback> UserFeedback { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
