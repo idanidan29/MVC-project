@@ -268,25 +268,19 @@ namespace MVC_project.Controllers
                 // Validate quantity
                 var qty = request.Quantity <= 0 ? 1 : request.Quantity;
                 
-                // Check if no rooms available - add to waitlist
+                // Check if no rooms available - prompt to join waitlist instead of auto-adding
                 if (trip.AvailableRooms == 0)
                 {
+                    var currentCount = _waitlistRepo.GetWaitlistCountForTrip(request.TripId);
+
                     // Check if user is already on waitlist
                     if (_waitlistRepo.IsUserOnWaitlist(userId, request.TripId))
                     {
-                        return Json(new { success = false, onWaitlist = true, message = $"You are already on the waitlist for {trip.Destination}. We'll notify you when a room becomes available!" });
+                        return Json(new { success = false, onWaitlist = true, waitlistCount = currentCount, message = $"You are already on the waitlist for {trip.Destination}. We'll notify you when a room becomes available!" });
                     }
 
-                    // Add to waitlist
-                    var addedToWaitlist = _waitlistRepo.AddToWaitlist(userId, request.TripId);
-                    if (addedToWaitlist)
-                    {
-                        return Json(new { success = true, onWaitlist = true, message = $"No rooms available for {trip.Destination}. You've been added to the waitlist and will be notified via email when a room opens up!" });
-                    }
-                    else
-                    {
-                        return Json(new { success = false, message = "Failed to add to waitlist." });
-                    }
+                    // Ask client to show a modal prompt to join waitlist
+                    return Json(new { success = false, showWaitlistPrompt = true, waitlistCount = currentCount, tripId = request.TripId, destination = trip.Destination });
                 }
                 
                 // Check if enough rooms available for the NEW quantity being added
@@ -356,6 +350,47 @@ namespace MVC_project.Controllers
                 totalPrice = booking.TotalPrice,
                 description = trip?.Description ?? "No description available"
             });
+        }
+
+        // POST: /User/AddToWaitlist
+        [HttpPost]
+        [Authorize]
+        public IActionResult AddToWaitlist([FromBody] WaitlistRequest request)
+        {
+            try
+            {
+                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
+                {
+                    return Json(new { success = false, message = "User not authenticated" });
+                }
+
+                var trip = _tripRepo.GetById(request.TripId);
+                if (trip == null)
+                {
+                    return Json(new { success = false, message = "Trip not found" });
+                }
+
+                if (_waitlistRepo.IsUserOnWaitlist(userId, request.TripId))
+                {
+                    var countExisting = _waitlistRepo.GetWaitlistCountForTrip(request.TripId);
+                    return Json(new { success = false, onWaitlist = true, waitlistCount = countExisting, message = $"You are already on the waitlist for {trip.Destination}." });
+                }
+
+                var added = _waitlistRepo.AddToWaitlist(userId, request.TripId);
+                if (added)
+                {
+                    var countAfter = _waitlistRepo.GetWaitlistCountForTrip(request.TripId);
+                    return Json(new { success = true, onWaitlist = true, waitlistCount = countAfter, message = $"You're on the waitlist for {trip.Destination}. We'll notify you when a room opens up!" });
+                }
+
+                return Json(new { success = false, message = "Failed to add to waitlist." });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"AddToWaitlist Error: {ex.Message}");
+                return Json(new { success = false, message = "An error occurred while adding to waitlist" });
+            }
         }
 
         [Authorize]
@@ -638,6 +673,12 @@ namespace MVC_project.Controllers
     public class CancelBookingRequest
     {
         public int BookingId { get; set; }
+        public int TripId { get; set; }
+    }
+
+    // Request model for AddToWaitlist
+    public class WaitlistRequest
+    {
         public int TripId { get; set; }
     }
 }

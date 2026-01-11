@@ -124,5 +124,15 @@ namespace MVC_project.Data
             var today = utcNow.Date;
             return today <= booking.Trip.EffectiveCancellationEndDate.Date;
         }
+
+        // Delete all bookings associated with a specific trip
+        public int DeleteByTripId(int tripId)
+        {
+            var bookings = _context.Bookings.Where(b => b.TripID == tripId).ToList();
+            if (bookings.Count == 0) return 0;
+            _context.Bookings.RemoveRange(bookings);
+            _context.SaveChanges();
+            return bookings.Count;
+        }
     }
 }

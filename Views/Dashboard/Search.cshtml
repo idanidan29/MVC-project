@@ -2271,7 +2271,9 @@
                     }
                 }
             } else {
-                if (data.onWaitlist) {
+                if (data.showWaitlistPrompt) {
+                    showWaitlistModal(tripId, destination, data.waitlistCount);
+                } else if (data.onWaitlist) {
                     showNotification(data.message, 'info');
                 } else {
                     showNotification(data.message, 'error');
@@ -2309,6 +2311,66 @@
             notification.style.animation = 'slideOutRight 0.3s ease';
             setTimeout(() => notification.remove(), 300);
         }, 3000);
+    }
+
+    // Waitlist modal
+    let waitlistModal;
+    function showWaitlistModal(tripId, destination, waitlistCount) {
+        if (!waitlistModal) {
+            waitlistModal = document.createElement('div');
+            waitlistModal.className = 'auth-modal-backdrop';
+            waitlistModal.innerHTML = `
+                <div class="auth-modal" style="max-width:520px;">
+                    <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:.5rem;">
+                        <div style="width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,#f59e0b,#f97316);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;">!</div>
+                        <h4 style="margin:0;font-size:1.25rem;">Trip is fully booked</h4>
+                    </div>
+                    <p style="margin:.25rem 0 .75rem 0;color:#475569;">No rooms are available right now for <span id="wl-destination" style="font-weight:600;"></span>.</p>
+                    <div style="background:#0ea5e910;border:1px solid #0ea5e940;border-radius:.75rem;padding:.75rem 1rem;margin-bottom:1rem;">
+                        <div style="font-weight:700;color:#0ea5e9;margin-bottom:.25rem;">Join the waitlist?</div>
+                        <div style="color:#334155;">You'll be notified by email when a room opens. <span id="wl-count" style="font-weight:600;"></span> people are currently waiting.</div>
+                    </div>
+                    <div class="actions" style="display:flex;gap:.5rem;">
+                        <button id="wl-confirm" class="btn-primary" style="flex:1">Add me to the waitlist</button>
+                        <button class="btn-outline" data-close-modal style="flex:1">Not now</button>
+                    </div>
+                </div>
+            `;
+            waitlistModal.addEventListener('click', (e) => {
+                if (e.target === waitlistModal || e.target.dataset.closeModal !== undefined) {
+                    closeWaitlistModal();
+                }
+            });
+            document.body.appendChild(waitlistModal);
+        }
+        waitlistModal.querySelector('#wl-destination').textContent = destination;
+        waitlistModal.querySelector('#wl-count').textContent = waitlistCount;
+        const confirmBtn = waitlistModal.querySelector('#wl-confirm');
+        confirmBtn.onclick = async () => {
+            try {
+                const resp = await fetch('/User/AddToWaitlist', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ tripId })
+                });
+                const res = await resp.json();
+                if (res.success) {
+                    showNotification(res.message || 'Added to waitlist', 'info');
+                } else {
+                    showNotification(res.message || 'Could not add to waitlist', 'error');
+                }
+            } catch (e) {
+                console.error('AddToWaitlist error:', e);
+                showNotification('Could not add to waitlist', 'error');
+            } finally {
+                closeWaitlistModal();
+            }
+        };
+        requestAnimationFrame(() => waitlistModal.classList.add('active'));
+    }
+
+    function closeWaitlistModal() {
+        if (waitlistModal) waitlistModal.classList.remove('active');
     }
 
     // Add animation keyframes

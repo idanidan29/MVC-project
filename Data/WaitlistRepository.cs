@@ -43,6 +43,12 @@ namespace MVC_project.Data
             return true;
         }
 
+        // Get number of users currently waiting for a specific trip
+        public int GetWaitlistCountForTrip(int tripId)
+        {
+            return _context.Waitlist.Count(w => w.TripId == tripId && w.Status == "Waiting");
+        }
+
         // Get all users who need to be notified (Status = Notified but EmailSentAt is null)
         public List<Waitlist> GetPendingNotifications()
         {
@@ -97,6 +103,16 @@ namespace MVC_project.Data
                 nextUser.Status = "Notified";
                 _context.SaveChanges();
             }
+        }
+
+        // Delete all waitlist entries for a trip
+        public int DeleteByTripId(int tripId)
+        {
+            var items = _context.Waitlist.Where(w => w.TripId == tripId).ToList();
+            if (items.Count == 0) return 0;
+            _context.Waitlist.RemoveRange(items);
+            _context.SaveChanges();
+            return items.Count;
         }
 
         public List<Waitlist> GetActiveByUserId(int userId)

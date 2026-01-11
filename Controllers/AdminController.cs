@@ -527,6 +527,15 @@ namespace MVC_project.Controllers
             // Delete associated images first
             _imageRepo.DeleteByTripId(tripId);
 
+            // Delete associated dates
+            _tripDateRepo.DeleteByTripId(tripId);
+
+            // Delete associated waitlist entries
+            _waitlistRepo.DeleteByTripId(tripId);
+
+            // Delete associated bookings
+            _bookingRepo.DeleteByTripId(tripId);
+
             // Delete the trip
             _tripRepo.Delete(tripId);
 
