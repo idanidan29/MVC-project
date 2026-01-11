@@ -1431,6 +1431,7 @@
                             data-duration="@((trip.ClosestEndDate - trip.ClosestStartDate).Days)"
                             data-rooms="@trip.ClosestAvailableRooms"
                             data-package="@trip.PackageType"
+                            data-cancel-until='@trip.EffectiveCancellationEndDate.ToString("MMM dd, yyyy")'
                             data-price='@(trip.DiscountPrice.HasValue && trip.DiscountPrice < trip.Price ? trip.DiscountPrice.Value.ToString("N2") : trip.Price.ToString("N2"))'
                             data-image-count="@trip.ImageCount"
                             onclick="openTripModal(this, @trip.TripID)">
@@ -1502,6 +1503,9 @@
         const mainEndDate = new Date(data.endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
         document.getElementById('modal-dates').textContent = `${mainStartDate} - ${mainEndDate}`;
         document.getElementById('modal-duration').textContent = `${data.duration} days`;
+        const cancelUntil = data.cancelUntil || '';
+        const cancelEl = document.getElementById('modal-cancel-until');
+        if (cancelEl) cancelEl.textContent = cancelUntil || '7 days before start';
         document.getElementById('modal-rooms').textContent = `${data.rooms} rooms`;
         document.getElementById('modal-package').textContent = data.package;
         document.getElementById('modal-price').textContent = `$${data.price}`;
@@ -1581,6 +1585,10 @@
                     <div class="detail-item">
                         <strong><i class="bi bi-calendar-event"></i> Travel Dates</strong>
                         <span id="modal-dates"></span>
+                    </div>
+                    <div class="detail-item" style="background: linear-gradient(135deg, #ecfdf5 0%, #f0fdf4 100%); border-color:#d1fae5;">
+                        <strong><i class="bi bi-shield-check"></i> Free Cancellation Until</strong>
+                        <span id="modal-cancel-until"></span>
                     </div>
                     <div class="detail-item">
                         <strong><i class="bi bi-clock-history"></i> Duration</strong>

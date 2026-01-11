@@ -130,6 +130,8 @@ namespace MVC_project.Controllers
                         HasImage = images.Any(),
                         ImageCount = images.Count(),
                         AvailableRooms = trip.AvailableRooms,
+                        CancellationEndDate = trip.CancellationEndDate,
+                        EffectiveCancellationEndDate = trip.EffectiveCancellationEndDate,
                         DateVariations = dates.Select(d => new TripDateVariation
                         {
                             TripDateID = d.TripDateID,

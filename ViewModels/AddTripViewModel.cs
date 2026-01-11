@@ -60,6 +60,10 @@ namespace MVC_project.ViewModels
 
         // Multiple date variations
         public List<TripDateItem>? AdditionalDates { get; set; }
+
+        [DataType(DataType.Date)]
+        [Display(Name = "Cancellation Deadline (Optional)")]
+        public DateTime? CancellationEndDate { get; set; }
     }
 
     public class TripDateItem

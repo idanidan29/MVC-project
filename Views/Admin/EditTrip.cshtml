@@ -554,6 +554,16 @@
                 </div>
             </div>
 
+            <!-- Cancellation Deadline (Optional) -->
+            <div class="form-group" style="background: linear-gradient(135deg, rgba(245,158,11,0.08) 0%, rgba(251,146,60,0.08) 100%); padding: 1rem; border-radius: 1rem; border: 1px solid rgba(245,158,11,0.25);">
+                <label asp-for="CancellationEndDate" class="form-label">
+                    <i class="bi bi-shield-check"></i> Cancellation Deadline (Optional)
+                </label>
+                <input asp-for="CancellationEndDate" type="date" class="form-control" />
+                <div class="small text-muted mt-1">If omitted, free cancellation is allowed until 7 days before the trip start date.</div>
+                <span asp-validation-for="CancellationEndDate" class="text-danger"></span>
+            </div>
+
             <!-- Price & Rooms -->
             <div class="form-row">
                 <div class="form-group">

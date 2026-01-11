@@ -33,6 +33,13 @@ namespace MVC_project.ViewModels
         public bool HasDiscount => DiscountPrice.HasValue && DiscountEndDate.HasValue && DiscountEndDate > DateTime.Now;
         
         public int DurationDays => (EndDate - StartDate).Days;
+
+        // Cancellation policy
+        public DateTime? CancellationEndDate { get; set; }
+        public DateTime EffectiveCancellationEndDate { get; set; }
+
+        // Booking status
+        public string Status { get; set; } = "Confirmed";
         
         // Get date info by index
         public DateInfo GetDateByIndex(int selectedDateIndex)

@@ -83,5 +83,14 @@ namespace MVC_project.Models
 
         [Column("LastRatedAt")]
         public DateTime? LastRatedAt { get; set; }
+
+        // Optional explicit cancellation deadline; if null, a default applies
+        [Column("CancellationEndDate")]
+        public DateTime? CancellationEndDate { get; set; }
+
+        // Computed effective deadline (fallback to StartDate - 7 days in DB)
+        [Column("EffectiveCancellationEndDate")]
+        [DatabaseGenerated(DatabaseGeneratedOption.Computed)]
+        public DateTime EffectiveCancellationEndDate { get; set; }
     }
 }

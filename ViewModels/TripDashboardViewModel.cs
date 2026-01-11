@@ -22,6 +22,10 @@ namespace MVC_project.ViewModels
     public decimal RatingSum { get; set; } = 0;
     public int RatingCount { get; set; } = 0;
 
+        // Cancellation policy
+        public DateTime? CancellationEndDate { get; set; }
+        public DateTime EffectiveCancellationEndDate { get; set; }
+
         // Computed property to get the closest upcoming date
         public DateTime ClosestStartDate
         {

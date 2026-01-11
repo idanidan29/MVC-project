@@ -20,6 +20,12 @@ namespace MVC_project.Data
             return booking;
         }
 
+        public void Update(Booking booking)
+        {
+            _context.Bookings.Update(booking);
+            _context.SaveChanges();
+        }
+
         public IEnumerable<Booking> GetByUserId(int userId)
         {
             return _context.Bookings
@@ -51,7 +57,10 @@ namespace MVC_project.Data
         {
             return _context.Bookings
                 .Include(b => b.Trip)
-                .Count(b => b.UserId == userId && b.Trip != null && b.Trip.EndDate >= todayUtc.Date);
+                .Count(b => b.UserId == userId 
+                    && b.Trip != null 
+                    && b.Trip.EndDate >= todayUtc.Date
+                    && (b.Status ?? string.Empty) == "Confirmed");
         }
 
         public Dictionary<int, int> GetCompletedBookingCounts(IEnumerable<int> tripIds)
@@ -92,6 +101,28 @@ namespace MVC_project.Data
                 .Include(b => b.Trip)
                 .Include(b => b.User)
                 .FirstOrDefault(b => b.BookingID == bookingId && b.UserId == userId);
+        }
+
+        /// <summary>
+        /// Determines if a booking can be cancelled by the user at the given time.
+        /// Cancellation is allowed only if the booking is not already marked as "Cancelled"
+        /// and the current date is on or before the trip's effective cancellation deadline.
+        /// </summary>
+        public bool CanCancelBooking(int bookingId, int userId, DateTime utcNow)
+        {
+            var booking = _context.Bookings
+                .Include(b => b.Trip)
+                .FirstOrDefault(b => b.BookingID == bookingId && b.UserId == userId);
+
+            if (booking == null || booking.Trip == null)
+                return false;
+
+            var status = booking.Status ?? string.Empty;
+            if (status.Equals("Cancelled", StringComparison.OrdinalIgnoreCase))
+                return false;
+
+            var today = utcNow.Date;
+            return today <= booking.Trip.EffectiveCancellationEndDate.Date;
         }
     }
 }

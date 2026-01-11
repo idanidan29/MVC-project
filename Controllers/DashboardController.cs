@@ -59,6 +59,8 @@ namespace MVC_project.Controllers
                     IsVisible = trip.IsVisible,
                                         RatingSum = trip.RatingSum,
                                         RatingCount = trip.RatingCount,
+                    CancellationEndDate = trip.CancellationEndDate,
+                    EffectiveCancellationEndDate = trip.EffectiveCancellationEndDate,
                     DateVariations = dates.Select(d => new TripDateVariation
                     {
                         TripDateID = d.TripDateID,

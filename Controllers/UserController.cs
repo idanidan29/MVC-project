@@ -86,7 +86,7 @@ namespace MVC_project.Controllers
                 return RedirectToAction("Login", "Login");
             }
 
-            // Get user's confirmed bookings
+            // Get ALL user bookings (confirmed, cancelled, past)
             var bookings = _bookingRepo.GetByUserId(userId);
 
             // Group by TripID to show one card per trip while keeping per-booking date selections
@@ -95,6 +95,10 @@ namespace MVC_project.Controllers
                 var firstBooking = group.First();
                 var trip = firstBooking.Trip ?? _tripRepo.GetById(firstBooking.TripID);
                 var tripDates = _dateRepo.GetByTripId(firstBooking.TripID);
+
+                // Determine booking status: Cancelled, Past, or Confirmed
+                var bookingStatus = firstBooking.Status?.ToLower() == "cancelled" ? "Cancelled" :
+                                   (trip?.EndDate < DateTime.UtcNow ? "Past" : "Confirmed");
 
                 return new UserTripViewModel
                 {
@@ -109,6 +113,9 @@ namespace MVC_project.Controllers
                     PackageType = trip?.PackageType ?? string.Empty,
                     AvailableRooms = trip?.AvailableRooms ?? 0,
                     Description = trip?.Description ?? string.Empty,
+                    CancellationEndDate = trip?.CancellationEndDate,
+                    EffectiveCancellationEndDate = trip?.EffectiveCancellationEndDate ?? DateTime.MinValue,
+                    Status = bookingStatus,
                     Quantity = group.Sum(b => b.Quantity),
                     DateVariations = tripDates.Select(td => new DateVariationInfo
                     {
@@ -169,6 +176,8 @@ namespace MVC_project.Controllers
                     PackageType = firstTrip.Trip.PackageType,
                     AvailableRooms = firstTrip.Trip.AvailableRooms,
                     Description = firstTrip.Trip.Description,
+                    CancellationEndDate = firstTrip.Trip.CancellationEndDate,
+                    EffectiveCancellationEndDate = firstTrip.Trip.EffectiveCancellationEndDate,
                     Quantity = group.Sum(ut => ut.Quantity),  // Total quantity across all dates
                     DateVariations = tripDates.Select(td => new DateVariationInfo
                     {
@@ -410,6 +419,59 @@ namespace MVC_project.Controllers
             return File(pdfBytes, "application/pdf", $"Itinerary_{safeName}_{booking.BookingID}.pdf");
         }
 
+        [Authorize]
+        [HttpPost]
+        public async Task<IActionResult> CancelBooking([FromBody] CancelBookingRequest request)
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
+            {
+                return Json(new { success = false, message = "User not authenticated" });
+            }
+
+            try
+            {
+                // Verify booking belongs to user and can be cancelled
+                var booking = _bookingRepo.GetByIdForUser(request.BookingId, userId);
+                if (booking == null)
+                {
+                    return Json(new { success = false, message = "Booking not found or access denied" });
+                }
+
+                if (booking.Status == "Cancelled")
+                {
+                    return Json(new { success = false, message = "This booking is already cancelled" });
+                }
+
+                // Check if cancellation is still allowed
+                if (!_bookingRepo.CanCancelBooking(request.BookingId, userId, DateTime.UtcNow))
+                {
+                    return Json(new { success = false, message = "Cancellation deadline has passed" });
+                }
+
+                // Update booking status to Cancelled
+                booking.Status = "Cancelled";
+                _bookingRepo.Update(booking);
+
+                // Restore available rooms
+                var trip = _tripRepo.GetById(request.TripId);
+                if (trip != null)
+                {
+                    trip.AvailableRooms += booking.Quantity;
+                    _tripRepo.Update(trip);
+
+                    // Process waitlist for freed rooms
+                    await ProcessWaitlistForTrip(request.TripId, booking.Quantity);
+                }
+
+                return Json(new { success = true, message = "Booking cancelled successfully" });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = $"An error occurred: {ex.Message}" });
+            }
+        }
+
         // Process waitlist when rooms become available
         private async Task ProcessWaitlistForTrip(int tripId, int roomsFreed)
         {
@@ -570,5 +632,12 @@ namespace MVC_project.Controllers
     public class RemoveFromCartRequest
     {
         public int UserTripID { get; set; }  // Specific cart entry ID
+    }
+
+    // Request model for CancelBooking
+    public class CancelBookingRequest
+    {
+        public int BookingId { get; set; }
+        public int TripId { get; set; }
     }
 }
