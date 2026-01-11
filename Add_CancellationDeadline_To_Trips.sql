@@ -5,6 +5,7 @@ GO
    - Adds nullable [CancellationEndDate]
    - Adds computed, persisted [EffectiveCancellationEndDate] that falls back to 7 days before [StartDate] when no explicit date is set
    - Enforces [EffectiveCancellationEndDate] <= [StartDate]
+*/
 
 SET ANSI_NULLS ON
 GO

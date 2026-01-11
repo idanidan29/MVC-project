@@ -24,6 +24,7 @@ namespace MVC_project.Controllers
         /// <summary>
         /// Filter and sort trips based on multiple criteria
         /// </summary>
+        /// <param name="searchQuery">Universal search across destination, country, description, and package type (partial keyword match)</param>
         /// <param name="destination">Filter by destination name (case-insensitive substring match)</param>
         /// <param name="country">Filter by country name (case-insensitive substring match)</param>
         /// <param name="category">Filter by package type (exact match)</param>
@@ -34,6 +35,7 @@ namespace MVC_project.Controllers
         /// <param name="sortBy">Sort option: price-asc, price-desc, date, popular (by completed bookings)</param>
         [HttpGet("Search")]
         public IActionResult Search(
+            string searchQuery = "",
             string destination = "",
             string country = "",
             string category = "",
@@ -47,6 +49,17 @@ namespace MVC_project.Controllers
             {
                 // Get all active trips
                 var trips = _tripRepo.GetActiveTrips().AsEnumerable();
+
+                // Apply universal search query (searches across multiple fields)
+                if (!string.IsNullOrWhiteSpace(searchQuery))
+                {
+                    trips = trips.Where(t => 
+                        t.Destination.Contains(searchQuery, StringComparison.OrdinalIgnoreCase) ||
+                        t.Country.Contains(searchQuery, StringComparison.OrdinalIgnoreCase) ||
+                        t.Description.Contains(searchQuery, StringComparison.OrdinalIgnoreCase) ||
+                        t.PackageType.Contains(searchQuery, StringComparison.OrdinalIgnoreCase)
+                    );
+                }
 
                 // Apply destination filter
                 if (!string.IsNullOrWhiteSpace(destination))

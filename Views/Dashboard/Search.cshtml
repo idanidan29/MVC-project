@@ -985,6 +985,178 @@
         overflow-x: auto;
     }
 
+    /* Universal Search Box */
+    .search-box-container {
+        max-width: 1400px;
+        margin: 0 auto 2rem auto;
+        padding: 0 1rem;
+        animation: slideInDown 0.6s ease-out;
+    }
+
+    .universal-search {
+        position: relative;
+        background: rgba(255, 255, 255, 0.98);
+        backdrop-filter: blur(15px);
+        border-radius: 1.5rem;
+        padding: 2rem;
+        box-shadow: 0 25px 80px rgba(99, 102, 241, 0.25), 
+                    0 10px 40px rgba(0, 0, 0, 0.15),
+                    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+        border: 2px solid rgba(99, 102, 241, 0.2);
+        transition: all 0.3s ease;
+    }
+
+    .universal-search:hover {
+        box-shadow: 0 30px 100px rgba(99, 102, 241, 0.35), 
+                    0 15px 50px rgba(0, 0, 0, 0.2);
+        border-color: rgba(99, 102, 241, 0.4);
+    }
+
+    .search-header {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin-bottom: 1rem;
+    }
+
+    .search-header h2 {
+        color: #1e293b;
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin: 0;
+        background: linear-gradient(135deg, #6366f1 0%, #a78bfa 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .search-header i {
+        font-size: 1.75rem;
+        color: #6366f1;
+        animation: searchPulse 2s ease-in-out infinite;
+    }
+
+    @@keyframes searchPulse {
+        0%, 100% { transform: scale(1); opacity: 1; }
+        50% { transform: scale(1.1); opacity: 0.8; }
+    }
+
+    .search-input-wrapper {
+        position: relative;
+        display: flex;
+        gap: 1rem;
+        align-items: stretch;
+    }
+
+    .search-icon {
+        position: absolute;
+        left: 1.5rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #6366f1;
+        font-size: 1.5rem;
+        pointer-events: none;
+        z-index: 2;
+    }
+
+    .universal-search-input {
+        flex: 1;
+        padding: 1.25rem 1.5rem 1.25rem 4rem;
+        border: 2px solid #e2e8f0;
+        border-radius: 1rem;
+        font-size: 1.1rem;
+        background: white;
+        transition: all 0.3s ease;
+        color: #1e293b;
+        font-weight: 500;
+    }
+
+    .universal-search-input:focus {
+        outline: none;
+        border-color: #6366f1;
+        box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1), 
+                    0 8px 25px rgba(99, 102, 241, 0.15);
+        transform: translateY(-2px);
+    }
+
+    .universal-search-input::placeholder {
+        color: #94a3b8;
+        font-weight: 400;
+    }
+
+    .search-btn {
+        padding: 1.25rem 2.5rem;
+        background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+        color: white;
+        border: none;
+        border-radius: 1rem;
+        font-size: 1.1rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 8px 25px rgba(99, 102, 241, 0.4);
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        white-space: nowrap;
+    }
+
+    .search-btn:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 12px 35px rgba(99, 102, 241, 0.5);
+        background: linear-gradient(135deg, #4f46e5 0%, #4338ca 100%);
+    }
+
+    .search-btn:active {
+        transform: translateY(-1px);
+    }
+
+    .search-btn i {
+        font-size: 1.3rem;
+    }
+
+    .search-suggestions {
+        margin-top: 1rem;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        align-items: center;
+    }
+
+    .search-suggestions-label {
+        color: #64748b;
+        font-size: 0.9rem;
+        font-weight: 600;
+        margin-right: 0.5rem;
+    }
+
+    .suggestion-chip {
+        padding: 0.5rem 1rem;
+        background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+        border: 1px solid #e2e8f0;
+        border-radius: 0.75rem;
+        color: #475569;
+        font-size: 0.9rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+    }
+
+    .suggestion-chip:hover {
+        background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+        color: white;
+        border-color: #6366f1;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+    }
+
+    .suggestion-chip i {
+        font-size: 0.85rem;
+    }
+
     .filter-header {
         display: flex;
         align-items: center;
@@ -1189,6 +1361,46 @@
         .sort-group {
             min-width: 100%;
         }
+
+        /* Universal Search Mobile */
+        .universal-search {
+            padding: 1.5rem;
+        }
+
+        .search-header h2 {
+            font-size: 1.2rem;
+        }
+
+        .search-input-wrapper {
+            flex-direction: column;
+        }
+
+        .universal-search-input {
+            padding: 1rem 1rem 1rem 3.5rem;
+            font-size: 1rem;
+        }
+
+        .search-icon {
+            left: 1rem;
+            font-size: 1.2rem;
+        }
+
+        .search-btn {
+            padding: 1rem 2rem;
+            font-size: 1rem;
+            justify-content: center;
+        }
+
+        .search-suggestions {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .suggestion-chip {
+            flex: 1;
+            width: 100%;
+            justify-content: center;
+        }
     }
 </style>
 
@@ -1231,6 +1443,32 @@
     }
     else
     {
+        <!-- Universal Search Box -->
+        <div class="search-box-container">
+            <div class="universal-search">
+                <div class="search-header">
+                    <i class="bi bi-search-heart-fill"></i>
+                    <h2>Search Your Dream Trip</h2>
+                </div>
+                <form id="universalSearchForm" method="get" action="@Url.Action("Search", "Filter")">
+                    <div class="search-input-wrapper">
+                        <i class="bi bi-search search-icon"></i>
+                        <input type="text" 
+                               id="searchQuery" 
+                               name="searchQuery" 
+                               class="universal-search-input" 
+                               placeholder="Search by destination, country, description, or package type (e.g., 'Paris', 'Honeymoon', 'Beach')..." 
+                               value="@Context.Request.Query["searchQuery"]"
+                               autocomplete="off">
+                        <button type="submit" class="search-btn">
+                            <i class="bi bi-arrow-right-circle-fill"></i>
+                            <span>Search</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
         <!-- Filter Panel -->
         <div class="filter-panel">
             <div class="filter-header">
@@ -1243,6 +1481,9 @@
             </div>
 
             <form id="filterForm" method="get" action="@Url.Action("Search", "Filter")">
+                <!-- Preserve search query when using filters -->
+                <input type="hidden" name="searchQuery" value="@Context.Request.Query["searchQuery"]">
+                
                 <div class="filter-grid">
                     <!-- Destination Filter -->
                     <div class="filter-group">
@@ -1453,6 +1694,11 @@
         e.preventDefault();
         // Clear all form inputs
         filterForm.reset();
+        // Also clear the universal search input
+        const searchInput = document.getElementById('searchQuery');
+        if (searchInput) {
+            searchInput.value = '';
+        }
         // Redirect to filter page with no parameters to show all trips
         window.location.href = '@Url.Action("Search", "Filter")';
     });
@@ -2090,5 +2336,93 @@
         }
     `;
     document.head.appendChild(style);
-</script>
 
+    // Universal Search - Suggestion Chips
+    document.querySelectorAll('.suggestion-chip').forEach(chip => {
+        chip.addEventListener('click', function(e) {
+            e.preventDefault();
+            const searchText = this.dataset.search;
+            const searchInput = document.getElementById('searchQuery');
+            if (searchInput) {
+                searchInput.value = searchText;
+                searchInput.focus();
+                // Add animation
+                searchInput.style.transform = 'scale(1.02)';
+                setTimeout(() => {
+                    searchInput.style.transform = 'scale(1)';
+                }, 200);
+            }
+        });
+    });
+
+    // Real-time search functionality (optional - search as you type after 500ms pause)
+    let searchTimeout;
+    const searchInput = document.getElementById('searchQuery');
+    if (searchInput) {
+        searchInput.addEventListener('input', function() {
+            clearTimeout(searchTimeout);
+            const query = this.value.trim();
+            
+            // Add visual feedback
+            if (query.length > 0) {
+                this.style.borderColor = '#6366f1';
+            } else {
+                this.style.borderColor = '#e2e8f0';
+            }
+            
+            // Optional: Auto-submit after 800ms of no typing (uncomment if desired)
+            // searchTimeout = setTimeout(() => {
+            //     if (query.length >= 2) {
+            //         document.getElementById('universalSearchForm').submit();
+            //     }
+            // }, 800);
+        });
+    }
+
+    // Clear search button (optional enhancement)
+    const createClearButton = () => {
+        const searchWrapper = document.querySelector('.search-input-wrapper');
+        const searchInput = document.getElementById('searchQuery');
+        
+        if (searchInput && searchInput.value.trim()) {
+            let clearBtn = document.getElementById('clearSearchBtn');
+            if (!clearBtn) {
+                clearBtn = document.createElement('button');
+                clearBtn.id = 'clearSearchBtn';
+                clearBtn.type = 'button';
+                clearBtn.innerHTML = '<i class="bi bi-x-circle-fill"></i>';
+                clearBtn.style.cssText = `
+                    position: absolute;
+                    right: 9rem;
+                    top: 50%;
+                    transform: translateY(-50%);
+                    background: transparent;
+                    border: none;
+                    color: #94a3b8;
+                    font-size: 1.5rem;
+                    cursor: pointer;
+                    transition: color 0.2s;
+                    padding: 0;
+                    z-index: 3;
+                `;
+                clearBtn.addEventListener('mouseover', () => clearBtn.style.color = '#ef4444');
+                clearBtn.addEventListener('mouseout', () => clearBtn.style.color = '#94a3b8');
+                clearBtn.addEventListener('click', () => {
+                    searchInput.value = '';
+                    searchInput.focus();
+                    clearBtn.remove();
+                });
+                searchWrapper.appendChild(clearBtn);
+            }
+        }
+    };
+    
+    // Check for existing search value on page load
+    if (searchInput && searchInput.value.trim()) {
+        createClearButton();
+    }
+    
+    // Add clear button when user types
+    if (searchInput) {
+        searchInput.addEventListener('input', createClearButton);
+    }
