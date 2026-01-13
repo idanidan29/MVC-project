@@ -558,6 +558,54 @@
             transform: translateY(0);
         }
     }
+
+    /* Quantity Adjuster Styles */
+    .quantity-adjuster {
+        transition: all 0.2s ease !important;
+    }
+
+    .quantity-adjuster:hover {
+        border-color: #6366f1 !important;
+        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+    }
+
+    .qty-input:focus {
+        outline: none;
+    }
+
+    .qty-input::-webkit-inner-spin-button,
+    .qty-input::-webkit-outer-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+
+    .qty-input[type=number] {
+        -moz-appearance: textfield;
+    }
+
+    .qty-btn-minus:active,
+    .qty-btn-plus:active {
+        transform: scale(0.9);
+    }
+
+    .qty-btn-minus:disabled,
+    .qty-btn-plus:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+    }
+
+    @@keyframes pulse {
+        0%, 100% {
+            transform: scale(1);
+        }
+        50% {
+            transform: scale(1.05);
+        }
+    }
+
+    .quantity-updated {
+        animation: pulse 0.3s ease;
+    }
 </style>
 
 <!-- Background elements -->
@@ -690,32 +738,57 @@
                             @foreach (var selectedDate in trip.UserSelectedDates)
                             {
                                 var dateInfo = trip.GetDateByIndex(selectedDate.SelectedDateIndex);
-                                <div class="date-option-item" style="background: white; padding: 0.75rem; border-radius: 0.5rem; margin-bottom: 0.5rem; border: 2px solid #e2e8f0;">
-                                    <div style="display: flex; justify-content: space-between; align-items: center;">
-                                        <div style="flex: 1;">
-                                            <div style="color: #475569; font-size: 0.9rem; margin-bottom: 0.25rem;">
-                                                <i class="bi bi-calendar-event"></i>
-                                                <strong>@dateInfo.StartDate.ToString("MMM dd") - @dateInfo.EndDate.ToString("MMM dd, yyyy")</strong>
-                                            </div>
-                                            <div style="color: #64748b; font-size: 0.85rem;">
-                                                <i class="bi bi-clock"></i> @dateInfo.DurationDays days
-                                                @if (!dateInfo.IsMainDate)
-                                                {
-                                                    <span style="color: #6366f1; font-weight: 600; margin-left: 0.5rem;">
-                                                        <i class="bi bi-star-fill"></i> Alternative Date
-                                                    </span>
-                                                }
-                                            </div>
-                                            <div style="color: #64748b; font-size: 0.85rem;">
-                                                <i class="bi bi-people-fill"></i> Quantity: @selectedDate.Quantity
+                                <div class="date-option-item" id="date-item-@selectedDate.UserTripID" data-available="@dateInfo.AvailableRooms" data-trip-id="@trip.TripID" style="background: white; padding: 0.75rem; border-radius: 0.5rem; margin-bottom: 0.5rem; border: 2px solid #e2e8f0;">
+                                    <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                                        <!-- Date Info Section -->
+                                        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                                            <div style="flex: 1;">
+                                                <div style="color: #475569; font-size: 0.9rem; margin-bottom: 0.25rem;">
+                                                    <i class="bi bi-calendar-event"></i>
+                                                    <strong>@dateInfo.StartDate.ToString("MMM dd") - @dateInfo.EndDate.ToString("MMM dd, yyyy")</strong>
+                                                </div>
+                                                <div style="color: #64748b; font-size: 0.85rem;">
+                                                    <i class="bi bi-clock"></i> @dateInfo.DurationDays days
+                                                    @if (!dateInfo.IsMainDate)
+                                                    {
+                                                        <span style="color: #6366f1; font-weight: 600; margin-left: 0.5rem;">
+                                                            <i class="bi bi-star-fill"></i> Alternative Date
+                                                        </span>
+                                                    }
+                                                </div>
+                                                <div style="color: #64748b; font-size: 0.85rem; margin-top: 0.25rem;">
+                                                    <i class="bi bi-box-seam"></i> 
+                                                    <span id="avail-rooms-@selectedDate.UserTripID" style="font-weight: 600; color: @(dateInfo.AvailableRooms < 5 ? "#ef4444" : "#10b981");">@dateInfo.AvailableRooms</span> rooms available
+                                                </div>
                                             </div>
                                         </div>
+
+                                        <!-- Quantity Controls Section -->
+                                        <div style="display: flex; align-items: center; gap: 0.75rem; padding: 0.5rem; background: #f8fafc; border-radius: 0.5rem;">
+                                            <span style="color: #64748b; font-size: 0.85rem; font-weight: 600;">
+                                                <i class="bi bi-people-fill"></i> Qty:
+                                            </span>
+                                            <div class="quantity-adjuster" id="qty-adjuster-@selectedDate.UserTripID" data-max="@dateInfo.AvailableRooms" style="display: flex; align-items: center; gap: 0.25rem; background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%); border: 2px solid #e2e8f0; border-radius: 0.5rem; padding: 0.25rem;">
+                                                <button class="qty-btn-minus" onclick="event.stopPropagation(); adjustQuantity(@selectedDate.UserTripID, -1, @dateInfo.AvailableRooms, @trip.TripID);" style="background: none; border: none; color: #6366f1; cursor: pointer; font-size: 1.1rem; padding: 0.25rem 0.5rem; font-weight: bold; transition: all 0.2s ease;" onmouseover="this.style.color='#4f46e5'; this.style.backgroundColor='rgba(99,102,241,0.1)';" onmouseout="this.style.color='#6366f1'; this.style.backgroundColor='transparent';">
+                                                    <i class="bi bi-dash-circle-fill"></i>
+                                                </button>
+                                                <input type="number" class="qty-input" id="qty-input-@selectedDate.UserTripID" value="@selectedDate.Quantity" min="1" max="@dateInfo.AvailableRooms" data-current="@selectedDate.Quantity" style="width: 3.5rem; text-align: center; border: none; background: transparent; font-weight: 700; color: #1e293b; font-size: 1rem;" onchange="updateQuantityFromInput(@selectedDate.UserTripID, @dateInfo.AvailableRooms, @trip.TripID);" onclick="event.stopPropagation();" />
+                                                <button class="qty-btn-plus" onclick="event.stopPropagation(); adjustQuantity(@selectedDate.UserTripID, 1, @dateInfo.AvailableRooms, @trip.TripID);" style="background: none; border: none; color: #6366f1; cursor: pointer; font-size: 1.1rem; padding: 0.25rem 0.5rem; font-weight: bold; transition: all 0.2s ease;" onmouseover="this.style.color='#4f46e5'; this.style.backgroundColor='rgba(99,102,241,0.1)';" onmouseout="this.style.color='#6366f1'; this.style.backgroundColor='transparent';">
+                                                    <i class="bi bi-plus-circle-fill"></i>
+                                                </button>
+                                            </div>
+                                            <span id="qty-validation-@selectedDate.UserTripID" style="color: #ef4444; font-size: 0.75rem; font-weight: 600; display: none;">
+                                                <i class="bi bi-exclamation-circle-fill"></i> Max @dateInfo.AvailableRooms
+                                            </span>
+                                        </div>
+
+                                        <!-- Action Buttons Section -->
                                         <div style="display: flex; gap: 0.5rem; align-items: center;">
-                                            <button class="btn-pay-date" onclick="event.stopPropagation(); openPaymentModalForDate(@selectedDate.UserTripID, @selectedDate.Quantity);" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none; padding: 0.5rem 1rem; border-radius: 0.5rem; cursor: pointer; font-size: 0.85rem; font-weight: 600; display: flex; align-items: center; gap: 0.3rem; box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3); transition: all 0.3s ease;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(16, 185, 129, 0.5)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(16, 185, 129, 0.3)';">
+                                            <button class="btn-pay-date" onclick="event.stopPropagation(); openPaymentModalForDate(@selectedDate.UserTripID, @selectedDate.Quantity);" style="flex: 1; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none; padding: 0.6rem 1rem; border-radius: 0.5rem; cursor: pointer; font-size: 0.85rem; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 0.3rem; box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3); transition: all 0.3s ease;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(16, 185, 129, 0.5)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(16, 185, 129, 0.3)';">
                                                 <i class="bi bi-credit-card"></i>
                                                 Pay Now
                                             </button>
-                                            <button class="btn-remove-date" onclick="event.stopPropagation(); removeFromCart(@selectedDate.UserTripID, '@trip.Destination');" style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: white; border: none; padding: 0.5rem 0.75rem; border-radius: 0.5rem; cursor: pointer; font-size: 0.85rem;">
+                                            <button class="btn-remove-date" onclick="event.stopPropagation(); removeFromCart(@selectedDate.UserTripID, '@trip.Destination');" style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: white; border: none; padding: 0.6rem 0.85rem; border-radius: 0.5rem; cursor: pointer; font-size: 0.85rem; transition: all 0.3s ease;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(239, 68, 68, 0.5)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(239, 68, 68, 0.3)';">
                                                 <i class="bi bi-trash"></i>
                                             </button>
                                         </div>
@@ -741,9 +814,9 @@
                                     <span class="per-trip-note">$@trip.FinalPrice.ToString("N2") per trip</span>
                                 }
                             </div>
-                            <div class="qty-badge" style="display:flex;align-items:center;gap:0.5rem;padding:0.5rem 0.75rem;background:linear-gradient(135deg,#f8fafc,#ffffff);border-radius:0.75rem;border:1px solid #e6edf6;font-weight:700;color:#111827;">
+                            <div class="qty-badge" id="total-qty-@trip.TripID" style="display:flex;align-items:center;gap:0.5rem;padding:0.5rem 0.75rem;background:linear-gradient(135deg,#f8fafc,#ffffff);border-radius:0.75rem;border:1px solid #e6edf6;font-weight:700;color:#111827;">
                                 <i class="bi bi-people-fill" style="color:#6366f1"></i>
-                                <span>Total Qty: <strong>@trip.Quantity</strong></span>
+                                <span>Total Qty: <strong id="total-qty-value-@trip.TripID">@trip.Quantity</strong></span>
                             </div>
                             @if (trip.HasDiscount)
                             {
@@ -894,6 +967,155 @@
         }
     }
 
+    // Quantity adjustment functions
+    async function adjustQuantity(userTripId, delta, maxAvailable, tripId) {
+        const input = document.getElementById(`qty-input-${userTripId}`);
+        const validationMsg = document.getElementById(`qty-validation-${userTripId}`);
+        if (!input) return;
+        
+        let currentQty = parseInt(input.value, 10) || 1;
+        let newQty = currentQty + delta;
+        
+        // Validate bounds
+        if (newQty < 1) {
+            newQty = 1;
+            showNotification('Minimum quantity is 1', 'error');
+            return;
+        }
+        
+        if (newQty > maxAvailable) {
+            newQty = maxAvailable;
+            if (validationMsg) {
+                validationMsg.style.display = 'inline';
+                setTimeout(() => {
+                    validationMsg.style.display = 'none';
+                }, 3000);
+            }
+            showNotification(`Only ${maxAvailable} rooms available for this date`, 'error');
+            return;
+        }
+        
+        input.value = newQty;
+        
+        // Add visual feedback
+        const adjuster = document.getElementById(`qty-adjuster-${userTripId}`);
+        if (adjuster) {
+            adjuster.style.transform = 'scale(0.95)';
+            setTimeout(() => {
+                adjuster.style.transform = 'scale(1)';
+            }, 100);
+        }
+        
+        await updateQuantityFromInput(userTripId, maxAvailable, tripId);
+    }
+
+    async function updateQuantityFromInput(userTripId, maxAvailable, tripId) {
+        const input = document.getElementById(`qty-input-${userTripId}`);
+        const validationMsg = document.getElementById(`qty-validation-${userTripId}`);
+        if (!input) return;
+        
+        const originalQty = parseInt(input.dataset.current, 10) || 1;
+        let quantity = parseInt(input.value, 10);
+        
+        // Validate
+        if (isNaN(quantity) || quantity < 1) {
+            quantity = 1;
+            input.value = quantity;
+        }
+        
+        if (quantity > maxAvailable) {
+            quantity = maxAvailable;
+            input.value = quantity;
+            if (validationMsg) {
+                validationMsg.style.display = 'inline';
+                setTimeout(() => {
+                    validationMsg.style.display = 'none';
+                }, 3000);
+            }
+            showNotification(`Maximum ${maxAvailable} rooms available`, 'error');
+        }
+        
+        // Skip if no change
+        if (quantity === originalQty) return;
+        
+        try {
+            const response = await fetch('/User/UpdateCartQuantity', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    userTripId: userTripId,
+                    quantity: quantity
+                })
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                // Update stored current value
+                input.dataset.current = quantity;
+                
+                // Show success notification
+                showNotification(`✓ Quantity updated to ${quantity}`, 'success');
+                
+                // Update Total Qty display for this trip
+                const totalQtyElement = document.getElementById(`total-qty-value-${tripId}`);
+                if (totalQtyElement && data.totalQuantity) {
+                    totalQtyElement.textContent = data.totalQuantity;
+                    // Add pulse animation
+                    const badge = document.getElementById(`total-qty-${tripId}`);
+                    if (badge) {
+                        badge.classList.add('quantity-updated');
+                        setTimeout(() => {
+                            badge.classList.remove('quantity-updated');
+                        }, 300);
+                    }
+                }
+                
+                // Update available rooms display if it changed
+                if (data.availableRooms !== undefined) {
+                    const availElement = document.getElementById(`avail-rooms-${userTripId}`);
+                    if (availElement) {
+                        availElement.textContent = data.availableRooms;
+                        availElement.style.color = data.availableRooms < 5 ? '#ef4444' : '#10b981';
+                    }
+                    // Update max attribute
+                    input.max = data.availableRooms;
+                    const adjuster = document.getElementById(`qty-adjuster-${userTripId}`);
+                    if (adjuster) {
+                        adjuster.dataset.max = data.availableRooms;
+                    }
+                }
+            } else {
+                // Revert to original value
+                input.value = originalQty;
+                showNotification(data.message || 'Failed to update quantity', 'error');
+                
+                // If availability changed, show special message
+                if (data.availableRooms !== undefined) {
+                    const availElement = document.getElementById(`avail-rooms-${userTripId}`);
+                    if (availElement) {
+                        availElement.textContent = data.availableRooms;
+                        availElement.style.color = data.availableRooms < 5 ? '#ef4444' : '#10b981';
+                    }
+                    input.max = data.availableRooms;
+                    if (validationMsg) {
+                        validationMsg.innerHTML = `<i class="bi bi-exclamation-circle-fill"></i> Max ${data.availableRooms}`;
+                        validationMsg.style.display = 'inline';
+                        setTimeout(() => {
+                            validationMsg.style.display = 'none';
+                        }, 5000);
+                    }
+                }
+            }
+        } catch (error) {
+            console.error('Error updating quantity:', error);
+            input.value = originalQty;
+            showNotification('Failed to update quantity. Please try again.', 'error');
+        }
+    }
+
     function bookTrip(tripId) {
         const card = document.querySelector(`[data-trip-id="${tripId}"]`);
         const quantity = card ? parseInt(card.dataset.quantity || '1', 10) : 1;
@@ -901,6 +1123,11 @@
     }
 
     function openPaymentModalForDate(userTripId, quantity) {
+        // Get the current quantity from the input field
+        const input = document.getElementById(`qty-input-${userTripId}`);
+        if (input) {
+            quantity = parseInt(input.value, 10) || quantity;
+        }
         // Open payment modal for a specific date using userTripId
         // Pass negative number to distinguish from tripId
         openPaymentModal(-userTripId, quantity);

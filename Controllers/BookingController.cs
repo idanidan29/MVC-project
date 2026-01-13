@@ -195,7 +195,12 @@ namespace MVC_project.Controllers
             // Record booking
             AddBookingRecord(userId, trip, qty, -1);
 
-            // On success: clear from cart (rooms already reserved when added to cart)
+            // Decrease available rooms NOW (after payment confirmation)
+            trip.AvailableRooms -= qty;
+            if (trip.AvailableRooms < 0) trip.AvailableRooms = 0;
+            _tripRepo.Update(trip);
+
+            // On success: clear from cart
             _userTripRepo.Remove(userId, request.TripId);
 
             // Mark waitlist entry as booked if user was from waitlist
@@ -253,11 +258,16 @@ namespace MVC_project.Controllers
             // Record booking
             AddBookingRecord(userId, trip, qty, -1);
 
-            // On success: clear from cart (rooms already reserved when added to cart)
-            _userTripRepo.Remove(userId, request.TripId);
+            // Decrease available rooms NOW (after payment confirmation)
+            trip.AvailableRooms -= qty;
+            if (trip.AvailableRooms < 0) trip.AvailableRooms = 0;
+            _tripRepo.Update(trip);
 
             // Mark waitlist entry as booked if user was from waitlist
             _waitlistRepo.MarkAsBooked(userId, request.TripId);
+
+            // On success: clear from cart
+            _userTripRepo.Remove(userId, request.TripId);
 
             // Send confirmation email
             var user = _userRepo.GetById(userId);
@@ -321,13 +331,18 @@ namespace MVC_project.Controllers
             if (!captured)
                 return Json(new { success = false, message = "PayPal capture failed." });
 
-            // Record bookings for each cart item
+            // Record bookings for each cart item and decrease availability
             foreach (var item in cartItems)
             {
                 var trip = item.Trip ?? _tripRepo.GetById(item.TripID);
                 if (trip == null) continue;
                 var qty = item.Quantity <= 0 ? 1 : item.Quantity;
                 AddBookingRecord(userId, trip, qty, item.SelectedDateIndex);
+
+                // Decrease available rooms NOW (after payment confirmation)
+                trip.AvailableRooms -= qty;
+                if (trip.AvailableRooms < 0) trip.AvailableRooms = 0;
+                _tripRepo.Update(trip);
             }
 
             // Mark all waitlist entries as booked for items in cart
@@ -336,7 +351,7 @@ namespace MVC_project.Controllers
                 _waitlistRepo.MarkAsBooked(userId, item.TripID);
             }
 
-            // On success: clear cart (rooms already reserved when added to cart)
+            // On success: clear cart
             _userTripRepo.RemoveAll(userId);
 
             // Send confirmation emails for each trip in cart
@@ -399,10 +414,15 @@ namespace MVC_project.Controllers
             // Record booking for this specific date selection
             AddBookingRecord(userId, trip, qty, userTrip.SelectedDateIndex);
 
+            // Decrease available rooms NOW (after payment confirmation)
+            trip.AvailableRooms -= qty;
+            if (trip.AvailableRooms < 0) trip.AvailableRooms = 0;
+            _tripRepo.Update(trip);
+
             // Mark waitlist entry as booked if user was from waitlist
             _waitlistRepo.MarkAsBooked(userId, userTrip.TripID);
 
-            // On success: clear from cart (rooms already reserved when added to cart)
+            // On success: clear from cart
             _userTripRepo.RemoveByUserTripId(request.UserTripId);
 
             // Send confirmation email
@@ -503,12 +523,8 @@ namespace MVC_project.Controllers
             }
 
             // Add to cart
+            // NOTE: Inventory is NOT decremented here - it only changes after payment is completed
             _userTripRepo.Add(userId, request.TripId, qty);
-            
-            // Decrease available rooms (reserve them in cart)
-            trip.AvailableRooms -= qty;
-            if (trip.AvailableRooms < 0) trip.AvailableRooms = 0;
-            _tripRepo.Update(trip);
             
             return Json(new 
             { 

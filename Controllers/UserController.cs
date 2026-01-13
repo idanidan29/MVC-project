@@ -243,6 +243,110 @@ namespace MVC_project.Controllers
             }
         }
 
+        // POST: /User/UpdateCartQuantity
+        [HttpPost]
+        [Authorize]
+        public IActionResult UpdateCartQuantity([FromBody] UpdateQuantityRequest request)
+        {
+            try
+            {
+                // Get current user's ID from claims
+                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                
+                if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
+                {
+                    return Json(new { success = false, message = "User not authenticated" });
+                }
+
+                // Validate quantity
+                if (request.Quantity <= 0)
+                {
+                    return Json(new { success = false, message = "Quantity must be at least 1" });
+                }
+
+                // Get cart item first to validate ownership and get trip info
+                var cartItem = _userTripRepo.GetByUserId(userId).FirstOrDefault(ut => ut.UserTripID == request.UserTripID);
+                if (cartItem == null)
+                {
+                    return Json(new { success = false, message = "Cart item not found or unauthorized access" });
+                }
+
+                var trip = cartItem.Trip ?? _tripRepo.GetById(cartItem.TripID);
+                if (trip == null)
+                {
+                    return Json(new { success = false, message = "Trip not found" });
+                }
+
+                // Check available rooms based on selected date
+                int availableRooms;
+                if (cartItem.SelectedDateIndex >= 0)
+                {
+                    // Alternative date selected
+                    var tripDates = _dateRepo.GetByTripId(cartItem.TripID).ToList();
+                    if (cartItem.SelectedDateIndex < tripDates.Count)
+                    {
+                        availableRooms = tripDates[cartItem.SelectedDateIndex].AvailableRooms;
+                    }
+                    else
+                    {
+                        return Json(new { success = false, message = "Invalid date selection" });
+                    }
+                }
+                else
+                {
+                    // Main trip date
+                    availableRooms = trip.AvailableRooms;
+                }
+
+                // Validate quantity against available rooms
+                if (request.Quantity > availableRooms)
+                {
+                    return Json(new 
+                    { 
+                        success = false, 
+                        message = $"Only {availableRooms} room(s) available. Please reduce your quantity.",
+                        availableRooms = availableRooms
+                    });
+                }
+
+                // Update the specific cart item
+                var updatedItem = _userTripRepo.UpdateQuantityByUserTripId(request.UserTripID, request.Quantity);
+                
+                if (updatedItem == null)
+                {
+                    return Json(new { success = false, message = "Failed to update cart item" });
+                }
+
+                // Calculate new total for this item
+                var finalPrice = (trip.DiscountPrice.HasValue && trip.DiscountPrice < trip.Price) 
+                    ? trip.DiscountPrice.Value 
+                    : trip.Price;
+                var itemTotal = finalPrice * request.Quantity;
+
+                // Calculate total quantity for this trip across all dates
+                var allUserTrips = _userTripRepo.GetByUserId(userId).Where(ut => ut.TripID == cartItem.TripID);
+                var totalQuantity = allUserTrips.Sum(ut => ut.Quantity);
+
+                return Json(new 
+                { 
+                    success = true, 
+                    message = $"Quantity updated to {request.Quantity}",
+                    userTripId = request.UserTripID,
+                    tripId = cartItem.TripID,
+                    quantity = request.Quantity,
+                    totalQuantity = totalQuantity,
+                    itemTotal = itemTotal,
+                    finalPrice = finalPrice,
+                    availableRooms = availableRooms
+                });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"UpdateCartQuantity error: {ex.Message}");
+                return Json(new { success = false, message = "An error occurred while updating quantity" });
+            }
+        }
+
         // POST: /User/AddToCart
         [HttpPost]
         [Authorize]
@@ -314,6 +418,7 @@ namespace MVC_project.Controllers
                 }
 
                 // Add to cart with quantity and selected date (increments if existing)
+                // NOTE: Inventory is NOT decremented here - it only changes after payment is completed
                 bool added = _userTripRepo.Add(userId, request.TripId, qty, request.SelectedDateIndex);
                 
                 if (!added)
@@ -321,23 +426,7 @@ namespace MVC_project.Controllers
                     return Json(new { success = false, message = $"{trip.Destination} is already in your cart!" });
                 }
 
-                // Decrease available rooms for the correct date
-                if (selectedTripDate != null)
-                {
-                    // Decrease alternative date rooms
-                    selectedTripDate.AvailableRooms -= qty;
-                    if (selectedTripDate.AvailableRooms < 0) selectedTripDate.AvailableRooms = 0;
-                    _dateRepo.Update(selectedTripDate);
-                }
-                else
-                {
-                    // Decrease main trip date rooms
-                    trip.AvailableRooms -= qty;
-                    if (trip.AvailableRooms < 0) trip.AvailableRooms = 0;
-                    _tripRepo.Update(trip);
-                }
-
-                return Json(new { success = true, message = $"✓ {trip.Destination} added to cart (x{qty})!", tripId = request.TripId, selectedDateIndex = request.SelectedDateIndex, availableRooms = (selectedTripDate?.AvailableRooms ?? trip.AvailableRooms) });
+                return Json(new { success = true, message = $"✓ {trip.Destination} added to cart (x{qty})!", tripId = request.TripId, selectedDateIndex = request.SelectedDateIndex, availableRooms = availableRooms });
             }
             catch (Exception ex)
             {
@@ -701,6 +790,13 @@ namespace MVC_project.Controllers
     public class RemoveFromCartRequest
     {
         public int UserTripID { get; set; }  // Specific cart entry ID
+    }
+
+    // Request model for UpdateCartQuantity
+    public class UpdateQuantityRequest
+    {
+        public int UserTripID { get; set; }  // Specific cart entry ID
+        public int Quantity { get; set; }     // New quantity value
     }
 
     // Request model for CancelBooking

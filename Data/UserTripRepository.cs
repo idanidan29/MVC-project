@@ -86,6 +86,28 @@ namespace MVC_project.Data
         }
 
         /// <summary>
+        /// Updates quantity for a specific cart item by UserTripID.
+        /// Used when user adjusts quantity for a specific date selection in cart.
+        /// UserTripID uniquely identifies a trip+date combination in cart.
+        /// Returns the updated UserTrip with trip data, or null if not found.
+        /// </summary>
+        public UserTrip? UpdateQuantityByUserTripId(int userTripId, int quantity)
+        {
+            var userTrip = _context.UserTrips
+                .Include(ut => ut.Trip)
+                .FirstOrDefault(ut => ut.UserTripID == userTripId);  // Find by cart item ID
+
+            if (userTrip == null) return null;  // Item not in cart
+
+            // Validate quantity is at least 1
+            if (quantity <= 0) quantity = 1;
+
+            userTrip.Quantity = quantity;  // Update quantity
+            _context.SaveChanges();         // Persist change
+            return userTrip;  // Return updated item with trip data
+        }
+
+        /// <summary>
         /// Checks if user already has a specific trip+date combination in their cart.
         /// Used to prevent duplicate cart entries or show "Already in cart" message.
         /// selectedDateIndex = -1 checks for main trip date.
