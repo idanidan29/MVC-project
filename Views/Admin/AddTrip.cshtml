@@ -531,7 +531,7 @@
                     <label asp-for="StartDate" class="form-label">
                         <i class="bi bi-calendar-check"></i> Start Date
                     </label>
-                    <input asp-for="StartDate" type="date" class="form-control" />
+                    <input asp-for="StartDate" type="date" class="form-control" id="mainStartDate" min="@DateTime.Now.ToString("yyyy-MM-dd")" />
                     <span asp-validation-for="StartDate" class="text-danger"></span>
                 </div>
 
@@ -539,7 +539,7 @@
                     <label asp-for="EndDate" class="form-label">
                         <i class="bi bi-calendar-x"></i> End Date
                     </label>
-                    <input asp-for="EndDate" type="date" class="form-control" />
+                    <input asp-for="EndDate" type="date" class="form-control" id="mainEndDate" />
                     <span asp-validation-for="EndDate" class="text-danger"></span>
                 </div>
             </div>
@@ -813,11 +813,11 @@
                             <div class="row g-3">
                                 <div class="col-md-4">
                                     <label class="form-label">Start Date</label>
-                                    <input type="date" name="AdditionalDates[${index}].StartDate" class="form-control" required />
+                                    <input type="date" name="AdditionalDates[${index}].StartDate" class="form-control additional-start-date" min="@DateTime.Now.ToString("yyyy-MM-dd")" required />
                                 </div>
                                 <div class="col-md-4">
                                     <label class="form-label">End Date</label>
-                                    <input type="date" name="AdditionalDates[${index}].EndDate" class="form-control" required />
+                                    <input type="date" name="AdditionalDates[${index}].EndDate" class="form-control additional-end-date" required />
                                 </div>
                                 <div class="col-md-4">
                                     <label class="form-label">Available Rooms</label>
@@ -841,6 +841,47 @@
                 if (item) {
                     item.style.animation = 'fadeOut 0.3s ease';
                     setTimeout(() => item.remove(), 300);
+                }
+            }
+        });
+    })();
+
+    // Date Validation
+    (function(){
+        const mainStartDate = document.getElementById('mainStartDate');
+        const mainEndDate = document.getElementById('mainEndDate');
+        
+        // Update main end date minimum when start date changes
+        if (mainStartDate && mainEndDate) {
+            mainStartDate.addEventListener('change', function() {
+                if (this.value) {
+                    mainEndDate.min = this.value;
+                    // If end date is before new start date, clear it
+                    if (mainEndDate.value && mainEndDate.value < this.value) {
+                        mainEndDate.value = '';
+                    }
+                }
+            });
+            
+            // Set initial minimum for end date if start date has value
+            if (mainStartDate.value) {
+                mainEndDate.min = mainStartDate.value;
+            }
+        }
+        
+        // Handle validation for additional date variations using event delegation
+        document.addEventListener('change', function(e) {
+            if (e.target.classList.contains('additional-start-date')) {
+                const row = e.target.closest('.row');
+                if (row) {
+                    const endDateInput = row.querySelector('.additional-end-date');
+                    if (endDateInput && e.target.value) {
+                        endDateInput.min = e.target.value;
+                        // If end date is before new start date, clear it
+                        if (endDateInput.value && endDateInput.value < e.target.value) {
+                            endDateInput.value = '';
+                        }
+                    }
                 }
             }
         });

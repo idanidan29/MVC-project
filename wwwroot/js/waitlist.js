@@ -1,10 +1,7 @@
-// ============================================
-// WAITLIST SYSTEM - FRONTEND INTEGRATION
-// ============================================
+// Waitlist System - Frontend Integration
 
-// Example 1: Add to Cart with Waitlist Support
+// Add item to cart with waitlist support
 function addToCartWithWaitlist(tripId, quantity) {
-    // Show loading
     const button = event.target;
     button.disabled = true;
     button.innerHTML = '<i class="spinner-border spinner-border-sm"></i> Adding...';
@@ -48,47 +45,45 @@ function addToCartWithWaitlist(tripId, quantity) {
     });
 }
 
-// Example 2: Display Waitlist Status on Trip Cards
+// Update trip card button based on room availability
 function updateTripCardButton(tripId, availableRooms) {
     const button = document.querySelector(`[data-trip-id="${tripId}"] .add-to-cart-btn`);
     
     if (availableRooms === 0) {
-        // No rooms available - show waitlist button
         button.innerHTML = '<i class="bi bi-bell"></i> Join Waitlist';
         button.classList.remove('btn-primary');
         button.classList.add('btn-warning');
     } else {
-        // Rooms available - show normal add to cart button
         button.innerHTML = '<i class="bi bi-cart-plus"></i> Add to Cart';
         button.classList.remove('btn-warning');
         button.classList.add('btn-primary');
     }
 }
 
-// Example 3: Admin - Process Waitlist Notifications
+// Admin: Process waitlist notifications for users with "Notified" status
 function processWaitlistNotifications() {
-    if (!confirm('Send notification emails to all users with status "Notified"?')) {
-        return;
-    }
-
-    fetch('/Waitlist/ProcessNotifications', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
+    showConfirm(
+        'Send Notifications',
+        'Send notification emails to all users with status "Notified"?',
+        function() {
+            fetch('/Waitlist/ProcessNotifications', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showAlert('Success', 'Waitlist notifications processed successfully!', 'success');
+                } else {
+                    showAlert('Error', 'Failed to process notifications: ' + data.message, 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showAlert('Error', 'An error occurred while processing notifications.', 'error');
+            });
         }
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            alert('Waitlist notifications processed successfully!');
-        } else {
-            alert('Failed to process notifications: ' + data.message);
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        alert('An error occurred while processing notifications.');
-    });
+    );
 }
 
 // Example 4: Admin - Notify Next User (after cancellation or adding rooms)

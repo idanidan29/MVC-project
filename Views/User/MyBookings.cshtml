@@ -1166,7 +1166,7 @@
     async function openItinerary(button) {
         const bookingId = button.getAttribute('data-booking-id');
         if (!bookingId || bookingId === '0') {
-            alert('No itinerary data available for this booking yet.');
+            showAlert('No Itinerary', 'No itinerary data available for this booking yet.', 'info');
             return;
         }
 
@@ -1189,14 +1189,14 @@
             document.getElementById('itineraryModal').classList.add('show');
         } catch (err) {
             console.error(err);
-            alert('Sorry, we could not load the itinerary right now.');
+            showAlert('Error', 'Sorry, we could not load the itinerary right now.', 'error');
         }
     }
 
     function downloadItineraryPdf(button) {
         const bookingId = button.getAttribute('data-booking-id');
         if (!bookingId || bookingId === '0') {
-            alert('No invoice available for this booking yet.');
+            showAlert('No Invoice', 'No invoice available for this booking yet.', 'info');
             return;
         }
         window.location.href = `/User/ItineraryPdf?bookingId=${bookingId}`;
@@ -1250,11 +1250,11 @@
                     location.reload();
                 }, 2500);
             } else {
-                alert(result.message || 'Failed to cancel booking. Please try again.');
+                showAlert('Cancellation Failed', result.message || 'Failed to cancel booking. Please try again.', 'error');
             }
         } catch (err) {
             console.error(err);
-            alert('An error occurred while cancelling the booking. Please try again.');
+            showAlert('Error', 'An error occurred while cancelling the booking. Please try again.', 'error');
         }
     }
 

@@ -55,7 +55,8 @@ namespace MVC_project.ViewModels
         [DataType(DataType.MultilineText)]
         public string Description { get; set; } = string.Empty;
 
-        [Display(Name = "Trip Images (Optional)")]
+        [Required(ErrorMessage = "At least one trip image is required")]
+        [Display(Name = "Trip Images")]
         public List<IFormFile>? Images { get; set; }
 
         // Multiple date variations

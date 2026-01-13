@@ -268,8 +268,32 @@ namespace MVC_project.Controllers
                 // Validate quantity
                 var qty = request.Quantity <= 0 ? 1 : request.Quantity;
                 
+                // Determine which date's rooms to check and decrease
+                int availableRooms;
+                TripDate? selectedTripDate = null;
+                
+                if (request.SelectedDateIndex >= 0)
+                {
+                    // User selected an alternative date
+                    var tripDates = _dateRepo.GetByTripId(request.TripId).ToList();
+                    if (request.SelectedDateIndex < tripDates.Count)
+                    {
+                        selectedTripDate = tripDates[request.SelectedDateIndex];
+                        availableRooms = selectedTripDate.AvailableRooms;
+                    }
+                    else
+                    {
+                        return Json(new { success = false, message = "Selected date is not valid." });
+                    }
+                }
+                else
+                {
+                    // User selected main trip date (-1)
+                    availableRooms = trip.AvailableRooms;
+                }
+                
                 // Check if no rooms available - prompt to join waitlist instead of auto-adding
-                if (trip.AvailableRooms == 0)
+                if (availableRooms == 0)
                 {
                     var currentCount = _waitlistRepo.GetWaitlistCountForTrip(request.TripId);
 
@@ -284,10 +308,9 @@ namespace MVC_project.Controllers
                 }
                 
                 // Check if enough rooms available for the NEW quantity being added
-                // (existing quantity already deducted from AvailableRooms)
-                if (qty > trip.AvailableRooms)
+                if (qty > availableRooms)
                 {
-                    return Json(new { success = false, message = $"Only {trip.AvailableRooms} room(s) available for {trip.Destination}." });
+                    return Json(new { success = false, message = $"Only {availableRooms} room(s) available for this date." });
                 }
 
                 // Add to cart with quantity and selected date (increments if existing)
@@ -298,12 +321,23 @@ namespace MVC_project.Controllers
                     return Json(new { success = false, message = $"{trip.Destination} is already in your cart!" });
                 }
 
-                // Decrease available rooms (reserve them in cart)
-                trip.AvailableRooms -= qty;
-                if (trip.AvailableRooms < 0) trip.AvailableRooms = 0;
-                _tripRepo.Update(trip);
+                // Decrease available rooms for the correct date
+                if (selectedTripDate != null)
+                {
+                    // Decrease alternative date rooms
+                    selectedTripDate.AvailableRooms -= qty;
+                    if (selectedTripDate.AvailableRooms < 0) selectedTripDate.AvailableRooms = 0;
+                    _dateRepo.Update(selectedTripDate);
+                }
+                else
+                {
+                    // Decrease main trip date rooms
+                    trip.AvailableRooms -= qty;
+                    if (trip.AvailableRooms < 0) trip.AvailableRooms = 0;
+                    _tripRepo.Update(trip);
+                }
 
-                return Json(new { success = true, message = $"✓ {trip.Destination} added to cart (x{qty})!", tripId = request.TripId, availableRooms = trip.AvailableRooms });
+                return Json(new { success = true, message = $"✓ {trip.Destination} added to cart (x{qty})!", tripId = request.TripId, selectedDateIndex = request.SelectedDateIndex, availableRooms = (selectedTripDate?.AvailableRooms ?? trip.AvailableRooms) });
             }
             catch (Exception ex)
             {

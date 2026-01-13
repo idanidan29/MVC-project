@@ -1446,8 +1446,9 @@
         document.getElementById('modal-description').textContent = data.description;
         
         // Format dates properly
-        const mainStartDate = new Date(data.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-        const mainEndDate = new Date(data.endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        // Format dates properly - use the date strings directly if already formatted
+        const mainStartDate = data.startDate.includes(',') ? data.startDate : new Date(data.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        const mainEndDate = data.endDate.includes(',') ? data.endDate : new Date(data.endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
         document.getElementById('modal-dates').textContent = `${mainStartDate} - ${mainEndDate}`;
         document.getElementById('modal-duration').textContent = `${data.duration} days`;
         document.getElementById('modal-rooms').textContent = `${data.rooms} rooms`;
@@ -1482,6 +1483,7 @@
         tripModal.dataset.mainEndDate = data.endDate;
         tripModal.dataset.mainRooms = data.rooms;
         tripModal.dataset.mainDuration = data.duration;
+        tripModal.dataset.selectedDateIndex = '-1'; // Initialize to main date
         // Configure modal quantity control
         try {
             const roomsCount = parseInt(data.rooms || '1', 10) || 1;
@@ -1786,8 +1788,9 @@
         }
         
         // Get main trip dates from modal dataset
-        const mainStartDate = new Date(tripModal.dataset.mainStartDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-        const mainEndDate = new Date(tripModal.dataset.mainEndDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        // Use the date strings directly if already formatted, otherwise parse
+        const mainStartDate = tripModal.dataset.mainStartDate.includes(',') ? tripModal.dataset.mainStartDate : new Date(tripModal.dataset.mainStartDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        const mainEndDate = tripModal.dataset.mainEndDate.includes(',') ? tripModal.dataset.mainEndDate : new Date(tripModal.dataset.mainEndDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
         const mainRooms = parseInt(tripModal.dataset.mainRooms || '0');
         const mainDuration = parseInt(tripModal.dataset.mainDuration || '0');
         
@@ -1796,7 +1799,7 @@
         
         // Create main date option (Option 1)
         let optionsHtml = `
-            <div class="date-variation-item" onclick="selectDateVariation(-1, ${mainRooms}, '${mainStartDate}', '${mainEndDate}', ${mainDuration})" style="cursor: pointer; transition: all 0.2s;">
+            <div class="date-variation-item" data-date-index="-1" onclick="selectDateVariation(-1, ${mainRooms}, '${mainStartDate}', '${mainEndDate}', ${mainDuration})" style="cursor: pointer; transition: all 0.2s;">
                 <input type="radio" name="selected-date" value="-1" checked style="margin-right: 0.75rem;" />
                 <div class="date-variation-info">
                     <div>
@@ -1813,7 +1816,7 @@
                     </div>
                     <div>
                         <i class="bi bi-door-open"></i>
-                        ${mainRooms} rooms available
+                        <span class="date-rooms-display">${mainRooms} rooms available</span>
                     </div>
                 </div>
             </div>
@@ -1822,12 +1825,13 @@
         // Add additional date variations (Option 2, 3, etc.) if they exist
         if (trip.dateVariations && trip.dateVariations.length > 0) {
             optionsHtml += trip.dateVariations.map((dateVar, index) => {
-            const startDate = new Date(dateVar.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-            const endDate = new Date(dateVar.endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+            // Use the date strings directly if already formatted, otherwise parse
+            const startDate = dateVar.startDate.includes(',') ? dateVar.startDate : new Date(dateVar.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+            const endDate = dateVar.endDate.includes(',') ? dateVar.endDate : new Date(dateVar.endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
             const days = Math.ceil((new Date(dateVar.endDate) - new Date(dateVar.startDate)) / (1000 * 60 * 60 * 24));
             
             return `
-                <div class="date-variation-item" onclick="selectDateVariation(${index}, ${dateVar.availableRooms}, '${startDate}', '${endDate}', ${days})" style="cursor: pointer; transition: all 0.2s;">
+                <div class="date-variation-item" data-date-index="${index}" onclick="selectDateVariation(${index}, ${dateVar.availableRooms}, '${startDate}', '${endDate}', ${days})" style="cursor: pointer; transition: all 0.2s;">
                     <input type="radio" name="selected-date" value="${index}" style="margin-right: 0.75rem;" />
                     <div class="date-variation-info">
                         <div>
@@ -1844,7 +1848,7 @@
                         </div>
                         <div>
                             <i class="bi bi-door-open"></i>
-                            ${dateVar.availableRooms} rooms available
+                            <span class="date-rooms-display">${dateVar.availableRooms} rooms available</span>
                         </div>
                     </div>
                 </div>
@@ -2110,24 +2114,55 @@
                 } else {
                     showNotification(data.message, 'success');
                     
-                    // Update available rooms count on the card and in modal
+                    // Update available rooms count based on which date was selected
                     if (data.tripId && data.availableRooms !== undefined) {
                         const card = document.querySelector(`[data-trip-id="${data.tripId}"]`);
-                        if (card) {
+                        const selectedDateIndex = data.selectedDateIndex || -1;
+                        
+                        // Update main trip card rooms if main date was selected
+                        if (card && selectedDateIndex === -1) {
                             card.setAttribute('data-rooms', data.availableRooms);
                         }
                         
                         // Update modal if still open
                         if (tripModal && parseInt(tripModal.dataset.tripId) === data.tripId) {
-                            const roomsDisplay = tripModal.querySelector('.rooms-available-text');
-                            if (roomsDisplay) {
-                                roomsDisplay.textContent = `${data.availableRooms} rooms available`;
+                            // Update the specific date option in the modal
+                            if (selectedDateIndex === -1) {
+                                // Main date was selected - update Option 1
+                                const mainDateOption = tripModal.querySelector('.date-variation-item[data-date-index="-1"]');
+                                if (mainDateOption) {
+                                    const roomsDisplay = mainDateOption.querySelector('.date-rooms-display');
+                                    if (roomsDisplay) {
+                                        roomsDisplay.textContent = `${data.availableRooms} rooms available`;
+                                    }
+                                }
+                                // Also update the main rooms display in detail items
+                                const modalRooms = tripModal.querySelector('#modal-rooms');
+                                if (modalRooms) {
+                                    modalRooms.textContent = `${data.availableRooms} rooms`;
+                                }
+                            } else {
+                                // Alternative date was selected - update that specific date variation
+                                const dateOption = tripModal.querySelector(`.date-variation-item[data-date-index="${selectedDateIndex}"]`);
+                                if (dateOption) {
+                                    const roomsDisplay = dateOption.querySelector('.date-rooms-display');
+                                    if (roomsDisplay) {
+                                        roomsDisplay.textContent = `${data.availableRooms} rooms available`;
+                                    }
+                                }
                             }
                             
-                            // Update quantity control max
-                            const qtyControl = tripModal.querySelector('#modal-qty-control');
-                            if (qtyControl) {
-                                qtyControl.dataset.max = data.availableRooms;
+                            // Update quantity control max if the currently displayed date was affected
+                            const currentlySelectedIndex = parseInt(tripModal.dataset.selectedDateIndex || '-1');
+                            if (currentlySelectedIndex === selectedDateIndex) {
+                                const qtyControl = tripModal.querySelector('#modal-qty-control');
+                                const roomsHint = tripModal.querySelector('#modal-rooms-hint');
+                                if (qtyControl) {
+                                    qtyControl.dataset.max = data.availableRooms;
+                                }
+                                if (roomsHint) {
+                                    roomsHint.textContent = `${data.availableRooms} available`;
+                                }
                             }
                         }
                     }

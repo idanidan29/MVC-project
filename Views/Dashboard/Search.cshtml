@@ -1744,9 +1744,9 @@
         document.getElementById('modal-location').innerHTML = `<i class="bi bi-geo-alt-fill"></i> ${data.country}`;
         document.getElementById('modal-description').textContent = data.description;
         
-        // Format dates properly
-        const mainStartDate = new Date(data.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-        const mainEndDate = new Date(data.endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        // Format dates properly - use the date strings directly if already formatted
+        const mainStartDate = data.startDate.includes(',') ? data.startDate : new Date(data.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        const mainEndDate = data.endDate.includes(',') ? data.endDate : new Date(data.endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
         document.getElementById('modal-dates').textContent = `${mainStartDate} - ${mainEndDate}`;
         document.getElementById('modal-duration').textContent = `${data.duration} days`;
         const cancelUntil = data.cancelUntil || '';
@@ -2022,9 +2022,9 @@
             return;
         }
         
-        // Get main trip dates from modal dataset
-        const mainStartDate = new Date(tripModal.dataset.mainStartDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-        const mainEndDate = new Date(tripModal.dataset.mainEndDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        // Get main trip dates from modal dataset - use the date strings directly if already formatted
+        const mainStartDate = tripModal.dataset.mainStartDate.includes(',') ? tripModal.dataset.mainStartDate : new Date(tripModal.dataset.mainStartDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        const mainEndDate = tripModal.dataset.mainEndDate.includes(',') ? tripModal.dataset.mainEndDate : new Date(tripModal.dataset.mainEndDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
         const mainRooms = parseInt(tripModal.dataset.mainRooms || '0');
         const mainDuration = parseInt(tripModal.dataset.mainDuration || '0');
         
@@ -2060,7 +2060,8 @@
         if (trip.dateVariations && trip.dateVariations.length > 0) {
             optionsHtml += trip.dateVariations.map((dateVar, index) => {
             const startDate = new Date(dateVar.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-            const endDate = new Date(dateVar.endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+            // Use the date strings directly if already formatted, otherwise parse
+            const endDate = dateVar.endDate.includes(',') ? dateVar.endDate : new Date(dateVar.endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
             const days = Math.ceil((new Date(dateVar.endDate) - new Date(dateVar.startDate)) / (1000 * 60 * 60 * 24));
             
             return `

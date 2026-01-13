@@ -242,10 +242,17 @@ namespace MVC_project.Controllers
                 return View(model);
             }
 
-            // Validate dates
-            if (model.EndDate <= model.StartDate)
+            // Validate that at least one image is provided
+            if (model.Images == null || !model.Images.Any() || !model.Images.Any(img => img.Length > 0))
             {
-                ModelState.AddModelError("EndDate", "End date must be after start date");
+                ModelState.AddModelError("Images", "At least one photo must be uploaded for the trip");
+                return View(model);
+            }
+
+            // Validate dates
+            if (model.EndDate < model.StartDate)
+            {
+                ModelState.AddModelError("EndDate", "End date cannot be before start date");
                 return View(model);
             }
 
@@ -387,10 +394,18 @@ namespace MVC_project.Controllers
         [RequestFormLimits(MultipartBodyLengthLimit = 104_857_600)]
         public async Task<IActionResult> EditTrip(int id, AddTripViewModel model)
         {
+            // For editing, images are optional if trip already has images
+            var existingImages = _imageRepo.GetByTripId(id).ToList();
+            if (existingImages.Any())
+            {
+                // Remove the Images required validation error since trip already has images
+                ModelState.Remove("Images");
+            }
+            
             if (!ModelState.IsValid)
             {
                 ViewBag.TripId = id;
-                ViewBag.ExistingImages = _imageRepo.GetByTripId(id).ToList();
+                ViewBag.ExistingImages = existingImages;
                 return View(model);
             }
 
@@ -399,11 +414,11 @@ namespace MVC_project.Controllers
                 return NotFound();
 
             // Validate dates
-            if (model.EndDate <= model.StartDate)
+            if (model.EndDate < model.StartDate)
             {
-                ModelState.AddModelError("EndDate", "End date must be after start date");
+                ModelState.AddModelError("EndDate", "End date cannot be before start date");
                 ViewBag.TripId = id;
-                ViewBag.ExistingImages = _imageRepo.GetByTripId(id).ToList();
+                ViewBag.ExistingImages = existingImages;
                 return View(model);
             }
 
@@ -412,7 +427,7 @@ namespace MVC_project.Controllers
             {
                 ModelState.AddModelError("DiscountPrice", "Discount price must be less than regular price");
                 ViewBag.TripId = id;
-                ViewBag.ExistingImages = _imageRepo.GetByTripId(id).ToList();
+                ViewBag.ExistingImages = existingImages;
                 return View(model);
             }
 
@@ -550,8 +565,29 @@ namespace MVC_project.Controllers
             if (image == null)
                 return NotFound(new { success = false, message = "Image not found" });
 
+            // Check if this is the last image for the trip
+            var tripImages = _imageRepo.GetByTripId(image.TripID);
+            if (tripImages.Count() <= 1)
+            {
+                return BadRequest(new { success = false, message = "Cannot delete the last photo. Each trip must have at least one photo." });
+            }
+
             _imageRepo.Delete(imageId);
             return Ok(new { success = true, message = "Image deleted successfully" });
+        }
+
+        // GET: /Admin/DownloadImage
+        [HttpGet("DownloadImage")]
+        public IActionResult DownloadImage(int imageId)
+        {
+            var image = _imageRepo.GetById(imageId);
+            if (image == null)
+                return NotFound();
+
+            var contentType = image.ContentType ?? "image/jpeg";
+            var fileName = image.FileName ?? $"trip-image-{imageId}.jpg";
+
+            return File(image.ImageData, contentType, fileName);
         }
 
         // POST: /Admin/ToggleTripVisibility

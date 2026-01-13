@@ -457,6 +457,102 @@
         margin-left: 0.5rem;
     }
 
+    /* Custom Alert Modal */
+    .custom-alert-modal {
+        position: fixed;
+        inset: 0;
+        background: rgba(15, 23, 42, 0.65);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 1200;
+        backdrop-filter: blur(8px);
+    }
+
+    .custom-alert-modal.show {
+        display: flex;
+    }
+
+    .custom-alert-content {
+        background: white;
+        border-radius: 1rem;
+        max-width: 480px;
+        width: 90%;
+        padding: 2rem;
+        box-shadow: 0 25px 70px rgba(0, 0, 0, 0.3);
+        animation: fadeIn 0.25s ease-out;
+    }
+
+    .custom-alert-header {
+        text-align: center;
+        margin-bottom: 1.5rem;
+    }
+
+    .custom-alert-icon {
+        width: 64px;
+        height: 64px;
+        margin: 0 auto 1rem;
+        background: linear-gradient(135deg, #fef3c7 0%, #fde047 100%);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        color: #ca8a04;
+    }
+
+    .custom-alert-header h3 {
+        font-size: 1.5rem;
+        color: #1e293b;
+        margin: 0;
+        font-weight: 700;
+    }
+
+    .custom-alert-body {
+        margin-bottom: 1.5rem;
+        color: #475569;
+        line-height: 1.6;
+        text-align: center;
+    }
+
+    .custom-alert-body p {
+        margin: 0;
+    }
+
+    .custom-alert-actions {
+        display: flex;
+        justify-content: center;
+    }
+
+    .btn-alert-ok {
+        background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        color: white;
+        border: none;
+        padding: 0.875rem 2rem;
+        font-size: 1rem;
+        font-weight: 600;
+        border-radius: 0.75rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3);
+    }
+
+    .btn-alert-ok:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(245, 158, 11, 0.4);
+    }
+
+    @@keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: scale(0.9);
+        }
+        to {
+            opacity: 1;
+            transform: scale(1);
+        }
+    }
+
 </style>
 
 <!-- Animated Background -->
@@ -504,18 +600,25 @@
                         <div class="image-item" data-image-id="@image.ImageID">
                             <img src="@Url.Action("GetImageById", "Dashboard", new { imageId = image.ImageID })" 
                                  alt="Trip image" />
-                            <button type="button" class="delete-image-btn" 
-                                    onclick="deleteImage(@image.ImageID)"
-                                    title="Delete image">
-                                <i class="bi bi-x"></i>
-                            </button>
+                            <div class="image-actions">
+                                <button type="button" class="download-image-btn" 
+                                        onclick="downloadImage(@image.ImageID, '@image.FileName')"
+                                        title="Download image">
+                                    <i class="bi bi-download"></i>
+                                </button>
+                                <button type="button" class="delete-image-btn" 
+                                        onclick="deleteImage(@image.ImageID)"
+                                        title="Delete image">
+                                    <i class="bi bi-x"></i>
+                                </button>
+                            </div>
                         </div>
                     }
                 </div>
             </div>
         }
 
-        <form asp-action="EditTrip" asp-controller="Admin" asp-route-id="@tripId" method="post" enctype="multipart/form-data">
+        <form asp-action="EditTrip" asp-controller="Admin" asp-route-id="@tripId" method="post" enctype="multipart/form-data" onsubmit="return validatePhotoBeforeSubmit(event)">
             <!-- Destination & Country -->
             <div class="form-row">
                 <div class="form-group">
@@ -541,7 +644,7 @@
                     <label asp-for="StartDate" class="form-label">
                         <i class="bi bi-calendar-check"></i> Start Date
                     </label>
-                    <input asp-for="StartDate" type="date" class="form-control" />
+                    <input asp-for="StartDate" type="date" class="form-control" id="mainStartDate" min="@DateTime.Now.ToString("yyyy-MM-dd")" />
                     <span asp-validation-for="StartDate" class="text-danger"></span>
                 </div>
 
@@ -549,7 +652,7 @@
                     <label asp-for="EndDate" class="form-label">
                         <i class="bi bi-calendar-x"></i> End Date
                     </label>
-                    <input asp-for="EndDate" type="date" class="form-control" />
+                    <input asp-for="EndDate" type="date" class="form-control" id="mainEndDate" />
                     <span asp-validation-for="EndDate" class="text-danger"></span>
                 </div>
             </div>
@@ -682,13 +785,13 @@
                                         <div class="row g-3">
                                             <div class="col-md-4">
                                                 <label class="form-label">Start Date</label>
-                                                <input type="date" name="AdditionalDates[@i].StartDate" class="form-control" 
-                                                       value="@Model.AdditionalDates[i].StartDate.ToString("yyyy-MM-dd")" required />
+                                                <input type="date" name="AdditionalDates[@i].StartDate" class="form-control additional-start-date" 
+                                                       value="@Model.AdditionalDates[i].StartDate.ToString("yyyy-MM-dd")" min="@DateTime.Now.ToString("yyyy-MM-dd")" required />
                                                 <input type="hidden" name="AdditionalDates[@i].TripDateID" value="@Model.AdditionalDates[i].TripDateID" />
                                             </div>
                                             <div class="col-md-4">
                                                 <label class="form-label">End Date</label>
-                                                <input type="date" name="AdditionalDates[@i].EndDate" class="form-control" 
+                                                <input type="date" name="AdditionalDates[@i].EndDate" class="form-control additional-end-date" 
                                                        value="@Model.AdditionalDates[i].EndDate.ToString("yyyy-MM-dd")" required />
                                             </div>
                                             <div class="col-md-4">
@@ -741,6 +844,24 @@
     </div>
 </div>
 
+<!-- Custom Modal for Alerts -->
+<div id="customAlertModal" class="custom-alert-modal">
+    <div class="custom-alert-content">
+        <div class="custom-alert-header">
+            <div class="custom-alert-icon" id="alertIcon">
+                <i class="bi bi-exclamation-triangle"></i>
+            </div>
+            <h3 id="alertTitle">Alert</h3>
+        </div>
+        <div class="custom-alert-body">
+            <p id="alertMessage">Message</p>
+        </div>
+        <div class="custom-alert-actions">
+            <button type="button" class="btn-alert-ok" onclick="closeCustomAlert()">OK</button>
+        </div>
+    </div>
+</div>
+
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
 }
@@ -759,8 +880,53 @@
         }
     })();
 
+    // Custom alert functions
+    function showCustomAlert(title, message, type = 'warning') {
+        const modal = document.getElementById('customAlertModal');
+        const titleEl = document.getElementById('alertTitle');
+        const messageEl = document.getElementById('alertMessage');
+        const iconEl = document.getElementById('alertIcon');
+        
+        titleEl.textContent = title;
+        messageEl.textContent = message;
+        
+        // Update icon based on type
+        if (type === 'error') {
+            iconEl.innerHTML = '<i class="bi bi-x-circle"></i>';
+            iconEl.style.background = 'linear-gradient(135deg, #fee2e2 0%, #fca5a5 100%)';
+            iconEl.style.color = '#dc2626';
+        } else if (type === 'success') {
+            iconEl.innerHTML = '<i class="bi bi-check-circle"></i>';
+            iconEl.style.background = 'linear-gradient(135deg, #d1fae5 0%, #6ee7b7 100%)';
+            iconEl.style.color = '#059669';
+        } else {
+            iconEl.innerHTML = '<i class="bi bi-exclamation-triangle"></i>';
+            iconEl.style.background = 'linear-gradient(135deg, #fef3c7 0%, #fde047 100%)';
+            iconEl.style.color = '#ca8a04';
+        }
+        
+        modal.classList.add('show');
+    }
+    
+    function closeCustomAlert() {
+        document.getElementById('customAlertModal').classList.remove('show');
+    }
+
     // Delete image function
     function deleteImage(imageId) {
+        // Count current images
+        const grid = document.getElementById('imagesGrid');
+        const currentCount = grid ? grid.querySelectorAll('.image-item').length : 0;
+        
+        if (currentCount <= 1) {
+            showCustomAlert(
+                'Cannot Delete Last Photo',
+                'Each trip must have at least one photo. Please upload a new photo before deleting this one.',
+                'warning'
+            );
+            return;
+        }
+
         if (!confirm('Are you sure you want to delete this image?')) {
             return;
         }
@@ -782,22 +948,29 @@
                 }
                 
                 // Update count
-                const grid = document.getElementById('imagesGrid');
-                const remaining = grid ? grid.querySelectorAll('.image-item').length - 1 : 0;
-                if (remaining === 0) {
-                    document.querySelector('.existing-images')?.remove();
-                } else {
-                    const title = document.querySelector('.existing-images-title span');
-                    if (title) title.textContent = `Current Images (${remaining})`;
-                }
+                const remaining = currentCount - 1;
+                const title = document.querySelector('.existing-images-title span');
+                if (title) title.textContent = `Current Images (${remaining})`;
+                
+                showCustomAlert('Success', 'Image deleted successfully!', 'success');
             } else {
-                alert('Failed to delete image: ' + (data.message || 'Unknown error'));
+                showCustomAlert('Error', data.message || 'Failed to delete image', 'error');
             }
         })
         .catch(error => {
             console.error('Delete error:', error);
-            alert('Error deleting image');
+            showCustomAlert('Error', 'An error occurred while deleting the image', 'error');
         });
+    }
+    
+    // Download image function
+    function downloadImage(imageId, fileName) {
+        const link = document.createElement('a');
+        link.href = `/Admin/DownloadImage?imageId=${imageId}`;
+        link.download = fileName || `trip-image-${imageId}.jpg`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
     }
 
     // Animation for fade out
@@ -835,11 +1008,11 @@
                             <div class="row g-3">
                                 <div class="col-md-4">
                                     <label class="form-label">Start Date</label>
-                                    <input type="date" name="AdditionalDates[${index}].StartDate" class="form-control" required />
+                                    <input type="date" name="AdditionalDates[${index}].StartDate" class="form-control additional-start-date" min="@DateTime.Now.ToString("yyyy-MM-dd")" required />
                                 </div>
                                 <div class="col-md-4">
                                     <label class="form-label">End Date</label>
-                                    <input type="date" name="AdditionalDates[${index}].EndDate" class="form-control" required />
+                                    <input type="date" name="AdditionalDates[${index}].EndDate" class="form-control additional-end-date" required />
                                 </div>
                                 <div class="col-md-4">
                                     <label class="form-label">Available Rooms</label>
@@ -863,6 +1036,67 @@
                 if (item) {
                     item.style.animation = 'fadeOut 0.3s ease';
                     setTimeout(() => item.remove(), 300);
+                }
+            }
+        });
+    })();
+
+    // Validate that at least one photo exists before form submission
+    function validatePhotoBeforeSubmit(event) {
+        const grid = document.getElementById('imagesGrid');
+        const existingPhotoCount = grid ? grid.querySelectorAll('.image-item').length : 0;
+        const newPhotoInput = document.querySelector('input[type="file"][name="Images"]');
+        const hasNewPhotos = newPhotoInput && newPhotoInput.files && newPhotoInput.files.length > 0;
+        
+        if (existingPhotoCount === 0 && !hasNewPhotos) {
+            event.preventDefault();
+            showCustomAlert(
+                'Cannot Update Trip',
+                'The trip cannot be updated without any photos. Please upload at least one photo before saving.',
+                'error'
+            );
+            return false;
+        }
+        
+        return true;
+    }
+
+    // Date Validation
+    (function(){
+        const mainStartDate = document.getElementById('mainStartDate');
+        const mainEndDate = document.getElementById('mainEndDate');
+        
+        // Update main end date minimum when start date changes
+        if (mainStartDate && mainEndDate) {
+            mainStartDate.addEventListener('change', function() {
+                if (this.value) {
+                    mainEndDate.min = this.value;
+                    // If end date is before new start date, clear it
+                    if (mainEndDate.value && mainEndDate.value < this.value) {
+                        mainEndDate.value = '';
+                    }
+                }
+            });
+            
+            // Set initial minimum for end date if start date has value
+            if (mainStartDate.value) {
+                mainEndDate.min = mainStartDate.value;
+            }
+        }
+        
+        // Handle validation for additional date variations using event delegation
+        document.addEventListener('change', function(e) {
+            if (e.target.classList.contains('additional-start-date')) {
+                const row = e.target.closest('.row');
+                if (row) {
+                    const endDateInput = row.querySelector('.additional-end-date');
+                    if (endDateInput && e.target.value) {
+                        endDateInput.min = e.target.value;
+                        // If end date is before new start date, clear it
+                        if (endDateInput.value && endDateInput.value < e.target.value) {
+                            endDateInput.value = '';
+                        }
+                    }
                 }
             }
         });

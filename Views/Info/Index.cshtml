@@ -902,18 +902,19 @@
         const rating = parseInt(selectedRatingInput.value);
         const feedbackText = feedbackTextarea.value.trim();
 
+        // Validate feedback input
         if (rating === 0) {
-            alert('Please select a rating');
+            showAlert('Rating Required', 'Please select a rating before submitting.', 'warning');
             return;
         }
 
         if (!feedbackText) {
-            alert('Please enter your feedback');
+            showAlert('Feedback Required', 'Please enter your feedback.', 'warning');
             return;
         }
 
         if (feedbackText.length > 1000) {
-            alert('Feedback must be 1000 characters or less');
+            showAlert('Feedback Too Long', 'Feedback must be 1000 characters or less.', 'warning');
             return;
         }
 
@@ -932,19 +933,13 @@
             const result = await response.json();
 
             if (result.success) {
-                // Show beautiful success message by reloading the page
                 location.reload();
             } else {
-                // Create and show error message
-                const errorDiv = document.createElement('div');
-                errorDiv.className = 'alert alert-danger';
-                errorDiv.innerHTML = `<i class="bi bi-exclamation-circle me-2"></i>${result.message}`;
-                feedbackForm.insertAdjacentElement('beforebegin', errorDiv);
-                setTimeout(() => errorDiv.remove(), 5000);
+                showAlert('Error', result.message, 'error');
             }
         } catch (error) {
             console.error('Error submitting feedback:', error);
-            alert('An error occurred while submitting your feedback. Please try again.');
+            showAlert('Error', 'An error occurred while submitting your feedback. Please try again.', 'error');
         }
     });
 </script>

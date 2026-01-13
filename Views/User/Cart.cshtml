@@ -781,8 +781,29 @@
         }
     }
 
-    async function removeFromCart(userTripId, destination) {
-        // Don't show modal, remove immediately
+    function removeFromCart(userTripId, destination) {
+        // Show confirmation modal before removing
+        window.pendingRemovalUserTripId = userTripId;
+        window.pendingRemovalDestination = destination;
+        
+        document.getElementById('tripNamePlaceholder').textContent = destination;
+        document.getElementById('confirmationModal').classList.add('show');
+    }
+
+    function closeConfirmationModal() {
+        document.getElementById('confirmationModal').classList.remove('show');
+        window.pendingRemovalUserTripId = null;
+        window.pendingRemovalDestination = null;
+    }
+
+    async function confirmRemoveFromCart() {
+        const userTripId = window.pendingRemovalUserTripId;
+        const destination = window.pendingRemovalDestination;
+
+        if (!userTripId) return;
+        
+        closeConfirmationModal();
+
         try {
             const response = await fetch('/User/RemoveFromCart', {
                 method: 'POST',
@@ -870,67 +891,6 @@
         } catch (error) {
             console.error('Error removing from cart:', error);
             showNotification('Failed to remove date. Please try again.', 'error');
-        }
-    }
-
-    function closeConfirmationModal() {
-        document.getElementById('confirmationModal').classList.remove('show');
-        window.pendingRemovalUserTripId = null;
-        window.pendingRemovalDestination = null;
-    }
-
-    async function confirmRemoveFromCart() {
-        const userTripId = window.pendingRemovalUserTripId;
-        const destination = window.pendingRemovalDestination;
-
-        if (!userTripId) return;
-
-        try {
-            const response = await fetch('/User/RemoveFromCart', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ userTripID: userTripId })
-            });
-
-            const data = await response.json();
-            
-            if (data.success) {
-                // Close modal
-                closeConfirmationModal();
-                
-                // Remove card with animation
-                const card = document.querySelector(`[data-usertrip-id="${userTripId}"]`);
-                if (card) {
-                    card.style.animation = 'fadeOut 0.4s ease forwards';
-                    setTimeout(() => {
-                        card.remove();
-                        
-                        // Check if cart is now empty
-                        const remainingCards = document.querySelectorAll('.trip-card');
-                        if (remainingCards.length === 0) {
-                            location.reload(); // Reload to show empty state
-                        } else {
-                            // Update count badge
-                            const badge = document.querySelector('.trip-count-badge');
-                            if (badge) {
-                                const count = remainingCards.length;
-                                badge.innerHTML = `<i class="bi bi-bag-check"></i> ${count} ${count === 1 ? 'Trip' : 'Trips'} in Cart`;
-                            }
-                        }
-                        
-                        showNotification('✓ Trip removed from cart', 'success');
-                    }, 400);
-                }
-            } else {
-                closeConfirmationModal();
-                showNotification(data.message, 'error');
-            }
-        } catch (error) {
-            console.error('Error removing from cart:', error);
-            closeConfirmationModal();
-            showNotification('Failed to remove trip. Please try again.', 'error');
         }
     }
 
