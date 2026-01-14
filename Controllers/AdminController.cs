@@ -20,9 +20,10 @@ namespace MVC_project.Controllers
         private readonly BookingRepository _bookingRepo;
         private readonly WaitlistRepository _waitlistRepo;
         private readonly PasswordService _passwordService;
+        private readonly ReminderService _reminderService;
         private readonly IWebHostEnvironment _webHostEnvironment;
 
-        public AdminController(TripRepository tripRepo, TripImageRepository imageRepo, TripDateRepository tripDateRepo, UserRepository userRepo, BookingRepository bookingRepo, WaitlistRepository waitlistRepo, PasswordService passwordService, IWebHostEnvironment webHostEnvironment)
+        public AdminController(TripRepository tripRepo, TripImageRepository imageRepo, TripDateRepository tripDateRepo, UserRepository userRepo, BookingRepository bookingRepo, WaitlistRepository waitlistRepo, PasswordService passwordService, ReminderService reminderService, IWebHostEnvironment webHostEnvironment)
         {
             _tripRepo = tripRepo;
             _imageRepo = imageRepo;
@@ -31,6 +32,7 @@ namespace MVC_project.Controllers
             _bookingRepo = bookingRepo;
             _waitlistRepo = waitlistRepo;
             _passwordService = passwordService;
+            _reminderService = reminderService;
             _webHostEnvironment = webHostEnvironment;
         }
 
@@ -256,6 +258,12 @@ namespace MVC_project.Controllers
                 return View(model);
             }
 
+            if (model.LatestBookingDate.HasValue && model.LatestBookingDate.Value.Date > model.StartDate.Date)
+            {
+                ModelState.AddModelError("LatestBookingDate", "Latest booking date must be on or before the trip start date");
+                return View(model);
+            }
+
             // Validate discount
             if (model.DiscountPrice.HasValue && model.DiscountPrice >= model.Price)
             {
@@ -272,6 +280,8 @@ namespace MVC_project.Controllers
                 Price = model.Price,
                 DiscountPrice = model.DiscountPrice,
                 DiscountEndDate = model.DiscountEndDate,
+                ReminderDaysBefore = model.ReminderDaysBefore,
+                LatestBookingDate = model.LatestBookingDate,
                 CancellationEndDate = model.CancellationEndDate,
                 AvailableRooms = model.AvailableRooms,
                 TotalRooms = model.AvailableRooms,
@@ -376,6 +386,8 @@ namespace MVC_project.Controllers
                 Price = trip.Price,
                 DiscountPrice = trip.DiscountPrice,
                 DiscountEndDate = trip.DiscountEndDate,
+                ReminderDaysBefore = trip.ReminderDaysBefore,
+                LatestBookingDate = trip.LatestBookingDate,
                 AvailableRooms = trip.AvailableRooms,
                 PackageType = trip.PackageType,
                 AgeLimit = trip.AgeLimit,
@@ -422,6 +434,14 @@ namespace MVC_project.Controllers
                 return View(model);
             }
 
+            if (model.LatestBookingDate.HasValue && model.LatestBookingDate.Value.Date > model.StartDate.Date)
+            {
+                ModelState.AddModelError("LatestBookingDate", "Latest booking date must be on or before the trip start date");
+                ViewBag.TripId = id;
+                ViewBag.ExistingImages = existingImages;
+                return View(model);
+            }
+
             // Validate discount
             if (model.DiscountPrice.HasValue && model.DiscountPrice >= model.Price)
             {
@@ -433,6 +453,8 @@ namespace MVC_project.Controllers
 
             // Update trip properties
             var oldPrice = trip.Price;
+            var originalReminder = trip.ReminderDaysBefore;
+            var originalStartDate = trip.StartDate;
             trip.Destination = model.Destination;
             trip.Country = model.Country;
             trip.StartDate = model.StartDate;
@@ -440,12 +462,20 @@ namespace MVC_project.Controllers
             trip.Price = model.Price;
             trip.DiscountPrice = model.DiscountPrice;
             trip.DiscountEndDate = model.DiscountEndDate;
+            var reminderChanged = originalReminder != model.ReminderDaysBefore || originalStartDate.Date != model.StartDate.Date;
+            trip.ReminderDaysBefore = model.ReminderDaysBefore;
+            trip.LatestBookingDate = model.LatestBookingDate;
             trip.CancellationEndDate = model.CancellationEndDate;
             trip.AvailableRooms = model.AvailableRooms;
             trip.TotalRooms = model.AvailableRooms;
             trip.PackageType = model.PackageType;
             trip.AgeLimit = model.AgeLimit;
             trip.Description = model.Description;
+
+            if (reminderChanged)
+            {
+                trip.LastReminderSentAt = null;
+            }
 
             // Track price drop from previous value
             if (model.Price < oldPrice)
@@ -609,9 +639,27 @@ namespace MVC_project.Controllers
             return Ok(new { success = true, message, isVisible = newVisibility });
         }
 
+        // POST: /Admin/SendTripReminders
+        // Allows admins to manually trigger reminder emails for due trips (optionally for a single trip)
+        [HttpPost("SendTripReminders")]
+        public async Task<IActionResult> SendTripReminders([FromBody] SendTripReminderRequest request)
+        {
+            var result = await _reminderService.SendDueRemindersAsync(request?.TripId);
+            var message = result.SentCount > 0
+                ? $"Sent {result.SentCount} reminder email(s)."
+                : "No reminders were sent because none were due.";
+
+            return Ok(new { success = true, sent = result.SentCount, skipped = result.SkippedCount, message });
+        }
+
         public class ToggleTripVisibilityRequest
         {
             public int TripId { get; set; }
+        }
+
+        public class SendTripReminderRequest
+        {
+            public int? TripId { get; set; }
         }
     }
 }

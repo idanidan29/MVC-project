@@ -23,6 +23,14 @@ namespace MVC_project.ViewModels
         [Display(Name = "End Date")]
         public DateTime EndDate { get; set; }
 
+        [DataType(DataType.Date)]
+        [Display(Name = "Latest Booking Date (Optional)")]
+        public DateTime? LatestBookingDate { get; set; }
+
+        [Range(0, 365, ErrorMessage = "Reminder must be between 0 and 365 days before departure")]
+        [Display(Name = "Reminder (Days Before Start)")]
+        public int? ReminderDaysBefore { get; set; }
+
         [Required(ErrorMessage = "Price is required")]
         [Range(0, 999999.99, ErrorMessage = "Price must be a non-negative value up to 999,999.99")]
         [DataType(DataType.Currency)]

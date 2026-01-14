@@ -1,3 +1,4 @@
+using System.Linq;
 using MVC_project.Models;
 
 namespace MVC_project.Data
@@ -121,6 +122,15 @@ namespace MVC_project.Data
                 return trip.IsVisible;  // Return new state
             }
             return false;  // Trip not found
+        }
+
+        /// <summary>
+        /// Returns trips that have reminder configuration enabled (ReminderDaysBefore is set).
+        /// Used by reminder services to find candidates without scanning all trips.
+        /// </summary>
+        public IEnumerable<Trip> GetReminderEnabledTrips()
+        {
+            return _context.Trips.Where(t => t.ReminderDaysBefore.HasValue).ToList();
         }
     }
 }

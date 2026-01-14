@@ -1119,6 +1119,8 @@
                      data-start-date-display='@trip.StartDate.ToString("MMM dd, yyyy")'
                      data-duration="@((trip.EndDate - trip.StartDate).Days)"
                      data-rooms="@trip.AvailableRooms"
+                     data-booking-closed="@trip.IsBookingClosed.ToString().ToLower()"
+                     data-cutoff="@trip.LatestBookingDate?.ToString("MMM dd, yyyy")"
                      data-age-limit="@trip.AgeLimit"
                      data-package="@trip.PackageType"
                      data-cancel-until='@trip.EffectiveCancellationEndDate.ToString("MMM dd, yyyy")'
@@ -1190,6 +1192,8 @@
                         @{
                             var avgRating = trip.RatingCount > 0 ? trip.RatingSum / (decimal)trip.RatingCount : 0m;
                             var fullStars = (int)avgRating;
+                            var bookingClosed = trip.IsBookingClosed;
+                            var cutoffText = trip.LatestBookingDate?.ToString("MMM dd, yyyy");
                         }
                         <div class="trip-rating" data-trip-id="@trip.TripID" style="display: flex; align-items: center; gap: 0.5rem; padding: 0.75rem 0;">
                             <div class="trip-rating-stars" data-trip-id="@trip.TripID" style="display: flex; gap: 0.1rem;">
@@ -1212,6 +1216,14 @@
                             <span class="trip-rating-avg" data-trip-id="@trip.TripID" style="color: #6366f1; font-weight: 700; font-size: 0.9rem;">@avgRating.ToString("F1")</span>
                             <span class="trip-rating-count" data-trip-id="@trip.TripID" style="color: #64748b; font-size: 0.85rem;">(@trip.RatingCount)</span>
                         </div>
+
+                        @if (trip.LatestBookingDate.HasValue)
+                        {
+                            <div class="trip-rating" style="padding: 0.35rem 0.75rem; border-radius: 999px; background: @(bookingClosed ? "linear-gradient(135deg, #fca5a5, #f87171)" : "linear-gradient(135deg, #e0f2fe, #bfdbfe)"); color: @(bookingClosed ? "#7f1d1d" : "#0f172a"); display:inline-flex; align-items:center; gap:0.4rem; font-weight:700;">
+                                <i class="bi bi-hourglass-split"></i>
+                                <span>@(bookingClosed ? $"Booking closed on {cutoffText}" : $"Book by {cutoffText}")</span>
+                            </div>
+                        }
 
                         <!-- Price Section -->
                         <div class="trip-price-section">
@@ -1268,15 +1280,24 @@
                         }
                         else
                         {
-                            <!-- Quantity is selected in the trip modal only -->
-                            <button type="button" class="btn-add-cart" onclick="event.stopPropagation(); addToCart(@trip.TripID, '@trip.Destination');" title="Add to cart">
-                                <i class="bi bi-cart-plus"></i>
-                                <span>Add to Cart</span>
-                            </button>
-                            <button type="button" class="btn-book-now" onclick="event.stopPropagation(); bookNow(@trip.TripID);" title="Buy now">
-                                <i class="bi bi-lightning-charge"></i>
-                                <span>Buy Now</span>
-                            </button>
+                            if (bookingClosed)
+                            {
+                                <div style="padding: 0.85rem 1rem; border-radius: 1rem; background: linear-gradient(135deg, #fee2e2, #fecaca); color: #7f1d1d; font-weight:700; text-align:center; width:100%; box-shadow: 0 8px 20px rgba(127, 29, 29, 0.08);">
+                                    <i class="bi bi-pause-circle"></i> Booking closed on @cutoffText
+                                </div>
+                            }
+                            else
+                            {
+                                <!-- Quantity is selected in the trip modal only -->
+                                <button type="button" class="btn-add-cart" onclick="event.stopPropagation(); addToCart(@trip.TripID, '@trip.Destination');" title="Add to cart">
+                                    <i class="bi bi-cart-plus"></i>
+                                    <span>Add to Cart</span>
+                                </button>
+                                <button type="button" class="btn-book-now" onclick="event.stopPropagation(); bookNow(@trip.TripID);" title="Buy now">
+                                    <i class="bi bi-lightning-charge"></i>
+                                    <span>Buy Now</span>
+                                </button>
+                            }
                         }
                         </div>
                     </div>
@@ -2226,6 +2247,12 @@
         const qtyInput = card ? card.querySelector('.qty-input') : null;
         const quantity = qtyInput ? parseInt(qtyInput.value || '1', 10) : 1;
         const selectedDateIndex = -1; // Main date when adding from card
+
+        if (card && card.dataset.bookingClosed === 'true') {
+            const cutoff = card.dataset.cutoff || 'the cutoff date';
+            showNotification(`Booking closed on ${cutoff}. This trip is browse-only now.`, 'error');
+            return;
+        }
         
         try {
             const response = await fetch('/User/AddToCart', {
@@ -2274,6 +2301,12 @@
         const card = document.querySelector(`[data-trip-id="${tripId}"]`);
         const qtyInput = card ? card.querySelector('.qty-input') : null;
         const quantity = qtyInput ? parseInt(qtyInput.value || '1', 10) : 1;
+
+        if (card && card.dataset.bookingClosed === 'true') {
+            const cutoff = card.dataset.cutoff || 'the cutoff date';
+            showNotification(`Booking closed on ${cutoff}. This trip cannot be booked.`, 'error');
+            return;
+        }
         
         // Try to open payment modal which requires auth
         fetch('/Booking/CheckoutInfo?tripId=' + tripId + '&quantity=' + quantity)

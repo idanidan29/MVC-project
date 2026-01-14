@@ -1,3 +1,4 @@
+using System.Linq;
 using MVC_project.Models;
 using Microsoft.EntityFrameworkCore;
 
@@ -210,6 +211,136 @@ namespace MVC_project.Data
             _context.UserTrips.RemoveRange(items);  // Mark all for deletion
             _context.SaveChanges();                  // Execute DELETE for all items
             return items.Count;  // Return how many items were removed
+        }
+
+        /// <summary>
+        /// Removes every cart entry for a specific trip across all users.
+        /// Helpful when a booking window closes so no carts hold stale items.
+        /// </summary>
+        public int RemoveAllByTripId(int tripId)
+        {
+            var items = _context.UserTrips.Where(ut => ut.TripID == tripId).ToList();
+            if (!items.Any()) return 0;
+
+            _context.UserTrips.RemoveRange(items);
+            _context.SaveChanges();
+            return items.Count;
+        }
+
+        /// <summary>
+        /// Removes cart entries for a user when the trip's latest booking date has passed.
+        /// Returns the number of items removed for transparency.
+        /// </summary>
+        public int RemoveClosedByUserId(int userId, DateTime todayUtcDate)
+        {
+            var expired = _context.UserTrips
+                .Include(ut => ut.Trip)
+                .Where(ut => ut.UserId == userId
+                    && ut.Trip != null
+                    && ut.Trip.LatestBookingDate.HasValue
+                    && todayUtcDate > ut.Trip.LatestBookingDate.Value.Date)
+                .ToList();
+
+            if (!expired.Any()) return 0;
+
+            _context.UserTrips.RemoveRange(expired);
+            _context.SaveChanges();
+            return expired.Count;
+        }
+
+        /// <summary>
+        /// Removes cart entries for all users when a trip's booking window has closed.
+        /// Used by background services to keep carts clean without requiring user interaction.
+        /// </summary>
+        public int RemoveClosedForAllUsers(DateTime todayUtcDate)
+        {
+            var expired = _context.UserTrips
+                .Include(ut => ut.Trip)
+                .Where(ut => ut.Trip != null
+                    && ut.Trip.LatestBookingDate.HasValue
+                    && todayUtcDate > ut.Trip.LatestBookingDate.Value.Date)
+                .ToList();
+
+            if (!expired.Any()) return 0;
+
+            _context.UserTrips.RemoveRange(expired);
+            _context.SaveChanges();
+            return expired.Count;
+        }
+
+        /// <summary>
+        /// Gets total quantity in user's cart for a specific trip across ALL date variations.
+        /// Used to validate if adding more would exceed available rooms.
+        /// </summary>
+        public int GetTotalQuantityForTrip(int userId, int tripId)
+        {
+            return _context.UserTrips
+                .Where(ut => ut.UserId == userId && ut.TripID == tripId)
+                .Sum(ut => ut.Quantity);
+        }
+
+        /// <summary>
+        /// Auto-caps quantities when they exceed available rooms.
+        /// Called on cart view to ensure cart stays valid even if availability changed.
+        /// Returns number of items that were capped.
+        /// </summary>
+        public int CapExcessQuantities(int userId)
+        {
+            var cartItems = _context.UserTrips
+                .Include(ut => ut.Trip)
+                .Where(ut => ut.UserId == userId)
+                .ToList();
+
+            int cappedCount = 0;
+
+            // Group by trip to check totals
+            var tripGroups = cartItems.GroupBy(ut => ut.TripID);
+
+            foreach (var tripGroup in tripGroups)
+            {
+                var trip = tripGroup.First().Trip;
+                if (trip == null) continue;
+
+                // Get total quantity for this trip across all dates
+                var totalQty = tripGroup.Sum(ut => ut.Quantity);
+
+                // Get max available (highest availability among all variations)
+                var maxAvailable = trip.AvailableRooms;
+                var tripDates = _context.TripDates.Where(td => td.TripID == trip.TripID).ToList();
+                if (tripDates.Any())
+                {
+                    maxAvailable = Math.Max(maxAvailable, tripDates.Max(td => td.AvailableRooms));
+                }
+
+                // If total exceeds available, cap it
+                if (totalQty > maxAvailable)
+                {
+                    var excess = totalQty - maxAvailable;
+                    
+                    // Reduce quantities starting from the last items in cart
+                    foreach (var item in tripGroup.OrderByDescending(ut => ut.UserTripID))
+                    {
+                        if (excess <= 0) break;
+
+                        var reduction = Math.Min(item.Quantity, excess);
+                        item.Quantity -= reduction;
+                        excess -= reduction;
+                        cappedCount++;
+
+                        if (item.Quantity <= 0)
+                        {
+                            _context.UserTrips.Remove(item);
+                        }
+                    }
+                }
+            }
+
+            if (cappedCount > 0)
+            {
+                _context.SaveChanges();
+            }
+
+            return cappedCount;
         }
     }
 }

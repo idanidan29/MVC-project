@@ -544,6 +544,26 @@
                 </div>
             </div>
 
+            <!-- Latest Booking Date (Optional) -->
+            <div class="form-group" style="background: linear-gradient(135deg, rgba(59,130,246,0.08) 0%, rgba(99,102,241,0.08) 100%); padding: 1rem; border-radius: 1rem; border: 1px solid rgba(99,102,241,0.25);">
+                <label asp-for="LatestBookingDate" class="form-label">
+                    <i class="bi bi-hourglass-split"></i> Latest Booking Date (Optional)
+                </label>
+                <input asp-for="LatestBookingDate" type="date" class="form-control" />
+                <div class="small text-muted mt-1">After this date, the trip stays visible but checkout and cart will be disabled automatically.</div>
+                <span asp-validation-for="LatestBookingDate" class="text-danger"></span>
+            </div>
+
+            <!-- Reminder (Optional) -->
+            <div class="form-group" style="background: linear-gradient(135deg, rgba(14,165,233,0.08) 0%, rgba(6,182,212,0.08) 100%); padding: 1rem; border-radius: 1rem; border: 1px solid rgba(6,182,212,0.25);">
+                <label asp-for="ReminderDaysBefore" class="form-label">
+                    <i class="bi bi-bell"></i> Send Reminder (days before departure, Optional)
+                </label>
+                <input asp-for="ReminderDaysBefore" type="number" min="0" max="365" class="form-control" placeholder="e.g., 5" />
+                <div class="small text-muted mt-1">If set, a reminder email is sent this many days before Start Date to all booked users.</div>
+                <span asp-validation-for="ReminderDaysBefore" class="text-danger"></span>
+            </div>
+
             <!-- Cancellation Deadline (Optional) -->
             <div class="form-group" style="background: linear-gradient(135deg, rgba(16,185,129,0.06) 0%, rgba(52,211,153,0.06) 100%); padding: 1rem; border-radius: 1rem; border: 1px solid rgba(16,185,129,0.2);">
                 <label asp-for="CancellationEndDate" class="form-label">

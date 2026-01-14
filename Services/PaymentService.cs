@@ -62,6 +62,7 @@ namespace MVC_project.Services
         {
             var trip = _tripRepo.GetById(tripId);  // Fetch trip from database
             if (trip == null) return null;  // Trip doesn't exist
+            if (trip.LatestBookingDate.HasValue && DateTime.UtcNow.Date > trip.LatestBookingDate.Value.Date) return null;
             
             // Determine unit price: use discount if available and lower than regular price
             var unit = trip.DiscountPrice.HasValue && trip.DiscountPrice < trip.Price 

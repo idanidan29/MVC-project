@@ -2,8 +2,8 @@
   "ExpandedNodes": [
     "",
     "\\Views",
-    "\\Views\\Dashboard",
     "\\Views\\Shared",
+    "\\Views\\User",
     "\\wwwroot",
     "\\wwwroot\\css",
     "\\wwwroot\\lib",
@@ -11,6 +11,6 @@
     "\\wwwroot\\lib\\bootstrap\\dist",
     "\\wwwroot\\lib\\bootstrap\\dist\\css"
   ],
-  "SelectedNode": "\\MVC-project.sln",
+  "SelectedNode": "\\Views\\User\\Bookings.cshtml",
   "PreviewInSolutionExplorer": false
 }

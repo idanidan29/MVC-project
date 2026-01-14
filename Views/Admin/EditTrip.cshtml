@@ -657,6 +657,26 @@
                 </div>
             </div>
 
+            <!-- Latest Booking Date (Optional) -->
+            <div class="form-group" style="background: linear-gradient(135deg, rgba(245,158,11,0.08) 0%, rgba(251,191,36,0.08) 100%); padding: 1rem; border-radius: 1rem; border: 1px solid rgba(245,158,11,0.25);">
+                <label asp-for="LatestBookingDate" class="form-label">
+                    <i class="bi bi-hourglass-split"></i> Latest Booking Date (Optional)
+                </label>
+                <input asp-for="LatestBookingDate" type="date" class="form-control" />
+                <div class="small text-muted mt-1">After this date the trip stays visible, but checkout and cart will be disabled automatically.</div>
+                <span asp-validation-for="LatestBookingDate" class="text-danger"></span>
+            </div>
+
+            <!-- Reminder (Optional) -->
+            <div class="form-group" style="background: linear-gradient(135deg, rgba(59,130,246,0.08) 0%, rgba(37,99,235,0.08) 100%); padding: 1rem; border-radius: 1rem; border: 1px solid rgba(59,130,246,0.25);">
+                <label asp-for="ReminderDaysBefore" class="form-label">
+                    <i class="bi bi-bell"></i> Send Reminder (days before departure, Optional)
+                </label>
+                <input asp-for="ReminderDaysBefore" type="number" min="0" max="365" class="form-control" placeholder="e.g., 5" />
+                <div class="small text-muted mt-1">If set, a reminder email is sent this many days before Start Date to all booked users.</div>
+                <span asp-validation-for="ReminderDaysBefore" class="text-danger"></span>
+            </div>
+
             <!-- Cancellation Deadline (Optional) -->
             <div class="form-group" style="background: linear-gradient(135deg, rgba(245,158,11,0.08) 0%, rgba(251,146,60,0.08) 100%); padding: 1rem; border-radius: 1rem; border: 1px solid rgba(245,158,11,0.25);">
                 <label asp-for="CancellationEndDate" class="form-label">

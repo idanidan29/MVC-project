@@ -140,6 +140,40 @@ namespace MVC_project.Services
             }
         }
 
+        // Send trip reminder emails to booked users
+        public async Task<bool> SendTripReminderAsync(string toEmail, string userName, string destination, DateTime startDate, int daysBefore)
+        {
+            try
+            {
+                var subject = $"Reminder: Your trip to {destination} is coming up";
+                var body = $@"
+                    <!DOCTYPE html>
+                    <html>
+                    <head>
+                        <meta charset='utf-8'>
+                        <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+                    </head>
+                    <body style='font-family: Arial, sans-serif; line-height: 1.6; color: #1f2937; max-width: 640px; margin: 0 auto; padding: 24px;'>
+                        <h2 style='color: #111827; margin-bottom: 8px;'>Hi {userName},</h2>
+                        <p style='margin-top: 0;'>This is a friendly reminder that your trip to <strong>{destination}</strong> departs on <strong>{startDate:MMMM dd, yyyy}</strong>.</p>
+                        <div style='background: #f3f4f6; border-radius: 12px; padding: 16px; margin: 18px 0; border: 1px solid #e5e7eb;'>
+                            <p style='margin: 0; color: #374151;'>We are sending this {daysBefore}-day reminder so you have time to finish any packing, document checks, and payments.</p>
+                        </div>
+                        <p style='margin: 12px 0;'>If you have any questions before departure, reply to this email or visit your account to review your booking details.</p>
+                        <p style='margin-top: 24px; color: #6b7280; font-size: 0.9em;'>Safe travels!<br/>The MVC Travel Team</p>
+                    </body>
+                    </html>
+                ";
+
+                return await SendEmailAsync(toEmail, subject, body);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Error sending trip reminder to {toEmail}");
+                return false;
+            }
+        }
+
         // Send waitlist notification emails
         public async Task<bool> SendWaitlistNotificationAsync(string toEmail, string userName, string destination)
         {

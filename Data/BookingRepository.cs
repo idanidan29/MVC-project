@@ -1,5 +1,6 @@
 using System;
 using Microsoft.EntityFrameworkCore;
+using System.Linq;
 using MVC_project.Models;
 
 namespace MVC_project.Data
@@ -111,6 +112,23 @@ namespace MVC_project.Data
                     && b.Trip != null 
                     && b.Trip.EndDate >= todayUtc.Date
                     && (b.Status ?? string.Empty) == "Confirmed");
+        }
+
+        /// <summary>
+        /// Retrieves confirmed bookings for a trip that are still upcoming, including user details for emailing reminders.
+        /// </summary>
+        public IEnumerable<Booking> GetConfirmedByTripId(int tripId, DateTime todayUtc)
+        {
+            var completedStatuses = new[] { "Confirmed", "Booked" };
+
+            return _context.Bookings
+                .Include(b => b.Trip)
+                .Include(b => b.User)
+                .Where(b => b.TripID == tripId
+                    && b.Trip != null
+                    && b.Trip.StartDate >= todayUtc.Date
+                    && completedStatuses.Contains((b.Status ?? string.Empty)))
+                .ToList();
         }
 
         /// <summary>

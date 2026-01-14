@@ -154,6 +154,16 @@ namespace MVC_project.Controllers
                 return RedirectToAction("Login", "Login");
             }
 
+            // Remove trips that are past their booking deadline
+            _userTripRepo.RemoveClosedByUserId(userId, DateTime.UtcNow.Date);
+            
+            // Auto-cap quantities if cart exceeds available inventory
+            var cappedCount = _userTripRepo.CapExcessQuantities(userId);
+            if (cappedCount > 0)
+            {
+                ViewBag.CartMessage = $"⚠ We've adjusted your cart - some items were capped to match current availability.";
+            }
+            
             // Get user's trips from database
             var userTrips = _userTripRepo.GetByUserId(userId);
             
@@ -216,7 +226,20 @@ namespace MVC_project.Controllers
                     return Json(new { success = false, message = "User not authenticated" });
                 }
 
-                // Remove specific cart entry by UserTripID
+                // Get the item first WITHOUT deleting, so we can capture trip data
+                var userTrip = _userTripRepo.GetByUserId(userId)
+                    .FirstOrDefault(ut => ut.UserTripID == request.UserTripID);
+                
+                if (userTrip == null)
+                {
+                    return Json(new { success = false, message = "Trip not found in cart" });
+                }
+
+                // Capture trip data BEFORE deletion
+                var tripId = userTrip.TripID;
+                var quantity = userTrip.Quantity;
+                
+                // Now remove the item
                 var removedItem = _userTripRepo.RemoveByUserTripId(request.UserTripID);
                 
                 if (removedItem == null)
@@ -224,17 +247,20 @@ namespace MVC_project.Controllers
                     return Json(new { success = false, message = "Trip not found in cart" });
                 }
 
-                // Restore available rooms
-                if (removedItem.Trip != null)
+                // Restore available rooms using the captured trip ID, capped to TotalRooms to satisfy CHK_RoomLogic constraint
+                var trip = _tripRepo.GetById(tripId);
+                if (trip != null)
                 {
-                    removedItem.Trip.AvailableRooms += removedItem.Quantity;
-                    _tripRepo.Update(removedItem.Trip);
+                    trip.AvailableRooms += quantity;
+                    if (trip.AvailableRooms > trip.TotalRooms)
+                        trip.AvailableRooms = trip.TotalRooms;
+                    _tripRepo.Update(trip);
                     
                     // Process waitlist - notify next users
-                    await ProcessWaitlistForTrip(removedItem.TripID, removedItem.Quantity);
+                    await ProcessWaitlistForTrip(tripId, quantity);
                 }
 
-                return Json(new { success = true, message = "Trip removed from cart", tripId = removedItem.TripID, availableRooms = removedItem.Trip?.AvailableRooms ?? 0 });
+                return Json(new { success = true, message = "Trip removed from cart", tripId = tripId, availableRooms = trip?.AvailableRooms ?? 0 });
             }
             catch (Exception ex)
             {
@@ -369,6 +395,12 @@ namespace MVC_project.Controllers
                     return Json(new { success = false, message = "Trip not found" });
                 }
 
+                if (IsBookingClosed(trip))
+                {
+                    RemoveTripFromAllCarts(trip);
+                    return Json(new { success = false, message = BookingClosedMessage(trip) });
+                }
+
                 // Validate quantity
                 var qty = request.Quantity <= 0 ? 1 : request.Quantity;
                 
@@ -415,6 +447,37 @@ namespace MVC_project.Controllers
                 if (qty > availableRooms)
                 {
                     return Json(new { success = false, message = $"Only {availableRooms} room(s) available for this date." });
+                }
+
+                // Check TOTAL quantity across all existing cart entries for this trip
+                var existingTotal = _userTripRepo.GetTotalQuantityForTrip(userId, request.TripId);
+                var projectedTotal = existingTotal + qty;
+
+                // If adding would exceed availability, offer waitlist or cap the quantity
+                if (projectedTotal > availableRooms)
+                {
+                    var canAdd = availableRooms - existingTotal;
+                    
+                    if (canAdd > 0)
+                    {
+                        // User can add some, but not all requested - cap it
+                        qty = canAdd;
+                        // Add to cart with capped quantity
+                        _userTripRepo.Add(userId, request.TripId, qty, request.SelectedDateIndex);
+                        return Json(new { success = true, capped = true, message = $"✓ Added {qty} room(s) to cart. Only {qty} slot(s) remain available.", tripId = request.TripId, selectedDateIndex = request.SelectedDateIndex, availableRooms = availableRooms });
+                    }
+                    else
+                    {
+                        // No slots available - user is at capacity, offer waitlist
+                        var currentCount = _waitlistRepo.GetWaitlistCountForTrip(request.TripId);
+                        
+                        if (_waitlistRepo.IsUserOnWaitlist(userId, request.TripId))
+                        {
+                            return Json(new { success = false, onWaitlist = true, waitlistCount = currentCount, message = $"You are already on the waitlist for {trip.Destination}." });
+                        }
+
+                        return Json(new { success = false, showWaitlistPrompt = true, waitlistCount = currentCount, tripId = request.TripId, destination = trip.Destination });
+                    }
                 }
 
                 // Add to cart with quantity and selected date (increments if existing)
@@ -775,6 +838,22 @@ namespace MVC_project.Controllers
         private static string EscapePdfText(string text)
         {
             return text.Replace("\\", "\\\\").Replace("(", "\\(").Replace(")", "\\)");
+        }
+
+        private bool IsBookingClosed(Trip trip)
+        {
+            return trip.LatestBookingDate.HasValue && DateTime.UtcNow.Date > trip.LatestBookingDate.Value.Date;
+        }
+
+        private int RemoveTripFromAllCarts(Trip trip)
+        {
+            return _userTripRepo.RemoveAllByTripId(trip.TripID);
+        }
+
+        private string BookingClosedMessage(Trip trip)
+        {
+            var cutoff = trip.LatestBookingDate?.ToString("MMM dd, yyyy") ?? "the cutoff date";
+            return $"Booking closed on {cutoff}. This trip stays visible for browsing only.";
         }
     }
 

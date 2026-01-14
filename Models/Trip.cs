@@ -28,6 +28,10 @@ namespace MVC_project.Models
         [Column("EndDate")]
         public DateTime EndDate { get; set; }
 
+        // Optional booking cut-off date; after this, buying is disabled but trip stays visible
+        [Column("LatestBookingDate")]
+        public DateTime? LatestBookingDate { get; set; }
+
         [Required]
         [Column("Price", TypeName = "decimal(10,2)")]
         public decimal Price { get; set; }
@@ -92,5 +96,13 @@ namespace MVC_project.Models
         [Column("EffectiveCancellationEndDate")]
         [DatabaseGenerated(DatabaseGeneratedOption.Computed)]
         public DateTime EffectiveCancellationEndDate { get; set; }
+
+        // Optional reminder configuration. If set, a reminder email is sent N days before departure.
+        [Column("ReminderDaysBefore")]
+        public int? ReminderDaysBefore { get; set; }
+
+        // Last time a reminder was sent for this trip (used to avoid duplicates)
+        [Column("LastReminderSentAt")]
+        public DateTime? LastReminderSentAt { get; set; }
     }
 }

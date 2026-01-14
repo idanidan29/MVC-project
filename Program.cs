@@ -48,9 +48,11 @@ builder.Services.AddScoped<PasswordService>();
 builder.Services.AddScoped<PaymentService>();
 builder.Services.AddScoped<EmailService>();
 builder.Services.AddScoped<WaitlistService>();
+builder.Services.AddScoped<ReminderService>();
 
 // Background Services
 builder.Services.AddHostedService<WaitlistExpirationService>();
+builder.Services.AddHostedService<ReminderHostedService>();
 
 var app = builder.Build();
 

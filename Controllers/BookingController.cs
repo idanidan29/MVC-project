@@ -40,11 +40,20 @@ namespace MVC_project.Controllers
         [HttpGet]
         public IActionResult CheckoutInfo(int tripId, int quantity = 1)
         {
-            var info = _paymentService.GetCheckoutInfo(tripId, quantity);
-            if (info == null)
+            var trip = _tripRepo.GetById(tripId);
+            if (trip == null)
                 return Json(new { success = false, message = "Trip not found" });
 
-            return Json(new { success = true, checkout = info });
+            if (IsBookingClosed(trip))
+            {
+                RemoveTripFromAllCarts(trip);
+                return Json(new { success = false, message = BookingClosedMessage(trip) });
+            }
+
+            var info = _paymentService.GetCheckoutInfo(tripId, quantity);
+            return info == null
+                ? Json(new { success = false, message = "Trip not found" })
+                : Json(new { success = true, checkout = info });
         }
 
         // GET: /Booking/CartCheckoutInfo
@@ -56,9 +65,17 @@ namespace MVC_project.Controllers
             if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
                 return Json(new { success = false, message = "User not authenticated" });
 
+            var todayDate = DateTime.UtcNow.Date;
+            var removedClosed = _userTripRepo.RemoveClosedByUserId(userId, todayDate);
+
             var cartItems = _userTripRepo.GetByUserId(userId).ToList();
             if (!cartItems.Any())
-                return Json(new { success = false, message = "Your cart is empty." });
+            {
+                var emptyMessage = removedClosed > 0
+                    ? "Trips whose booking window closed were removed from your cart."
+                    : "Your cart is empty.";
+                return Json(new { success = false, message = emptyMessage });
+            }
 
             decimal total = 0m;
             var packages = new List<object>();
@@ -91,7 +108,7 @@ namespace MVC_project.Controllers
                 });
             }
 
-            return Json(new { success = true, checkout = new { itemCount = cartItems.Count, total = total, packages = packages } });
+            return Json(new { success = true, checkout = new { itemCount = cartItems.Count, total = total, packages = packages }, removedClosed });
         }
 
         // GET: /Booking/DateCheckoutInfo?userTripId=123
@@ -110,6 +127,12 @@ namespace MVC_project.Controllers
             var trip = userTrip.Trip ?? _tripRepo.GetById(userTrip.TripID);
             if (trip == null)
                 return Json(new { success = false, message = "Trip not found" });
+
+            if (IsBookingClosed(trip))
+            {
+                RemoveTripFromAllCarts(trip);
+                return Json(new { success = false, message = BookingClosedMessage(trip) });
+            }
 
             var qty = userTrip.Quantity <= 0 ? 1 : userTrip.Quantity;
             var unitPrice = trip.DiscountPrice.HasValue && trip.DiscountPrice < trip.Price
@@ -153,6 +176,18 @@ namespace MVC_project.Controllers
                 return Json(new { success = false, message = "Trip not found" });
             }
 
+            if (IsBookingClosed(trip))
+            {
+                RemoveTripFromAllCarts(trip);
+                return Json(new { success = false, message = BookingClosedMessage(trip) });
+            }
+
+            if (IsBookingClosed(trip))
+            {
+                RemoveTripFromAllCarts(trip);
+                return Json(new { success = false, message = BookingClosedMessage(trip) });
+            }
+
             var qty = request.Quantity <= 0 ? 1 : request.Quantity;
             if (qty > trip.AvailableRooms)
             {
@@ -182,6 +217,18 @@ namespace MVC_project.Controllers
             var trip = _tripRepo.GetById(request.TripId);
             if (trip == null)
                 return Json(new { success = false, message = "Trip not found" });
+
+            if (IsBookingClosed(trip))
+            {
+                RemoveTripFromAllCarts(trip);
+                return Json(new { success = false, message = BookingClosedMessage(trip) });
+            }
+
+            if (IsBookingClosed(trip))
+            {
+                RemoveTripFromAllCarts(trip);
+                return Json(new { success = false, message = BookingClosedMessage(trip) });
+            }
 
             var qty = request.Quantity <= 0 ? 1 : request.Quantity;
             if (qty > trip.AvailableRooms)
@@ -240,6 +287,12 @@ namespace MVC_project.Controllers
             if (trip == null)
                 return Json(new { success = false, message = "Trip not found" });
 
+            if (IsBookingClosed(trip))
+            {
+                RemoveTripFromAllCarts(trip);
+                return Json(new { success = false, message = BookingClosedMessage(trip) });
+            }
+
             var qty = request.Quantity <= 0 ? 1 : request.Quantity;
             if (qty > trip.AvailableRooms)
                 return Json(new { success = false, message = $"Only {trip.AvailableRooms} rooms available for {trip.Destination}." });
@@ -296,9 +349,17 @@ namespace MVC_project.Controllers
             if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
                 return Json(new { success = false, message = "User not authenticated" });
 
+            var todayDate = DateTime.UtcNow.Date;
+            var removedClosed = _userTripRepo.RemoveClosedByUserId(userId, todayDate);
+
             var cartItems = _userTripRepo.GetByUserId(userId).ToList();
             if (!cartItems.Any())
-                return Json(new { success = false, message = "Your cart is empty." });
+            {
+                var emptyMessage = removedClosed > 0
+                    ? "Trips whose booking window closed were removed from your cart."
+                    : "Your cart is empty.";
+                return Json(new { success = false, message = emptyMessage });
+            }
 
             var existingUpcoming = GetUpcomingBookingsCount(userId);
             if (existingUpcoming + cartItems.Count > 3)
@@ -312,6 +373,12 @@ namespace MVC_project.Controllers
                 var trip = item.Trip ?? _tripRepo.GetById(item.TripID);
                 if (trip == null)
                     return Json(new { success = false, message = $"Trip with ID {item.TripID} not found." });
+
+                if (IsBookingClosed(trip))
+                {
+                    RemoveTripFromAllCarts(trip);
+                    return Json(new { success = false, message = BookingClosedMessage(trip) });
+                }
 
                 var qty = item.Quantity <= 0 ? 1 : item.Quantity;
                 if (qty > trip.AvailableRooms)
@@ -396,6 +463,12 @@ namespace MVC_project.Controllers
             if (trip == null)
                 return Json(new { success = false, message = "Trip not found" });
 
+            if (IsBookingClosed(trip))
+            {
+                RemoveTripFromAllCarts(trip);
+                return Json(new { success = false, message = BookingClosedMessage(trip) });
+            }
+
             var qty = userTrip.Quantity <= 0 ? 1 : userTrip.Quantity;
             if (qty > trip.AvailableRooms)
                 return Json(new { success = false, message = $"Only {trip.AvailableRooms} rooms available" });
@@ -479,6 +552,12 @@ namespace MVC_project.Controllers
                 return Json(new { success = false, message = "Trip not found" });
             }
 
+            if (IsBookingClosed(trip))
+            {
+                RemoveTripFromAllCarts(trip);
+                return Json(new { success = false, message = BookingClosedMessage(trip) });
+            }
+
             var qty = request.Quantity <= 0 ? 1 : request.Quantity;
 
             // Check if no rooms available
@@ -522,6 +601,57 @@ namespace MVC_project.Controllers
                 });
             }
 
+            // Check TOTAL quantity across all existing cart entries for this trip
+            var existingTotal = _userTripRepo.GetTotalQuantityForTrip(userId, request.TripId);
+            var projectedTotal = existingTotal + qty;
+
+            // If adding would exceed availability, cap the quantity
+            if (projectedTotal > trip.AvailableRooms)
+            {
+                var canAdd = trip.AvailableRooms - existingTotal;
+                
+                if (canAdd > 0)
+                {
+                    // Cap to remaining available
+                    qty = canAdd;
+                    _userTripRepo.Add(userId, request.TripId, qty);
+                    return Json(new 
+                    { 
+                        success = true, 
+                        capped = true,
+                        message = $"{trip.Destination} (x{qty}) added to cart. {qty} slot(s) remain available." 
+                    });
+                }
+                else
+                {
+                    // No slots available - add to waitlist
+                    if (_waitlistRepo.IsUserOnWaitlist(userId, request.TripId))
+                    {
+                        return Json(new 
+                        { 
+                            success = false, 
+                            onWaitlist = true,
+                            message = $"You are already on the waitlist for {trip.Destination}." 
+                        });
+                    }
+
+                    var added = _waitlistRepo.AddToWaitlist(userId, request.TripId);
+                    if (added)
+                    {
+                        return Json(new 
+                        { 
+                            success = true, 
+                            onWaitlist = true,
+                            message = $"Cart is at capacity for {trip.Destination}. You've been added to the waitlist!" 
+                        });
+                    }
+                    else
+                    {
+                        return Json(new { success = false, message = "Failed to add to waitlist" });
+                    }
+                }
+            }
+
             // Add to cart
             // NOTE: Inventory is NOT decremented here - it only changes after payment is completed
             _userTripRepo.Add(userId, request.TripId, qty);
@@ -559,6 +689,22 @@ namespace MVC_project.Controllers
         {
             var todayUtc = DateTime.UtcNow.Date;
             return _bookingRepo.CountUpcoming(userId, todayUtc);
+        }
+
+        private bool IsBookingClosed(Trip trip)
+        {
+            return trip.LatestBookingDate.HasValue && DateTime.UtcNow.Date > trip.LatestBookingDate.Value.Date;
+        }
+
+        private int RemoveTripFromAllCarts(Trip trip)
+        {
+            return _userTripRepo.RemoveAllByTripId(trip.TripID);
+        }
+
+        private string BookingClosedMessage(Trip trip)
+        {
+            var cutoff = trip.LatestBookingDate?.ToString("MMM dd, yyyy") ?? "the cutoff date";
+            return $"Booking closed on {cutoff}. This trip remains visible for browsing only.";
         }
     }
 

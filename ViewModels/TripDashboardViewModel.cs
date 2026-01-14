@@ -19,8 +19,12 @@ namespace MVC_project.ViewModels
         public int AvailableRooms { get; set; }
         public bool IsVisible { get; set; }
         public List<TripDateVariation> DateVariations { get; set; } = new List<TripDateVariation>();
-    public decimal RatingSum { get; set; } = 0;
-    public int RatingCount { get; set; } = 0;
+        public decimal RatingSum { get; set; } = 0;
+        public int RatingCount { get; set; } = 0;
+
+        // Booking cut-off
+        public DateTime? LatestBookingDate { get; set; }
+        public bool IsBookingClosed => LatestBookingDate.HasValue && DateTime.UtcNow.Date > LatestBookingDate.Value.Date;
 
         // Cancellation policy
         public DateTime? CancellationEndDate { get; set; }

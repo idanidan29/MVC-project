@@ -102,8 +102,10 @@ namespace MVC_project.Services
                         
                         if (removedItem != null && removedItem.Trip != null)
                         {
-                            // Restore available rooms
+                            // Restore available rooms, capped to TotalRooms to satisfy CHK_RoomLogic constraint
                             removedItem.Trip.AvailableRooms += removedItem.Quantity;
+                            if (removedItem.Trip.AvailableRooms > removedItem.Trip.TotalRooms)
+                                removedItem.Trip.AvailableRooms = removedItem.Trip.TotalRooms;
                             tripRepo.Update(removedItem.Trip);
 
                             _logger.LogInformation(
@@ -278,8 +280,10 @@ namespace MVC_project.Services
 
                     if (removedItem != null && removedItem.Trip != null)
                     {
-                        // Restore available rooms
+                        // Restore available rooms, capped to TotalRooms to satisfy CHK_RoomLogic constraint
                         removedItem.Trip.AvailableRooms += removedItem.Quantity;
+                        if (removedItem.Trip.AvailableRooms > removedItem.Trip.TotalRooms)
+                            removedItem.Trip.AvailableRooms = removedItem.Trip.TotalRooms;
                         tripRepo.Update(removedItem.Trip);
 
                         _logger.LogInformation(
@@ -313,6 +317,13 @@ namespace MVC_project.Services
             }
 
             _logger.LogInformation("Completed processing {Count} expired cart items.", expiredCartItems.Count);
+
+            // Remove cart items whose booking window has closed
+            var removedClosed = userTripRepo.RemoveClosedForAllUsers(DateTime.UtcNow.Date);
+            if (removedClosed > 0)
+            {
+                _logger.LogInformation("Removed {Count} cart item(s) because booking windows closed.", removedClosed);
+            }
         }
     }
 }

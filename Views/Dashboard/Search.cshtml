@@ -1617,6 +1617,7 @@
                             <span>@trip.Country</span>
                         </div>
 
+                        @{ var bookingClosed = trip.IsBookingClosed; var cutoffText = trip.LatestBookingDate?.ToString("MMM dd, yyyy"); }
                         <div class="trip-info">
                             <div class="info-item">
                                 <i class="bi bi-calendar-check"></i>
@@ -1626,6 +1627,13 @@
                                 <i class="bi bi-person-badge"></i>
                                 <span>@(trip.AgeLimit.HasValue ? $"{trip.AgeLimit}+" : "All ages")</span>
                             </div>
+                            @if (trip.LatestBookingDate.HasValue)
+                            {
+                                <div class="info-item" style="color:@(bookingClosed ? "#b91c1c" : "#0f172a"); font-weight:600;">
+                                    <i class="bi bi-hourglass-split"></i>
+                                    <span>@(bookingClosed ? $"Booking closed on {cutoffText}" : $"Book by {cutoffText}")</span>
+                                </div>
+                            }
                             @if (trip.DateVariations.Any())
                             {
                                 <div class="info-item" style="color: #6366f1; font-weight: 600;">
@@ -1674,6 +1682,8 @@
                             data-package="@trip.PackageType"
                             data-cancel-until='@trip.EffectiveCancellationEndDate.ToString("MMM dd, yyyy")'
                             data-price='@(trip.DiscountPrice.HasValue && trip.DiscountPrice < trip.Price ? trip.DiscountPrice.Value.ToString("N2") : trip.Price.ToString("N2"))'
+                            data-booking-closed="@bookingClosed.ToString().ToLower()"
+                            data-cutoff="@cutoffText"
                             data-image-count="@trip.ImageCount"
                             onclick="openTripModal(this, @trip.TripID)">
                         <span>View Details</span>
@@ -1755,6 +1765,8 @@
         document.getElementById('modal-rooms').textContent = `${data.rooms} rooms`;
         document.getElementById('modal-package').textContent = data.package;
         document.getElementById('modal-price').textContent = `$${data.price}`;
+        const bookingClosed = data.bookingClosed === 'true';
+        const cutoffText = data.cutoff || '';
         
         // Store trip ID for actions
         tripModal.dataset.tripId = tripId;
@@ -1763,6 +1775,8 @@
         tripModal.dataset.mainEndDate = data.endDate;
         tripModal.dataset.mainRooms = data.rooms;
         tripModal.dataset.mainDuration = data.duration;
+        tripModal.dataset.bookingClosed = bookingClosed ? 'true' : 'false';
+        tripModal.dataset.cutoffText = cutoffText;
         // Configure modal quantity control
         try {
             const roomsCount = parseInt(data.rooms || '1', 10) || 1;
@@ -1780,6 +1794,23 @@
                 if (btnDec) btnDec.disabled = true;
             }
         } catch (e) { console.error(e); }
+
+        const closedBanner = tripModal.querySelector('#modal-booking-closed');
+        const cutoffLabel = tripModal.querySelector('#modal-booking-cutoff');
+        const addBtn = tripModal.querySelector('.btn-add-cart');
+        const bookBtn = tripModal.querySelector('.btn-book-now');
+
+        if (bookingClosed) {
+            if (closedBanner) closedBanner.style.display = 'block';
+            if (cutoffLabel) cutoffLabel.textContent = cutoffText || 'the cutoff date';
+            if (addBtn) { addBtn.disabled = true; addBtn.classList.add('disabled'); }
+            if (bookBtn) { bookBtn.disabled = true; bookBtn.classList.add('disabled'); }
+        } else {
+            if (closedBanner) closedBanner.style.display = 'none';
+            if (cutoffLabel) cutoffLabel.textContent = '';
+            if (addBtn) { addBtn.disabled = false; addBtn.classList.remove('disabled'); }
+            if (bookBtn) { bookBtn.disabled = false; bookBtn.classList.remove('disabled'); }
+        }
         
         // Load images
         loadCarouselImages(tripId);
@@ -1869,6 +1900,10 @@
                         <i class="bi bi-calendar-range"></i> Available Date Options
                     </h4>
                     <div id="date-variations-list" class="date-variations-list"></div>
+                </div>
+
+                <div id="modal-booking-closed" style="display:none; background: linear-gradient(135deg,#fee2e2,#fecdd3); color:#7f1d1d; font-weight:700; padding:0.85rem 1rem; border-radius:1rem; text-align:center; box-shadow:0 8px 20px rgba(127,29,29,0.08);">
+                    <i class="bi bi-pause-circle"></i> Booking closed on <span id="modal-booking-cutoff"></span>
                 </div>
 
                 <div class="trip-actions">
@@ -2125,6 +2160,11 @@
     function addToCartFromModal() {
         const tripId = parseInt(tripModal.dataset.tripId);
         const destination = tripModal.dataset.destination;
+        if (tripModal?.dataset.bookingClosed === 'true') {
+            const cutoff = tripModal.dataset.cutoffText || 'the cutoff date';
+            showNotification(`Booking closed on ${cutoff}. This trip is browse-only now.`, 'error');
+            return;
+        }
         const qtyDisplay = tripModal.querySelector('#modal-qty-display');
         const quantity = qtyDisplay ? parseInt(qtyDisplay.value || '1', 10) : 1;
         const selectedDateIndex = parseInt(tripModal.dataset.selectedDateIndex || '-1', 10);
@@ -2133,6 +2173,11 @@
 
     function bookNowFromModal() {
         const tripId = parseInt(tripModal.dataset.tripId);
+        if (tripModal?.dataset.bookingClosed === 'true') {
+            const cutoff = tripModal.dataset.cutoffText || 'the cutoff date';
+            showNotification(`Booking closed on ${cutoff}. This trip cannot be booked.`, 'error');
+            return;
+        }
         const qtyDisplay = tripModal.querySelector('#modal-qty-display');
         const quantity = qtyDisplay ? parseInt(qtyDisplay.value || '1', 10) : 1;
         // Close trip modal so checkout modal is fully visible

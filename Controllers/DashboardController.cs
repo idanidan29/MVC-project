@@ -53,6 +53,7 @@ namespace MVC_project.Controllers
                     PackageType = trip.PackageType,
                     Description = trip.Description,
                     AgeLimit = trip.AgeLimit,
+                    LatestBookingDate = trip.LatestBookingDate,
                     HasImage = images.Any(),
                     ImageCount = images.Count(),
                     AvailableRooms = trip.AvailableRooms,
