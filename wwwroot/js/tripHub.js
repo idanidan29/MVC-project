@@ -12,15 +12,25 @@
     .build();
 
   connection.on('availabilityUpdated', (payload) => {
-    // payload: { tripId, availableRooms }
-    const { tripId, availableRooms } = payload || {};
-    // Simple demo: dispatch a custom event so app code can react
-    const event = new CustomEvent('trip-availability-updated', { detail: { tripId, availableRooms } });
+    // payload: { tripId, availableRooms, selectedDateIndex }
+    const { tripId, availableRooms, selectedDateIndex = -1 } = payload || {};
+
+    // Dispatch a custom event so page-specific code can react (e.g., modal updates)
+    const event = new CustomEvent('trip-availability-updated', { detail: { tripId, availableRooms, selectedDateIndex } });
     window.dispatchEvent(event);
-    // Optionally update DOM if elements follow a convention
-    const el = document.querySelector(`[data-trip-id="${tripId}"][data-role="available-rooms"]`);
-    if (el) {
-      el.textContent = availableRooms;
+
+    // If the page uses data-role hooks, update inline counts
+    const mainEl = document.querySelector(`[data-trip-id="${tripId}"][data-role="available-rooms"]`);
+    if (mainEl && selectedDateIndex === -1) {
+      mainEl.textContent = availableRooms;
+    }
+
+    // Update date variation blocks if present (uses data-date-index)
+    if (selectedDateIndex >= 0) {
+      const variationEl = document.querySelector(`.date-variation-item[data-date-index="${selectedDateIndex}"] .date-rooms-display`);
+      if (variationEl) {
+        variationEl.textContent = `${availableRooms} rooms available`;
+      }
     }
   });
 

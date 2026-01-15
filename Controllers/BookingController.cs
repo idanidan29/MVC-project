@@ -6,6 +6,7 @@ using MVC_project.Services;
 using System.Security.Claims;
 using Microsoft.AspNetCore.SignalR;
 using MVC_project.Hubs;
+using MVC_project.Data;
 
 namespace MVC_project.Controllers
 {
@@ -20,6 +21,7 @@ namespace MVC_project.Controllers
         private readonly UserRepository _userRepo;
         private readonly EmailService _emailService;
         private readonly IHubContext<TripHub> _tripHub;
+        private readonly TripDateRepository _tripDateRepo;
 
         public BookingController(
             TripRepository tripRepo, 
@@ -29,7 +31,8 @@ namespace MVC_project.Controllers
             WaitlistRepository waitlistRepo,
             UserRepository userRepo,
             EmailService emailService,
-            IHubContext<TripHub> tripHub)
+            IHubContext<TripHub> tripHub,
+            TripDateRepository tripDateRepo)
         {
             _tripRepo = tripRepo;
             _userTripRepo = userTripRepo;
@@ -39,6 +42,7 @@ namespace MVC_project.Controllers
             _userRepo = userRepo;
             _emailService = emailService;
             _tripHub = tripHub;
+            _tripDateRepo = tripDateRepo;
         }
 
         // GET: /Booking/CheckoutInfo?tripId=1&quantity=2
@@ -194,7 +198,7 @@ namespace MVC_project.Controllers
             }
 
             var qty = request.Quantity <= 0 ? 1 : request.Quantity;
-            // Atomic reservation to prevent oversell
+            // Atomic reservation to prevent oversell (main date only)
             var reserved = _tripRepo.TryReserveRooms(trip.TripID, qty);
             if (!reserved)
             {
@@ -204,7 +208,7 @@ namespace MVC_project.Controllers
             }
             // Notify clients about availability change
             var updated = _tripRepo.GetById(trip.TripID);
-            await _tripHub.Clients.All.SendAsync("availabilityUpdated", new { tripId = trip.TripID, availableRooms = updated?.AvailableRooms ?? 0 });
+            await _tripHub.Clients.All.SendAsync("availabilityUpdated", new { tripId = trip.TripID, availableRooms = updated?.AvailableRooms ?? 0, selectedDateIndex = -1 });
             
             return Json(new { success = true, message = $"Purchase completed for {trip.Destination} (x{qty})." });
         }
@@ -243,6 +247,8 @@ namespace MVC_project.Controllers
             if (!ok)
                 return Json(new { success = false, message = "Payment failed. Please try another method." });
 
+            var selectedDateIndex = -1; // PayCard currently uses main date
+
             // Reserve inventory atomically (post-payment)
             var reserved = _tripRepo.TryReserveRooms(trip.TripID, qty);
             if (!reserved)
@@ -253,11 +259,11 @@ namespace MVC_project.Controllers
             }
 
             // Record booking
-            AddBookingRecord(userId, trip, qty, -1);
+            AddBookingRecord(userId, trip, qty, selectedDateIndex);
 
             // Notify clients about availability change
             var updated = _tripRepo.GetById(trip.TripID);
-            await _tripHub.Clients.All.SendAsync("availabilityUpdated", new { tripId = trip.TripID, availableRooms = updated?.AvailableRooms ?? 0 });
+            await _tripHub.Clients.All.SendAsync("availabilityUpdated", new { tripId = trip.TripID, availableRooms = updated?.AvailableRooms ?? 0, selectedDateIndex });
 
             // On success: clear from cart
             _userTripRepo.Remove(userId, request.TripId);
@@ -318,6 +324,8 @@ namespace MVC_project.Controllers
             if (!captured)
                 return Json(new { success = false, message = "PayPal capture failed." });
 
+            var selectedDateIndex = -1; // PayPalSimulate currently uses main date
+
             // Reserve inventory atomically (post-payment)
             var reserved = _tripRepo.TryReserveRooms(trip.TripID, qty);
             if (!reserved)
@@ -328,11 +336,11 @@ namespace MVC_project.Controllers
             }
 
             // Record booking
-            AddBookingRecord(userId, trip, qty, -1);
+            AddBookingRecord(userId, trip, qty, selectedDateIndex);
 
             // Notify clients about availability change
             var updated = _tripRepo.GetById(trip.TripID);
-            await _tripHub.Clients.All.SendAsync("availabilityUpdated", new { tripId = trip.TripID, availableRooms = updated?.AvailableRooms ?? 0 });
+            await _tripHub.Clients.All.SendAsync("availabilityUpdated", new { tripId = trip.TripID, availableRooms = updated?.AvailableRooms ?? 0, selectedDateIndex });
 
             // Mark waitlist entry as booked if user was from waitlist
             _waitlistRepo.MarkAsBooked(userId, request.TripId);
@@ -423,19 +431,44 @@ namespace MVC_project.Controllers
                 if (trip == null) continue;
                 var qty = item.Quantity <= 0 ? 1 : item.Quantity;
 
-                var reserved = _tripRepo.TryReserveRooms(trip.TripID, qty);
-                if (!reserved)
+                var selectedDateIndex = item.SelectedDateIndex;
+                bool reserved;
+                int newAvailable;
+
+                if (selectedDateIndex >= 0)
                 {
-                    var fresh = _tripRepo.GetById(trip.TripID);
-                    var left = fresh?.AvailableRooms ?? 0;
-                    return Json(new { success = false, message = $"Inventory changed during checkout for {trip.Destination}. Only {left} rooms remain." });
+                    var tripDates = _tripDateRepo.GetByTripId(trip.TripID).ToList();
+                    if (selectedDateIndex >= tripDates.Count)
+                    {
+                        return Json(new { success = false, message = "Selected date is no longer available." });
+                    }
+
+                    var tripDate = tripDates[selectedDateIndex];
+                    reserved = _tripDateRepo.TryReserveRooms(tripDate.TripDateID, qty);
+                    if (!reserved)
+                    {
+                        var fresh = _tripDateRepo.GetById(tripDate.TripDateID);
+                        var left = fresh?.AvailableRooms ?? 0;
+                        return Json(new { success = false, message = $"Inventory changed during checkout for {trip.Destination} (date option). Only {left} rooms remain." });
+                    }
+                    newAvailable = _tripDateRepo.GetById(tripDate.TripDateID)?.AvailableRooms ?? 0;
+                }
+                else
+                {
+                    reserved = _tripRepo.TryReserveRooms(trip.TripID, qty);
+                    if (!reserved)
+                    {
+                        var fresh = _tripRepo.GetById(trip.TripID);
+                        var left = fresh?.AvailableRooms ?? 0;
+                        return Json(new { success = false, message = $"Inventory changed during checkout for {trip.Destination}. Only {left} rooms remain." });
+                    }
+                    newAvailable = _tripRepo.GetById(trip.TripID)?.AvailableRooms ?? 0;
                 }
 
                 AddBookingRecord(userId, trip, qty, item.SelectedDateIndex);
 
-                // Notify clients about availability change
-                var updated = _tripRepo.GetById(trip.TripID);
-                await _tripHub.Clients.All.SendAsync("availabilityUpdated", new { tripId = trip.TripID, availableRooms = updated?.AvailableRooms ?? 0 });
+                // Notify clients about availability change (include selectedDateIndex for variations)
+                await _tripHub.Clients.All.SendAsync("availabilityUpdated", new { tripId = trip.TripID, availableRooms = newAvailable, selectedDateIndex });
             }
 
             // Mark all waitlist entries as booked for items in cart
@@ -508,21 +541,45 @@ namespace MVC_project.Controllers
             if (!captured)
                 return Json(new { success = false, message = "PayPal capture failed." });
 
+            var selectedDateIndex = userTrip.SelectedDateIndex;
+
             // Reserve inventory atomically (post-payment)
-            var reserved = _tripRepo.TryReserveRooms(trip.TripID, qty);
-            if (!reserved)
+            bool reserved;
+            int newAvailable;
+
+            if (selectedDateIndex >= 0)
             {
-                var fresh = _tripRepo.GetById(trip.TripID);
-                var left = fresh?.AvailableRooms ?? 0;
-                return Json(new { success = false, message = $"PayPal captured, but inventory changed. Only {left} rooms remain for {trip.Destination}." });
+                var tripDates = _tripDateRepo.GetByTripId(trip.TripID).ToList();
+                if (selectedDateIndex >= tripDates.Count)
+                    return Json(new { success = false, message = "Selected date is no longer available." });
+
+                var tripDate = tripDates[selectedDateIndex];
+                reserved = _tripDateRepo.TryReserveRooms(tripDate.TripDateID, qty);
+                if (!reserved)
+                {
+                    var fresh = _tripDateRepo.GetById(tripDate.TripDateID);
+                    var left = fresh?.AvailableRooms ?? 0;
+                    return Json(new { success = false, message = $"PayPal captured, but inventory changed. Only {left} rooms remain for {trip.Destination}." });
+                }
+                newAvailable = _tripDateRepo.GetById(tripDate.TripDateID)?.AvailableRooms ?? 0;
+            }
+            else
+            {
+                reserved = _tripRepo.TryReserveRooms(trip.TripID, qty);
+                if (!reserved)
+                {
+                    var fresh = _tripRepo.GetById(trip.TripID);
+                    var left = fresh?.AvailableRooms ?? 0;
+                    return Json(new { success = false, message = $"PayPal captured, but inventory changed. Only {left} rooms remain for {trip.Destination}." });
+                }
+                newAvailable = _tripRepo.GetById(trip.TripID)?.AvailableRooms ?? 0;
             }
 
             // Record booking for this specific date selection
-            AddBookingRecord(userId, trip, qty, userTrip.SelectedDateIndex);
+            AddBookingRecord(userId, trip, qty, selectedDateIndex);
 
             // Notify clients about availability change
-            var updated = _tripRepo.GetById(trip.TripID);
-            await _tripHub.Clients.All.SendAsync("availabilityUpdated", new { tripId = trip.TripID, availableRooms = updated?.AvailableRooms ?? 0 });
+            await _tripHub.Clients.All.SendAsync("availabilityUpdated", new { tripId = trip.TripID, availableRooms = newAvailable, selectedDateIndex });
 
             // Mark waitlist entry as booked if user was from waitlist
             _waitlistRepo.MarkAsBooked(userId, userTrip.TripID);

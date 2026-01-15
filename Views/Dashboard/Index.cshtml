@@ -2134,59 +2134,8 @@
                     showNotification(data.message, 'info');
                 } else {
                     showNotification(data.message, 'success');
-                    
-                    // Update available rooms count based on which date was selected
-                    if (data.tripId && data.availableRooms !== undefined) {
-                        const card = document.querySelector(`[data-trip-id="${data.tripId}"]`);
-                        const selectedDateIndex = data.selectedDateIndex || -1;
-                        
-                        // Update main trip card rooms if main date was selected
-                        if (card && selectedDateIndex === -1) {
-                            card.setAttribute('data-rooms', data.availableRooms);
-                        }
-                        
-                        // Update modal if still open
-                        if (tripModal && parseInt(tripModal.dataset.tripId) === data.tripId) {
-                            // Update the specific date option in the modal
-                            if (selectedDateIndex === -1) {
-                                // Main date was selected - update Option 1
-                                const mainDateOption = tripModal.querySelector('.date-variation-item[data-date-index="-1"]');
-                                if (mainDateOption) {
-                                    const roomsDisplay = mainDateOption.querySelector('.date-rooms-display');
-                                    if (roomsDisplay) {
-                                        roomsDisplay.textContent = `${data.availableRooms} rooms available`;
-                                    }
-                                }
-                                // Also update the main rooms display in detail items
-                                const modalRooms = tripModal.querySelector('#modal-rooms');
-                                if (modalRooms) {
-                                    modalRooms.textContent = `${data.availableRooms} rooms`;
-                                }
-                            } else {
-                                // Alternative date was selected - update that specific date variation
-                                const dateOption = tripModal.querySelector(`.date-variation-item[data-date-index="${selectedDateIndex}"]`);
-                                if (dateOption) {
-                                    const roomsDisplay = dateOption.querySelector('.date-rooms-display');
-                                    if (roomsDisplay) {
-                                        roomsDisplay.textContent = `${data.availableRooms} rooms available`;
-                                    }
-                                }
-                            }
-                            
-                            // Update quantity control max if the currently displayed date was affected
-                            const currentlySelectedIndex = parseInt(tripModal.dataset.selectedDateIndex || '-1');
-                            if (currentlySelectedIndex === selectedDateIndex) {
-                                const qtyControl = tripModal.querySelector('#modal-qty-control');
-                                const roomsHint = tripModal.querySelector('#modal-rooms-hint');
-                                if (qtyControl) {
-                                    qtyControl.dataset.max = data.availableRooms;
-                                }
-                                if (roomsHint) {
-                                    roomsHint.textContent = `${data.availableRooms} available`;
-                                }
-                            }
-                        }
-                    }
+                    // Note: Adding to cart doesn't change inventory
+                    // Room counts only update on actual payment via SignalR broadcasts
                 }
             } else {
                 if (data.showWaitlistPrompt) {

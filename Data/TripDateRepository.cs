@@ -39,6 +39,37 @@ namespace MVC_project.Data
         }
 
         /// <summary>
+        /// Atomically reserves rooms for a specific trip date. Uses a conditional UPDATE to avoid race conditions.
+        /// Returns true if the reservation succeeded; false if insufficient availability.
+        /// </summary>
+        public bool TryReserveRooms(int tripDateId, int quantity)
+        {
+            var qty = quantity <= 0 ? 1 : quantity;
+            using var tx = _context.Database.BeginTransaction();
+            var affected = _context.Database.ExecuteSqlInterpolated(
+                $"UPDATE dbo.TripDates SET AvailableRooms = AvailableRooms - {qty} WHERE TripDateID = {tripDateId} AND AvailableRooms >= {qty}");
+
+            if (affected == 1)
+            {
+                tx.Commit();
+                return true;
+            }
+
+            tx.Rollback();
+            return false;
+        }
+
+        /// <summary>
+        /// Restores rooms to a specific trip date (e.g., on cancellation/refund).
+        /// </summary>
+        public void ReleaseRooms(int tripDateId, int quantity)
+        {
+            var qty = quantity <= 0 ? 1 : quantity;
+            _context.Database.ExecuteSqlInterpolated(
+                $"UPDATE dbo.TripDates SET AvailableRooms = AvailableRooms + {qty} WHERE TripDateID = {tripDateId}");
+        }
+
+        /// <summary>
         /// Retrieves all alternative dates for a trip, sorted by start date.
         /// OrderBy ensures dates are displayed chronologically to customers.
         /// </summary>

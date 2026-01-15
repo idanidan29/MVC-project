@@ -464,7 +464,8 @@ namespace MVC_project.Controllers
                         qty = canAdd;
                         // Add to cart with capped quantity
                         _userTripRepo.Add(userId, request.TripId, qty, request.SelectedDateIndex);
-                        return Json(new { success = true, capped = true, message = $"✓ Added {qty} room(s) to cart. Only {qty} slot(s) remain available.", tripId = request.TripId, selectedDateIndex = request.SelectedDateIndex, availableRooms = availableRooms });
+                        // Don't send availableRooms - cart ops don't change inventory
+                        return Json(new { success = true, capped = true, message = $"✓ Added {qty} room(s) to cart. Only {qty} slot(s) remain available.", tripId = request.TripId, selectedDateIndex = request.SelectedDateIndex });
                     }
                     else
                     {
@@ -489,7 +490,9 @@ namespace MVC_project.Controllers
                     return Json(new { success = false, message = $"{trip.Destination} is already in your cart!" });
                 }
 
-                return Json(new { success = true, message = $"✓ {trip.Destination} added to cart (x{qty})!", tripId = request.TripId, selectedDateIndex = request.SelectedDateIndex, availableRooms = availableRooms });
+                // Don't send availableRooms in response - cart additions don't change inventory
+                // Only payment completions trigger inventory changes and SignalR broadcasts
+                return Json(new { success = true, message = $"✓ {trip.Destination} added to cart (x{qty})!", tripId = request.TripId, selectedDateIndex = request.SelectedDateIndex });
             }
             catch (Exception ex)
             {
