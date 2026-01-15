@@ -1,6 +1,6 @@
 {
   "Version": 1,
-  "Hash": "nADYfgKzULFpYXObBNNHRdfh7CoNA+mqZakRziOsNFc=",
+  "Hash": "TrXo9Fv2DnODTGdWA/GHDVoQHR+ttCtw910SCbBfcqE=",
   "Source": "MVC-project",
   "BasePath": "_content/MVC-project",
   "Mode": "Default",
@@ -129,6 +129,25 @@
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
       "OriginalItemSpec": "wwwroot\\js\\site.js"
+    },
+    {
+      "Identity": "C:\\Users\\29ida\\OneDrive\\Documents\\GitHub\\MVC-project\\wwwroot\\js\\tripHub.js",
+      "SourceId": "MVC-project",
+      "SourceType": "Discovered",
+      "ContentRoot": "C:\\Users\\29ida\\OneDrive\\Documents\\GitHub\\MVC-project\\wwwroot\\",
+      "BasePath": "_content/MVC-project",
+      "RelativePath": "js/tripHub.js",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "PreferTarget",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\js\\tripHub.js"
     },
     {
       "Identity": "C:\\Users\\29ida\\OneDrive\\Documents\\GitHub\\MVC-project\\wwwroot\\js\\waitlist.js",

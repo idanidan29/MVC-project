@@ -21,6 +21,10 @@
       "PackagePath": "staticwebassets\\js\\site.js"
     },
     {
+      "Id": "C:\\Users\\29ida\\OneDrive\\Documents\\GitHub\\MVC-project\\wwwroot\\js\\tripHub.js",
+      "PackagePath": "staticwebassets\\js\\tripHub.js"
+    },
+    {
       "Id": "C:\\Users\\29ida\\OneDrive\\Documents\\GitHub\\MVC-project\\wwwroot\\js\\waitlist.js",
       "PackagePath": "staticwebassets\\js\\waitlist.js"
     },

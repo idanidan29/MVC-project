@@ -1,5 +1,6 @@
 using MVC_project.Data;
 using MVC_project.Services;
+using MVC_project.Hubs;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Http.Features;
@@ -8,6 +9,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+builder.Services.AddSignalR();
 
 // Authentication (cookie)
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
@@ -74,5 +76,8 @@ app.UseAuthorization();
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Info}/{action=Index}/{id?}");
+
+// Map SignalR hubs
+app.MapHub<TripHub>("/tripHub");
 
 app.Run();

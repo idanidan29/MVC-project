@@ -1,4 +1,5 @@
 using System.Linq;
+using Microsoft.EntityFrameworkCore;
 using MVC_project.Models;
 
 namespace MVC_project.Data
@@ -72,6 +73,38 @@ namespace MVC_project.Data
         {
             _context.Trips.Update(trip);
             _context.SaveChanges();
+        }
+
+        /// <summary>
+        /// Atomically reserves rooms by decrementing AvailableRooms only if enough remain.
+        /// Prevents race conditions when multiple users pay at the same time.
+        /// Returns true if reservation succeeded; false if insufficient availability.
+        /// </summary>
+        public bool TryReserveRooms(int tripId, int quantity)
+        {
+            var qty = quantity <= 0 ? 1 : quantity;
+            using var tx = _context.Database.BeginTransaction();
+            // Conditional UPDATE ensures atomic check and decrement
+            var affected = _context.Database.ExecuteSqlInterpolated(
+                $"UPDATE dbo.Trips SET AvailableRooms = AvailableRooms - {qty} WHERE TripID = {tripId} AND AvailableRooms >= {qty}");
+
+            if (affected == 1)
+            {
+                tx.Commit();
+                return true;
+            }
+            tx.Rollback();
+            return false;
+        }
+
+        /// <summary>
+        /// Adds rooms back (e.g., on failed payments or cancellations).
+        /// </summary>
+        public void ReleaseRooms(int tripId, int quantity)
+        {
+            var qty = quantity <= 0 ? 1 : quantity;
+            _context.Database.ExecuteSqlInterpolated(
+                $"UPDATE dbo.Trips SET AvailableRooms = AvailableRooms + {qty} WHERE TripID = {tripId}");
         }
 
         /// <summary>

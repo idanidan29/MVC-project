@@ -112,6 +112,9 @@
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/modal-utils.js" asp-append-version="true"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
+    <!-- SignalR client and availability listener -->
+    <script src="https://cdn.jsdelivr.net/npm/@@microsoft/signalr@latest/dist/browser/signalr.min.js"></script>
+    <script src="~/js/tripHub.js" asp-append-version="true"></script>
     <!-- PayPal JS SDK (loaded with sandbox client id from configuration) -->
     <script src="https://www.paypal.com/sdk/js?client-id=@Configuration["Payment:PayPal:ClientId"]&currency=@Configuration["Payment:Currency"]"></script>
     @await Html.PartialAsync("_PaymentModal")
