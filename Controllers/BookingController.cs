@@ -6,7 +6,6 @@ using MVC_project.Services;
 using System.Security.Claims;
 using Microsoft.AspNetCore.SignalR;
 using MVC_project.Hubs;
-using MVC_project.Data;
 
 namespace MVC_project.Controllers
 {
@@ -198,6 +197,18 @@ namespace MVC_project.Controllers
             }
 
             var qty = request.Quantity <= 0 ? 1 : request.Quantity;
+            
+            // Check if no rooms available - offer waitlist
+            if (trip.AvailableRooms == 0)
+            {
+                var currentCount = _waitlistRepo.GetWaitlistCountForTrip(request.TripId);
+                if (_waitlistRepo.IsUserOnWaitlist(userId, request.TripId))
+                {
+                    return Json(new { success = false, onWaitlist = true, waitlistCount = currentCount, message = $"You are already on the waitlist for {trip.Destination}." });
+                }
+                return Json(new { success = false, showWaitlistPrompt = true, waitlistCount = currentCount, tripId = request.TripId, destination = trip.Destination });
+            }
+            
             // Atomic reservation to prevent oversell (main date only)
             var reserved = _tripRepo.TryReserveRooms(trip.TripID, qty);
             if (!reserved)
@@ -241,6 +252,17 @@ namespace MVC_project.Controllers
             }
 
             var qty = request.Quantity <= 0 ? 1 : request.Quantity;
+
+            // Check if no rooms available - offer waitlist
+            if (trip.AvailableRooms == 0)
+            {
+                var currentCount = _waitlistRepo.GetWaitlistCountForTrip(request.TripId);
+                if (_waitlistRepo.IsUserOnWaitlist(userId, request.TripId))
+                {
+                    return Json(new { success = false, onWaitlist = true, waitlistCount = currentCount, message = $"You are already on the waitlist for {trip.Destination}." });
+                }
+                return Json(new { success = false, showWaitlistPrompt = true, waitlistCount = currentCount, tripId = request.TripId, destination = trip.Destination });
+            }
 
             // Simulate card payment success
             var ok = _paymentService.SimulateCardCharge(userId, trip, qty);
@@ -312,6 +334,17 @@ namespace MVC_project.Controllers
             }
 
             var qty = request.Quantity <= 0 ? 1 : request.Quantity;
+
+            // Check if no rooms available - offer waitlist
+            if (trip.AvailableRooms == 0)
+            {
+                var currentCount = _waitlistRepo.GetWaitlistCountForTrip(request.TripId);
+                if (_waitlistRepo.IsUserOnWaitlist(userId, request.TripId))
+                {
+                    return Json(new { success = false, onWaitlist = true, waitlistCount = currentCount, message = $"You are already on the waitlist for {trip.Destination}." });
+                }
+                return Json(new { success = false, showWaitlistPrompt = true, waitlistCount = currentCount, tripId = request.TripId, destination = trip.Destination });
+            }
 
             // Create and capture a simulated PayPal order
             var info = _paymentService.GetCheckoutInfo(request.TripId, qty);
@@ -407,8 +440,23 @@ namespace MVC_project.Controllers
                 }
 
                 var qty = item.Quantity <= 0 ? 1 : item.Quantity;
-                if (qty > trip.AvailableRooms)
-                    return Json(new { success = false, message = $"Only {trip.AvailableRooms} rooms available for {trip.Destination}." });
+                
+                // Check availability for the specific date (main or variation)
+                int availableRooms;
+                if (item.SelectedDateIndex >= 0)
+                {
+                    var tripDates = _tripDateRepo.GetByTripId(item.TripID).ToList();
+                    if (item.SelectedDateIndex >= tripDates.Count)
+                        return Json(new { success = false, message = "Selected date is no longer available." });
+                    availableRooms = tripDates[item.SelectedDateIndex].AvailableRooms;
+                }
+                else
+                {
+                    availableRooms = trip.AvailableRooms;
+                }
+                
+                if (qty > availableRooms)
+                    return Json(new { success = false, message = $"Only {availableRooms} rooms available for {trip.Destination}." });
 
                 var unit = trip.DiscountPrice.HasValue && trip.DiscountPrice < trip.Price
                     ? trip.DiscountPrice.Value

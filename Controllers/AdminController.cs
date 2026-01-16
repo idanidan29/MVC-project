@@ -19,11 +19,12 @@ namespace MVC_project.Controllers
         private readonly UserRepository _userRepo;
         private readonly BookingRepository _bookingRepo;
         private readonly WaitlistRepository _waitlistRepo;
+        private readonly TripRatingRepository _ratingRepo;
         private readonly PasswordService _passwordService;
         private readonly ReminderService _reminderService;
         private readonly IWebHostEnvironment _webHostEnvironment;
 
-        public AdminController(TripRepository tripRepo, TripImageRepository imageRepo, TripDateRepository tripDateRepo, UserRepository userRepo, BookingRepository bookingRepo, WaitlistRepository waitlistRepo, PasswordService passwordService, ReminderService reminderService, IWebHostEnvironment webHostEnvironment)
+        public AdminController(TripRepository tripRepo, TripImageRepository imageRepo, TripDateRepository tripDateRepo, UserRepository userRepo, BookingRepository bookingRepo, WaitlistRepository waitlistRepo, TripRatingRepository ratingRepo, PasswordService passwordService, ReminderService reminderService, IWebHostEnvironment webHostEnvironment)
         {
             _tripRepo = tripRepo;
             _imageRepo = imageRepo;
@@ -31,6 +32,7 @@ namespace MVC_project.Controllers
             _userRepo = userRepo;
             _bookingRepo = bookingRepo;
             _waitlistRepo = waitlistRepo;
+            _ratingRepo = ratingRepo;
             _passwordService = passwordService;
             _reminderService = reminderService;
             _webHostEnvironment = webHostEnvironment;
@@ -572,8 +574,8 @@ namespace MVC_project.Controllers
             // Delete associated images first
             _imageRepo.DeleteByTripId(tripId);
 
-            // Delete associated dates
-            _tripDateRepo.DeleteByTripId(tripId);
+            // Delete associated ratings
+            _ratingRepo.DeleteByTripId(tripId);
 
             // Delete associated waitlist entries
             _waitlistRepo.DeleteByTripId(tripId);
@@ -581,7 +583,7 @@ namespace MVC_project.Controllers
             // Delete associated bookings
             _bookingRepo.DeleteByTripId(tripId);
 
-            // Delete the trip
+            // Delete the trip (TripDates will cascade delete automatically via FK constraint)
             _tripRepo.Delete(tripId);
 
             return Ok(new { success = true, message = "Trip deleted successfully" });

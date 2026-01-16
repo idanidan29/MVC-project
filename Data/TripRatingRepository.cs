@@ -94,6 +94,20 @@ namespace MVC_project.Data
         }
 
         /// <summary>
+        /// Deletes all ratings for a trip (used when deleting a trip).
+        /// Returns count of deleted ratings.
+        /// </summary>
+        public int DeleteByTripId(int tripId)
+        {
+            var ratings = _context.TripRatings.Where(r => r.TripID == tripId).ToList();
+            if (!ratings.Any()) return 0;
+
+            _context.TripRatings.RemoveRange(ratings);
+            _context.SaveChanges();
+            return ratings.Count;
+        }
+
+        /// <summary>
         /// Recalculates and updates aggregate rating statistics for a trip.
         /// 
         /// Why cache aggregates?
