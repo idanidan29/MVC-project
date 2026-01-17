@@ -1517,14 +1517,14 @@
                 // If no rooms available, disable quantity controls
                 if (roomsCount === 0) {
                     qtyDisplay.value = '0';
-                    roomsHint.textContent = '0 available';
+                    roomsHint.textContent = '';
                     const btnInc = qtyControl.querySelector('.qty-increase');
                     const btnDec = qtyControl.querySelector('.qty-decrease');
                     if (btnInc) btnInc.disabled = true;
                     if (btnDec) btnDec.disabled = true;
                 } else {
                     qtyDisplay.value = '1';
-                    roomsHint.textContent = `${roomsCount} available`;
+                    roomsHint.textContent = '';
                     // initialize buttons disabled state
                     const btnInc = qtyControl.querySelector('.qty-increase');
                     const btnDec = qtyControl.querySelector('.qty-decrease');

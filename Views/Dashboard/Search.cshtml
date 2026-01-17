@@ -1786,7 +1786,7 @@
             if (qtyControl && qtyDisplay) {
                 qtyControl.dataset.max = roomsCount;
                 qtyDisplay.value = '1';
-                roomsHint.textContent = `${roomsCount} available`;
+                roomsHint.textContent = '';
                 // initialize buttons disabled state
                 const btnInc = qtyControl.querySelector('.qty-increase');
                 const btnDec = qtyControl.querySelector('.qty-decrease');
