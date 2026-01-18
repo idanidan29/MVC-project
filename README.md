@@ -163,11 +163,8 @@ Configuration files:
 
 3. Update the database connection string in appsettings.json
 
-4. Apply migrations to create the database:
-   ```
-   dotnet ef database update
-   ```
-
+4. Apply the database scripts:
+   
 5. Build the project:
    ```
    dotnet build
