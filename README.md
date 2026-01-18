@@ -11,7 +11,6 @@ A comprehensive ASP.NET Core MVC web application for managing travel trips, book
 - [API Endpoints](#api-endpoints)
 - [Services and Components](#services-and-components)
 - [Authentication and Authorization](#authentication-and-authorization)
-- [Contributing](#contributing)
 
 ## Project Overview
 
@@ -334,28 +333,6 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
 - `[Authorize]` attribute protects controllers/actions from unauthenticated users
 - Admin-only features restricted with role checks
 - User isolation - users can only access their own data
-
-## Contributing
-
-### Code Standards
-- Follow C# naming conventions (PascalCase for classes, camelCase for variables)
-- Use dependency injection for all services
-- Keep controllers focused on routing and view selection
-- Place business logic in services
-- Use repositories for data access
-
-### Database Changes
-1. Create a migration: `dotnet ef migrations add MigrationName`
-2. Review the generated migration
-3. Update the database: `dotnet ef database update`
-4. Commit migration files to version control
-
-### Testing Recommendations
-- Test authentication flows
-- Validate booking calculations
-- Verify email service integration
-- Test waitlist promotion logic
-- Validate payment processing
 
 
 ## Support and Troubleshooting
