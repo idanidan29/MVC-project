@@ -6,7 +6,6 @@ A comprehensive ASP.NET Core MVC web application for managing travel trips, book
 - [Project Overview](#project-overview)
 - [Technology Stack](#technology-stack)
 - [Project Structure](#project-structure)
-- [Features](#features)
 - [Setup and Installation](#setup-and-installation)
 - [Configuration](#configuration)
 - [Database Schema](#database-schema)
