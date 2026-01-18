@@ -357,39 +357,6 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
 - Test waitlist promotion logic
 - Validate payment processing
 
-## Project Notes
-
-### File Structure Conventions
-- Controllers handle HTTP requests and routing
-- Services contain business logic
-- Repositories handle data access
-- Models represent database entities
-- ViewModels are for view-specific data
-- Views use Razor syntax for server-side rendering
-
-### Performance Considerations
-- Entity Framework queries are optimized with includes
-- Pagination implemented for large datasets
-- Caching used where appropriate
-- Database indexes on frequently queried columns
-
-### Security Features
-- Password hashing with BCrypt
-- SQL injection prevention through EF Core
-- CSRF protection via token validation
-- HTTP to HTTPS redirection
-- Secure cookie configuration
-- Input validation and sanitization
-
-### Future Enhancements
-- Two-factor authentication
-- OAuth/OpenID Connect integration
-- Advanced analytics dashboard
-- Mobile application
-- API endpoints for third-party integration
-- Automated testing suite
-- Improved payment provider integration
-- Trip review moderation
 
 ## Support and Troubleshooting
 
